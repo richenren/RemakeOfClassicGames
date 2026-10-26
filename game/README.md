@@ -29,7 +29,14 @@
 - 导入/解析检查：`godot --headless --editor --path game --quit`。
 - 主场景启动检查：`godot --headless --path game --quit-after 5`。
 
-自动化测试已通过：33 项通过、0 项失败；Headless 导入和主场景启动均通过。Windows 与 Android 实机测试仍未完成。
+自动化测试已通过：33 项通过、0 项失败；Headless 导入和主场景启动均通过。Windows 独立窗口基础试玩也已通过，包含键盘移动、自动攻击、血条、升级、暂停/继续和失败结算。仍待完成尸王胜利结算实测、失败结算 UI 重叠修复与 Android 真机测试。
+
+## 已知问题
+
+- 失败结算界面中，玩家角色可能与击杀统计文字轻微重叠，见 [`TESTING.md`](TESTING.md)；待修复。
+- Godot 编辑器启动时可能改写 `project.godot` 并生成 `.uid` 文件；打开编辑器后应检查 Git 差异，不要覆盖其他本地修改。
+- 编辑器内嵌视口较小时 HUD 左侧文字可能被裁切；独立游戏窗口正常。
+- Windows 编辑器曾出现 WASAPI 输出设备日志，独立游戏窗口未复现，暂不作为游戏脚本问题处理。
 
 ## 当前未完成
 
