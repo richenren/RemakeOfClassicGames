@@ -89,7 +89,7 @@ func _draw() -> void:
 	draw_line(Vector2(10.0, -5.0), Vector2(6.0, 11.0), robe_light, 2.0)
 	draw_line(Vector2(-8.0, 1.0), Vector2(8.0, 1.0), Color("#7c382d"), 3.0)
 	draw_circle(Vector2(0.0, -12.0), 7.0, Color("#d5b18c"))
-	draw_arc(Rect2(-7.0, -20.0, 14.0, 14.0), PI, TAU, 16, Color("#211e1b"), 4.0)
+	draw_arc(Vector2(0.0, -13.0), 7.0, PI, TAU, 16, Color("#211e1b"), 4.0)
 	draw_line(Vector2(-4.0, -18.0), Vector2(4.0, -18.0), Color("#211e1b"), 3.0)
 
 	var talisman_tip := facing.normalized() * 22.0
