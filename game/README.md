@@ -29,7 +29,7 @@
 - 导入/解析检查：`godot --headless --editor --path game --quit`。
 - 主场景启动检查：`godot --headless --path game --quit-after 5`。
 
-当前自动化测试已编写，需以 GitHub Actions 的实际结果确认通过；Windows 与 Android 实机测试仍未完成。
+自动化测试已通过：33 项通过、0 项失败；Headless 导入和主场景启动均通过。Windows 与 Android 实机测试仍未完成。
 
 ## 当前未完成
 
