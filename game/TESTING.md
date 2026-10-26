@@ -20,13 +20,14 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 2. `tests/test_smoke.gd` 游戏逻辑烟雾测试。
 3. 主场景 headless 启动检查。
 
-## 当前结果状态
+## 最新执行结果（2026-10-26）
 
-- [x] 已编写自动化测试脚本与 CI 工作流。
-- [ ] Godot Headless 导入 / 解析测试通过。
-- [ ] 游戏逻辑烟雾测试通过。
-- [ ] 主场景启动测试通过。
-- [ ] Windows 交互试玩。
-- [ ] Android 真机触控与性能测试。
+[GitHub Actions #12：Godot Headless 测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40261370130)
 
-注意：测试代码已提交，但只有 GitHub Actions 实际执行成功后，才可把前三项标记为通过。当前开发容器没有安装 Godot，无法声称已经在本地完成引擎级运行测试。
+- [x] Godot 4.5.1 Headless 导入与脚本解析：通过。
+- [x] 游戏逻辑烟雾测试：**33 项通过，0 项失败**。
+- [x] 主场景 Headless 启动：通过。
+- [ ] Windows 图形界面与键盘交互试玩。
+- [ ] Android 真机触控、分辨率适配与性能测试。
+
+首轮 CI 曾发现 `main.gd` 的 `spawn_position` 类型推断解析错误，已显式声明为 `Vector2` 并复测通过。当前结果证明脚本能在 Godot 4.5.1 中导入、核心逻辑测试通过且主场景可 Headless 启动；不代表 Windows/Android 图形交互或性能已经验收。
