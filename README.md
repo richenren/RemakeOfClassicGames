@@ -2,7 +2,7 @@
 
 个人与家庭使用的 Windows 电脑 + Android 安卓手机双端 2D 游戏开发项目。
 
-> 当前阶段：首款游戏《镇邪录》已进入 Godot 可玩原型开发。基础战斗闭环与自动化测试脚本已写入开发分支；Godot 引擎级 CI 结果待确认，Windows/Android 实机验证尚未完成。
+> 当前阶段：首款游戏《镇邪录》已进入 Godot 可玩原型开发。Godot 4.5.1 Headless CI 已通过，33 项逻辑测试通过、0 项失败；Windows 图形界面试玩与 Android 真机验证尚未完成。
 
 ## 项目目标
 
@@ -36,6 +36,7 @@
 
 - [Godot 可玩原型与运行说明](game/README.md)
 - [原型测试范围与结果记录](game/TESTING.md)
+- [Godot Headless 测试运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40261370130)
 - [打开 game/ 项目目录](game/)
 
 ## 文档
@@ -64,4 +65,4 @@
 
 ## 下一步
 
-当前已在 `feat/godot-playable-prototype-v0.1` 分支建立 Godot 工程、基础战斗原型、自动化烟雾测试与 GitHub Actions 检查。下一步先确认 CI 是否通过并修复问题，再进行 Windows 与 Android 实机验证；法坛、完整尸王机制、本地多存档随后实现，NAS 同步留到 V0.2。
+当前已在 `feat/godot-playable-prototype-v0.1` 分支建立 Godot 工程、基础战斗原型与自动化测试。Headless CI 已通过；下一步进行 Windows 图形界面与 Android 真机验证，再扩展法坛、完整尸王机制和本地多存档，NAS 同步留到 V0.2。
