@@ -40,6 +40,8 @@ func _draw_hud(view: Vector2) -> void:
 
 	draw_rect(Rect2(view.x * 0.5 - 150.0, 18.0, 300.0, 48.0), PANEL_COLOR)
 	_text(Vector2(view.x * 0.5 - 136.0, 39.0), "生存时间  %s" % _format_time(main_ref.elapsed_seconds), 16, TEXT_COLOR)
+	if _is_mobile():
+		_text(Vector2(view.x * 0.5 + 112.0, 39.0), "Ⅱ", 18, Color("#e8c86c"))
 	_text(Vector2(view.x * 0.5 - 136.0, 57.0), "灵气 %d / %d" % [player.xp, player.xp_to_next], 12, MUTED_COLOR)
 	_bar(Rect2(view.x * 0.5 + 10.0, 47.0, 124.0, 7.0), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#6ebba0"))
 
