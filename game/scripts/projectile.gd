@@ -1,6 +1,6 @@
 extends Node2D
 
-var target: Node2D
+var target
 var damage: float = 18.0
 var speed: float = 470.0
 var lifetime: float = 2.0
@@ -9,7 +9,7 @@ var alive: bool = true
 var impacted: bool = false
 
 
-func setup(target_node: Node2D, hit_damage: float) -> void:
+func setup(target_node, hit_damage: float) -> void:
 	target = target_node
 	damage = hit_damage
 
