@@ -118,6 +118,28 @@ func _test_combat_and_progression(main: Variant) -> void:
 	_check(target.hp < target.max_hp, "镇尸诀对范围内敌人造成伤害")
 	_check(main.active_skill_cooldown > 0.0, "镇尸诀施放后进入冷却")
 
+	player.hp = 100.0
+	player.invuln_time = 0.0
+	target.position = player.position + Vector2(1.0, 0.0)
+	target.move_speed = 0.0
+	main.enemies.clear()
+	main.enemies.append(target)
+	var hp_before_contact: float = player.hp
+	main._tick_enemies(0.016)
+	_check(player.hp < hp_before_contact, "敌人接触玩家时实际造成伤害")
+	_check(player.invuln_time > 0.0, "接触伤害触发受击无敌窗口")
+
+	var kills_before: int = main.kills
+	target.hp = 0.0
+	main._remove_dead_enemies()
+	_check(main.kills == kills_before + 1, "普通敌人死亡后击杀数增加")
+	_check(main.xp_orbs.size() == 1, "普通敌人死亡后掉落灵气球")
+
+	player.xp = 0
+	player.xp_to_next = 100
+	main._tick_xp_orbs(0.016)
+	_check(player.xp == 1 and main.xp_orbs.is_empty(), "战斗掉落的灵气球可转化为经验")
+
 	player.hp = 50.0
 	main.heal_charges = 2
 	main.use_heal()
@@ -149,6 +171,10 @@ func _test_combat_and_progression(main: Variant) -> void:
 	main._process(0.02)
 	_check(main.get_boss() != null, "达到约 8 分钟后生成尸王")
 	_check(main.state == "playing", "Boss 出场后游戏仍处于战斗状态")
+	var boss: Variant = main.get_boss()
+	boss.hp = 0.0
+	main._remove_dead_enemies()
+	_check(main.state == "victory", "尸王死亡后进入胜利结算")
 
 
 func _check(condition: bool, description: String) -> void:
