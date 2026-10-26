@@ -79,8 +79,8 @@ func _draw_level_up(view: Vector2) -> void:
 		var rect := Rect2(start_x + i * (card_width + gap), y, card_width, card_height)
 		draw_rect(rect, Color("#24251f"))
 		draw_rect(rect, PANEL_EDGE, false, 2.0)
-		_text(rect.position + Vector2(18.0, 30.0), "%d  %s" % [i + 1, main_ref.level_cards[i].name], 19, Color("#f1d58f"))
-		_text(rect.position + Vector2(18.0, 64.0), main_ref.level_cards[i].desc, 14, TEXT_COLOR)
+		_text(rect.position + Vector2(18.0, 30.0), "%d  %s" % [i + 1, main_ref.level_cards[i]["name"]], 19, Color("#f1d58f"))
+		_text(rect.position + Vector2(18.0, 64.0), main_ref.level_cards[i]["desc"], 14, TEXT_COLOR)
 		_text(rect.position + Vector2(18.0, card_height - 18.0), "点击选择", 12, MUTED_COLOR)
 
 
