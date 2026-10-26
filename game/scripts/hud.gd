@@ -1,6 +1,6 @@
 extends Node2D
 
-var main_ref: Node
+var main_ref
 const TEXT_COLOR := Color("#efe6d2")
 const MUTED_COLOR := Color("#b8ad99")
 const PANEL_COLOR := Color(0.08, 0.075, 0.065, 0.92)
@@ -43,11 +43,12 @@ func _draw_hud(view: Vector2) -> void:
 	_text(Vector2(view.x * 0.5 - 136.0, 57.0), "灵气 %d / %d" % [player.xp, player.xp_to_next], 12, MUTED_COLOR)
 	_bar(Rect2(view.x * 0.5 + 10.0, 47.0, 124.0, 7.0), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#6ebba0"))
 
-	draw_rect(Rect2(view.x - 218.0, 18.0, 200.0, 88.0), PANEL_COLOR)
+	draw_rect(Rect2(view.x - 218.0, 18.0, 200.0, 112.0), PANEL_COLOR)
 	_text(Vector2(view.x - 204.0, 39.0), "基础符箓", 15, TEXT_COLOR)
 	_text(Vector2(view.x - 204.0, 60.0), "伤害 %d" % roundi(player.damage), 13, MUTED_COLOR)
 	_text(Vector2(view.x - 204.0, 80.0), "攻击间隔 %.2fs" % player.attack_interval, 13, MUTED_COLOR)
 	_text(Vector2(view.x - 204.0, 98.0), "镇尸诀  %s" % ("就绪" if main_ref.active_skill_cooldown <= 0.0 else "%ds" % ceili(main_ref.active_skill_cooldown)), 13, Color("#e8c86c"))
+	_text(Vector2(view.x - 204.0, 120.0), "治疗次数 %d/2" % main_ref.heal_charges, 13, MUTED_COLOR)
 
 	var boss = main_ref.get_boss()
 	if boss != null:
@@ -98,12 +99,12 @@ func _draw_end_screen(view: Vector2) -> void:
 func _draw_touch_controls(view: Vector2) -> void:
 	var joystick_center := Vector2(94.0, view.y - 105.0)
 	draw_circle(joystick_center, 58.0, Color(0.06, 0.06, 0.05, 0.3))
-	draw_arc(Rect2(joystick_center - Vector2(58.0, 58.0), Vector2(116.0, 116.0)), 0.0, TAU, 40, Color(0.85, 0.78, 0.62, 0.65), 2.0)
+	draw_arc(joystick_center, 58.0, 0.0, TAU, 40, Color(0.85, 0.78, 0.62, 0.65), 2.0)
 	var knob_offset: Vector2 = main_ref.player.mobile_move * 28.0
 	draw_circle(joystick_center + knob_offset, 24.0, Color(0.78, 0.68, 0.48, 0.35))
-	draw_arc(Rect2(view.x - 126.0, view.y - 166.0, 88.0, 88.0), 0.0, TAU, 40, Color("#d9b65f"), 3.0)
+	draw_arc(Vector2(view.x - 82.0, view.y - 122.0), 44.0, 0.0, TAU, 40, Color("#d9b65f"), 3.0)
 	_text(Vector2(view.x - 115.0, view.y - 115.0), "镇尸", 16, Color("#f0d79b"))
-	draw_arc(Rect2(view.x - 78.0, view.y - 88.0, 54.0, 54.0), 0.0, TAU, 32, Color("#c16b55"), 2.0)
+	draw_arc(Vector2(view.x - 51.0, view.y - 61.0), 27.0, 0.0, TAU, 32, Color("#c16b55"), 2.0)
 	_text(Vector2(view.x - 72.0, view.y - 55.0), "疗", 15, TEXT_COLOR)
 
 
