@@ -188,7 +188,7 @@ func spawn_enemy(kind: String = "walker") -> void:
 	var enemy = ENEMY_SCRIPT.new()
 	enemy.setup(kind)
 	var angle := randf_range(0.0, TAU)
-	var distance := randf_range(500.0, 680.0) if kind != "boss" else 390.0
+	var distance := randf_range(500.0, 680.0) if kind != "boss" else 700.0
 	var spawn_position := player.position + Vector2(cos(angle), sin(angle)) * distance
 	spawn_position.x = clampf(spawn_position.x, 40.0, WORLD_SIZE.x - 40.0)
 	spawn_position.y = clampf(spawn_position.y, 40.0, WORLD_SIZE.y - 40.0)
