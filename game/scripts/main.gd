@@ -142,6 +142,9 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 			return
 
 		var view := get_viewport_rect().size
+		if event.position.y < 70.0 and absf(event.position.x - view.x * 0.5) < 150.0:
+			state = "paused"
+			return
 		var skill_center := Vector2(view.x - 82.0, view.y - 122.0)
 		var heal_center := Vector2(view.x - 51.0, view.y - 61.0)
 		if event.position.distance_to(skill_center) <= 58.0:
