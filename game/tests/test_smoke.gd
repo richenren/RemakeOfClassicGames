@@ -1,0 +1,160 @@
+extends SceneTree
+
+const PLAYER_SCRIPT = preload("res://scripts/player.gd")
+const ENEMY_SCRIPT = preload("res://scripts/enemy.gd")
+const XP_ORB_SCRIPT = preload("res://scripts/xp_orb.gd")
+const MAIN_SCENE = preload("res://scenes/main.tscn")
+
+var passed: int = 0
+var failed: int = 0
+
+
+func _initialize() -> void:
+	call_deferred("_run_tests")
+
+
+func _run_tests() -> void:
+	print("=== 镇邪录 Godot 原型自动化测试 ===")
+	_test_player()
+	_test_enemy_variants()
+	_test_xp_orb()
+
+	var main: Variant = MAIN_SCENE.instantiate()
+	root.add_child(main)
+	await process_frame
+
+	_check(main.player != null, "主场景创建玩家")
+	_check(main.enemies.size() == 7, "开局生成 7 个普通敌人")
+
+	if main.player != null and not main.enemies.is_empty():
+		_test_combat_and_progression(main)
+
+	main.queue_free()
+	await process_frame
+	print("=== 测试汇总：%d 通过，%d 失败 ===" % [passed, failed])
+	quit(1 if failed > 0 else 0)
+
+
+func _test_player() -> void:
+	var player: Variant = PLAYER_SCRIPT.new()
+	root.add_child(player)
+	player.position = Vector2(100.0, 100.0)
+	player.mobile_move = Vector2.RIGHT
+	player.tick(0.1)
+	_check(player.position.x > 100.0, "玩家触屏移动输入可驱动位移")
+
+	player.hp = 100.0
+	player.invuln_time = 0.0
+	player.take_damage(20.0)
+	_check(is_equal_approx(player.hp, 80.0), "玩家受伤正确扣除生命")
+	player.take_damage(20.0)
+	_check(is_equal_approx(player.hp, 80.0), "受击无敌窗口阻止连续伤害")
+	player.heal(50.0)
+	_check(is_equal_approx(player.hp, 100.0), "治疗不会超过最大生命")
+	player.queue_free()
+
+
+func _test_enemy_variants() -> void:
+	var walker: Variant = ENEMY_SCRIPT.new()
+	root.add_child(walker)
+	walker.setup("walker")
+	_check(is_equal_approx(walker.max_hp, 34.0), "行尸基础属性正确")
+	var old_x: float = walker.position.x
+	walker.tick(0.5, Vector2(100.0, 0.0), Vector2.ZERO)
+	_check(walker.position.x > old_x, "普通敌人会追踪玩家")
+	walker.queue_free()
+
+	var jumper: Variant = ENEMY_SCRIPT.new()
+	root.add_child(jumper)
+	jumper.setup("jumper")
+	_check(jumper.move_speed > 100.0 and jumper.contact_damage == 10.0, "跳僵具备独立速度和伤害")
+	jumper.queue_free()
+
+	var armored: Variant = ENEMY_SCRIPT.new()
+	root.add_child(armored)
+	armored.setup("armored")
+	_check(armored.max_hp > 2.0 * 34.0, "铁甲尸具有更高生命值")
+	armored.queue_free()
+
+	var boss: Variant = ENEMY_SCRIPT.new()
+	root.add_child(boss)
+	boss.setup("boss")
+	boss.apply_slow(2.0, 0.35)
+	_check(boss.is_boss and boss.max_hp >= 1000.0, "尸王具备 Boss 标识和独立生命值")
+	_check(is_equal_approx(boss.slow_multiplier, 0.72), "Boss 对减速效果具有抗性")
+	_check(is_equal_approx(boss.slow_timer, 0.7), "Boss 减速持续时间受到抗性缩短")
+	boss.queue_free()
+
+
+func _test_xp_orb() -> void:
+	var orb: Variant = XP_ORB_SCRIPT.new()
+	root.add_child(orb)
+	orb.setup(1)
+	orb.position = Vector2.ZERO
+	_check(orb.tick(0.016, Vector2.ZERO, 92.0), "玩家接触灵气球时可拾取")
+	orb.queue_free()
+
+
+func _test_combat_and_progression(main: Variant) -> void:
+	var player: Variant = main.player
+	var target: Variant = main.enemies[0]
+	target.position = player.position + Vector2(100.0, 0.0)
+	target.hp = target.max_hp
+
+	main._auto_attack()
+	_check(main.projectiles.size() == 1, "基础符箓会自动锁定射程内敌人")
+	if not main.projectiles.is_empty():
+		var projectile: Variant = main.projectiles[0]
+		projectile.speed = 10000.0
+		main._tick_projectiles(0.1)
+		_check(target.hp < target.max_hp, "符箓命中后正确造成伤害")
+	else:
+		_check(false, "符箓命中后正确造成伤害（未生成投射物）")
+
+	target.hp = target.max_hp
+	target.position = player.position + Vector2(100.0, 0.0)
+	main.active_skill_cooldown = 0.0
+	main.cast_active_skill()
+	_check(target.hp < target.max_hp, "镇尸诀对范围内敌人造成伤害")
+	_check(main.active_skill_cooldown > 0.0, "镇尸诀施放后进入冷却")
+
+	player.hp = 50.0
+	main.heal_charges = 2
+	main.use_heal()
+	_check(is_equal_approx(player.hp, 80.0), "治疗恢复最大生命的 30%")
+	_check(main.heal_charges == 1, "治疗消耗一次库存")
+
+	player.xp = player.xp_to_next
+	main.state = "playing"
+	main._maybe_level_up()
+	_check(main.state == "level_up" and main.level_cards.size() == 3, "经验达到阈值后进入三选一升级")
+	if main.state == "level_up":
+		main.level_cards.clear()
+		main.level_cards.append({"id": "talisman_power", "name": "符箓精进", "desc": "测试强化"})
+		var damage_before: float = player.damage
+		main._select_upgrade(0)
+		_check(player.damage > damage_before, "选择符箓强化后基础伤害提高")
+		_check(main.state == "playing", "选择升级后恢复战斗")
+
+	var pause_event := InputEventKey.new()
+	pause_event.pressed = true
+	pause_event.keycode = KEY_ESCAPE
+	main._input(pause_event)
+	_check(main.state == "paused", "Esc 可暂停游戏")
+	main._input(pause_event)
+	_check(main.state == "playing", "再次按 Esc 可继续游戏")
+
+	main.elapsed_seconds = 479.99
+	main.boss_spawned = false
+	main._process(0.02)
+	_check(main.get_boss() != null, "达到约 8 分钟后生成尸王")
+	_check(main.state == "playing", "Boss 出场后游戏仍处于战斗状态")
+
+
+func _check(condition: bool, description: String) -> void:
+	if condition:
+		passed += 1
+		print("PASS: " + description)
+	else:
+		failed += 1
+		push_error("FAIL: " + description)
