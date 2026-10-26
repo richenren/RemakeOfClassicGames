@@ -20,6 +20,17 @@
 - 治疗库存（每局 2 次，每次恢复最大生命的 30%）。
 - 约第 8 分钟生成占位尸王，用于验证血条和基础战斗流程。
 
+## 测试
+
+- 测试范围与当前状态见 [`TESTING.md`](TESTING.md)。
+- 自动化测试脚本：`tests/test_smoke.gd`。
+- CI 工作流：`../.github/workflows/godot-prototype-tests.yml`。
+- 本地运行逻辑测试：`godot --headless --path game --script res://tests/test_smoke.gd`。
+- 导入/解析检查：`godot --headless --editor --path game --quit`。
+- 主场景启动检查：`godot --headless --path game --quit-after 5`。
+
+当前自动化测试已编写，需以 GitHub Actions 的实际结果确认通过；Windows 与 Android 实机测试仍未完成。
+
 ## 当前未完成
 
 - 尸王冲锋、环形震地、延迟危险区域和二阶段完整状态机。
@@ -42,4 +53,4 @@
 
 - 本目录是原型，不是完整 V0.1 交付版本。
 - 数值仅用于验证战斗闭环，后续应移入可配置资源并通过试玩平衡。
-- 当前开发环境尚未运行 Godot 解析或实机测试；导入项目后必须执行一次运行验证，再继续扩展。
+- 当前自动化测试脚本与 CI 工作流已添加，但 Godot 引擎级测试结果需等待 CI 确认；Windows 交互试玩和 Android 真机验证尚未完成。
