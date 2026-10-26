@@ -394,6 +394,6 @@ func _draw() -> void:
 	for p in props:
 		draw_circle(p + Vector2(0.0, 8.0), 19.0, Color(0.03, 0.03, 0.025, 0.3))
 		draw_rect(Rect2(p.x - 13.0, p.y - 18.0, 26.0, 30.0), Color("#5a5b4e"))
-		draw_arc(Rect2(p.x - 13.0, p.y - 25.0, 26.0, 18.0), PI, TAU, 16, Color("#7a7965"), 3.0)
+		draw_arc(Vector2(p.x, p.y - 16.0), 13.0, PI, TAU, 16, Color("#7a7965"), 3.0)
 		draw_line(p + Vector2(-7.0, -7.0), p + Vector2(7.0, 4.0), Color("#77745f"), 2.0)
 	draw_rect(Rect2(Vector2.ZERO, WORLD_SIZE), Color("#11120f"), false, 8.0)
