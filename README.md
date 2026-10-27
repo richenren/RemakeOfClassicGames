@@ -65,4 +65,4 @@
 
 ## 下一步
 
-当前已在 `feat/godot-playable-prototype-v0.1` 分支建立 Godot 工程、基础战斗原型与自动化测试。Headless CI 已通过；下一步进行 Windows 图形界面与 Android 真机验证，再扩展法坛、完整尸王机制和本地多存档，NAS 同步留到 V0.2。
+当前已在 `feat/godot-playable-prototype-v0.1` 分支建立 Godot 工程、基础战斗原型与自动化测试；最新 CI 的 44 项测试全部通过。下一步先在 Windows 独立窗口目视检查阶段目标 HUD、镇尸诀技能反馈、升级卡片与结算面板，再继续完善法坛和完整尸王机制。Android 真机测试留到后续阶段，NAS 同步留到 V0.2。
