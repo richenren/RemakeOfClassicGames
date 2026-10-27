@@ -59,7 +59,7 @@ func _draw_hud(view: Vector2) -> void:
 	_text(Vector2(view.x - 234.0, 122.0), "就绪" if skill_ready else "冷却 %ds" % ceili(main_ref.active_skill_cooldown), 12, TEXT_COLOR)
 	var skill_ratio := 1.0 if skill_ready else 1.0 - clampf(main_ref.active_skill_cooldown / maxf(0.1, main_ref.active_skill_base_cooldown), 0.0, 1.0)
 	_bar(Rect2(view.x - 234.0, 130.0, 132.0, 6.0), skill_ratio, Color("#d1a84e"))
-	_text(Vector2(view.x - 94.0, 140.0), "SPACE", 10, MUTED_COLOR)
+	_text(Vector2(view.x - 94.0, 140.0), "触发" if _is_mobile() else "SPACE", 10, MUTED_COLOR)
 	_text(Vector2(view.x - 234.0, 156.0), "治疗次数 %d/2" % main_ref.heal_charges, 12, MUTED_COLOR)
 
 	if main_ref.state != "game_over" and main_ref.state != "victory":
