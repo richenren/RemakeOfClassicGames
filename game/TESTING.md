@@ -24,7 +24,7 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 
 ## 最新执行结果（2026-10-27）
 
-[GitHub Actions：任务与技能表现优化后自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40470964779)
+[GitHub Actions：任务与技能表现优化后自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40471221971)
 
 - [x] Godot 4.5.1 Headless 导入与脚本解析：通过。
 - [x] 游戏逻辑烟雾测试：**44 项通过，0 项失败**。
