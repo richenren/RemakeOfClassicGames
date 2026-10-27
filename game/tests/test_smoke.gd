@@ -27,6 +27,7 @@ func _run_tests() -> void:
 
 	_check(main.player != null, "主场景创建玩家")
 	_check(main.enemies.size() == 7, "开局生成 7 个普通敌人")
+	_test_hud_presentation(main)
 
 	if main.player != null and not main.enemies.is_empty():
 		_test_combat_and_progression(main)
@@ -35,6 +36,16 @@ func _run_tests() -> void:
 	await process_frame
 	print("=== 测试汇总：%d 通过，%d 失败 ===" % [passed, failed])
 	quit(1 if failed > 0 else 0)
+
+
+func _test_hud_presentation(main: Variant) -> void:
+	var hud: Variant = main.hud
+	var objective: Dictionary = hud.objective_data()
+	_check(objective.get("title", "").contains("镇压尸潮"), "战斗 HUD 显示当前阶段目标")
+	_check(objective.get("detail", "").contains("倒计时"), "战斗 HUD 显示尸王登场倒计时")
+	_check(float(objective.get("progress", -1.0)) >= 0.0 and float(objective.get("progress", 2.0)) <= 1.0, "任务进度条比例限制在 0 到 1")
+	_check(hud._upgrade_category("rapid_talisman") == "攻击强化", "技能升级卡显示攻击类别")
+	_check(hud._upgrade_category("control_art") == "道术强化", "主动道术升级卡显示道术类别")
 
 
 func _test_end_screen_layout() -> void:
@@ -130,6 +141,7 @@ func _test_combat_and_progression(main: Variant) -> void:
 	main.cast_active_skill()
 	_check(target.hp < target.max_hp, "镇尸诀对范围内敌人造成伤害")
 	_check(main.active_skill_cooldown > 0.0, "镇尸诀施放后进入冷却")
+	_check(main.active_skill_effect_time > 0.0, "镇尸诀施放后触发范围视觉反馈")
 
 	player.hp = 100.0
 	player.invuln_time = 0.0
@@ -184,6 +196,8 @@ func _test_combat_and_progression(main: Variant) -> void:
 	main._process(0.02)
 	_check(main.get_boss() != null, "达到约 8 分钟后生成尸王")
 	_check(main.state == "playing", "Boss 出场后游戏仍处于战斗状态")
+	var boss_objective: Dictionary = main.hud.objective_data()
+	_check(boss_objective.get("title", "").contains("击败尸王"), "尸王出现后当前目标切换为击败尸王")
 	var boss: Variant = main.get_boss()
 	boss.hp = 0.0
 	main._remove_dead_enemies()
