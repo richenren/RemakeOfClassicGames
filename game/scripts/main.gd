@@ -442,8 +442,8 @@ func _draw() -> void:
 			p + Vector2(10.0, -9.0), p + Vector2(12.0, 10.0),
 			p + Vector2(-12.0, 10.0)
 		]), Color("#666451"), 1.2, true)
-		draw_line(p + Vector2(-4.0, -4.0), p + Vector2(4.0, -4.0), Color("#8b7d5c", 0.72), 1.2)
-		draw_line(p + Vector2(-3.0, 1.0), p + Vector2(3.0, 1.0), Color("#8b7d5c", 0.52), 1.0)
+		draw_line(p + Vector2(-4.0, -4.0), p + Vector2(4.0, -4.0), Color(0.545, 0.49, 0.36, 0.72), 1.2)
+		draw_line(p + Vector2(-3.0, 1.0), p + Vector2(3.0, 1.0), Color(0.545, 0.49, 0.36, 0.52), 1.0)
 
 	var dead_trees: Array[Vector2] = [Vector2(560, 565), Vector2(1870, 560), Vector2(590, 1115), Vector2(1810, 1090), Vector2(1420, 530)]
 	for p in dead_trees:
