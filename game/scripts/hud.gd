@@ -52,7 +52,7 @@ func _draw_hud(view: Vector2) -> void:
 	_text(Vector2(view.x - 234.0, 60.0), "伤害 %d" % roundi(player.damage), 13, MUTED_COLOR)
 	_text(Vector2(view.x - 234.0, 80.0), "攻击间隔 %.2fs" % player.attack_interval, 13, MUTED_COLOR)
 
-	var skill_ready := main_ref.active_skill_cooldown <= 0.0
+	var skill_ready: bool = main_ref.active_skill_cooldown <= 0.0
 	var skill_color := Color("#e8c86c") if skill_ready else Color("#9e8b6a")
 	_draw_skill_emblem(Vector2(view.x - 42.0, 103.0), skill_ready, skill_color)
 	_text(Vector2(view.x - 234.0, 103.0), "主动道术 · 镇尸诀", 13, skill_color)
