@@ -381,29 +381,87 @@ func get_boss():
 
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, WORLD_SIZE), Color("#292b26"))
+	draw_rect(Rect2(Vector2.ZERO, WORLD_SIZE), Color("#242720"))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 829104
-	for i in range(180):
-		var p := Vector2(rng.randf_range(20.0, WORLD_SIZE.x - 20.0), rng.randf_range(20.0, WORLD_SIZE.y - 20.0))
-		var radius := rng.randf_range(5.0, 19.0)
-		var color := Color("#32342d") if i % 3 == 0 else Color("#262822")
-		draw_circle(p, radius, color)
 
-	# A worn stone path and simple graveyard props; all are temporary vector placeholders.
-	draw_line(Vector2(0.0, 800.0), Vector2(WORLD_SIZE.x, 800.0), Color("#3b3a30"), 74.0)
-	for x in range(160, 2320, 160):
-		draw_rect(Rect2(float(x), 770.0, 72.0, 58.0), Color("#454338"), false, 2.0)
-	var props: Array[Vector2] = [
-		Vector2(260, 280), Vector2(510, 440), Vector2(820, 250), Vector2(1120, 350),
-		Vector2(1560, 260), Vector2(1900, 390), Vector2(2200, 280), Vector2(320, 1260),
-		Vector2(680, 1380), Vector2(1260, 1280), Vector2(1740, 1360), Vector2(2160, 1220)
+	# Subtle moss, worn earth and scattered stone texture keep the battlefield readable.
+	for i in range(250):
+		var p := Vector2(rng.randf_range(20.0, WORLD_SIZE.x - 20.0), rng.randf_range(20.0, WORLD_SIZE.y - 20.0))
+		var radius := rng.randf_range(4.0, 17.0)
+		var shade := rng.randf_range(0.0, 1.0)
+		var patch_color := Color("#2d3028") if shade > 0.58 else Color("#20231e")
+		draw_circle(p, radius, patch_color)
+	for i in range(125):
+		var p := Vector2(rng.randf_range(24.0, WORLD_SIZE.x - 24.0), rng.randf_range(24.0, WORLD_SIZE.y - 24.0))
+		var length := rng.randf_range(5.0, 16.0)
+		var drift := rng.randf_range(-4.0, 4.0)
+		draw_line(p, p + Vector2(length, drift), Color(0.42, 0.40, 0.31, 0.16), 1.0)
+
+	# The old stone path has broken edges and uneven paving instead of a uniform strip.
+	draw_line(Vector2(0.0, 800.0), Vector2(WORLD_SIZE.x, 800.0), Color("#191b16"), 112.0, true)
+	draw_line(Vector2(0.0, 800.0), Vector2(WORLD_SIZE.x, 800.0), Color("#35362c"), 88.0, true)
+	draw_line(Vector2(0.0, 800.0), Vector2(WORLD_SIZE.x, 800.0), Color("#3d3b30"), 72.0, true)
+	for i in range(19):
+		var tile_x := float(i) * 136.0 - 20.0
+		var tile_y := 800.0 + rng.randf_range(-11.0, 11.0)
+		var tile_width := rng.randf_range(62.0, 118.0)
+		var tile_height := rng.randf_range(42.0, 59.0)
+		var tile_rect := Rect2(tile_x, tile_y - tile_height * 0.5, tile_width, tile_height)
+		draw_rect(tile_rect, Color("#424033"), false, 1.0)
+		if i % 3 == 0:
+			draw_line(tile_rect.position + Vector2(12.0, 8.0), tile_rect.position + Vector2(22.0, 19.0), Color("#24251f"), 1.0)
+			draw_line(tile_rect.position + Vector2(tile_width - 20.0, tile_height - 12.0), tile_rect.position + Vector2(tile_width - 9.0, tile_height - 18.0), Color("#292a23"), 1.0)
+	for i in range(42):
+		var edge_x := rng.randf_range(0.0, WORLD_SIZE.x)
+		var edge_y := 800.0 + rng.randf_range(-65.0, 65.0)
+		var size := rng.randf_range(4.0, 12.0)
+		draw_circle(Vector2(edge_x, edge_y), size, Color("#34342a"))
+		draw_circle(Vector2(edge_x - 1.0, edge_y - 1.0), size * 0.45, Color("#474536"))
+
+	# Original grave markers and dead trees are drawn as quiet silhouettes, not UI-like boxes.
+	var grave_positions: Array[Vector2] = [
+		Vector2(610, 690), Vector2(760, 970), Vector2(880, 610), Vector2(1010, 1015),
+		Vector2(1160, 650), Vector2(1370, 980), Vector2(1510, 625), Vector2(1690, 960),
+		Vector2(1810, 670), Vector2(680, 1080), Vector2(1280, 560), Vector2(1590, 1085),
+		Vector2(930, 1130), Vector2(1750, 1110)
 	]
-	for p in props:
-		draw_circle(p + Vector2(0.0, 8.0), 19.0, Color(0.03, 0.03, 0.025, 0.3))
-		draw_rect(Rect2(p.x - 13.0, p.y - 18.0, 26.0, 30.0), Color("#5a5b4e"))
-		draw_arc(Vector2(p.x, p.y - 16.0), 13.0, PI, TAU, 16, Color("#7a7965"), 3.0)
-		draw_line(p + Vector2(-7.0, -7.0), p + Vector2(7.0, 4.0), Color("#77745f"), 2.0)
+	for p in grave_positions:
+		draw_set_transform(p + Vector2(0.0, 13.0), 0.0, Vector2(1.25, 0.42))
+		draw_circle(Vector2.ZERO, 16.0, Color(0.01, 0.012, 0.01, 0.42))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		var stone := PackedVector2Array([
+			p + Vector2(-12.0, 10.0), p + Vector2(-10.0, -7.0),
+			p + Vector2(-6.0, -15.0), p + Vector2(5.0, -17.0),
+			p + Vector2(10.0, -9.0), p + Vector2(12.0, 10.0)
+		])
+		draw_colored_polygon(stone, Color("#45483d"))
+		draw_polyline(PackedVector2Array([
+			p + Vector2(-12.0, 10.0), p + Vector2(-10.0, -7.0),
+			p + Vector2(-6.0, -15.0), p + Vector2(5.0, -17.0),
+			p + Vector2(10.0, -9.0), p + Vector2(12.0, 10.0),
+			p + Vector2(-12.0, 10.0)
+		]), Color("#666451"), 1.2, true)
+		draw_line(p + Vector2(-4.0, -4.0), p + Vector2(4.0, -4.0), Color("#8b7d5c", 0.72), 1.2)
+		draw_line(p + Vector2(-3.0, 1.0), p + Vector2(3.0, 1.0), Color("#8b7d5c", 0.52), 1.0)
+
+	var dead_trees: Array[Vector2] = [Vector2(560, 565), Vector2(1870, 560), Vector2(590, 1115), Vector2(1810, 1090), Vector2(1420, 530)]
+	for p in dead_trees:
+		draw_circle(p + Vector2(0.0, 20.0), 22.0, Color(0.01, 0.01, 0.01, 0.28))
+		draw_line(p, p + Vector2(0.0, -44.0), Color("#34362d"), 5.0, true)
+		draw_line(p + Vector2(0.0, -19.0), p + Vector2(-19.0, -38.0), Color("#34362d"), 3.0, true)
+		draw_line(p + Vector2(-12.0, -31.0), p + Vector2(-26.0, -31.0), Color("#34362d"), 2.0, true)
+		draw_line(p + Vector2(0.0, -29.0), p + Vector2(18.0, -48.0), Color("#34362d"), 3.0, true)
+		draw_line(p + Vector2(11.0, -41.0), p + Vector2(27.0, -43.0), Color("#34362d"), 2.0, true)
+
+	var torch_positions: Array[Vector2] = [Vector2(730, 755), Vector2(1665, 850), Vector2(1020, 705), Vector2(1450, 895)]
+	for p in torch_positions:
+		draw_circle(p, 34.0, Color(0.76, 0.43, 0.16, 0.07))
+		draw_circle(p, 19.0, Color(0.76, 0.43, 0.16, 0.05))
+		draw_line(p + Vector2(0.0, 10.0), p + Vector2(0.0, -8.0), Color("#4c4432"), 3.0)
+		draw_circle(p + Vector2(0.0, -10.0), 4.0, Color("#d5a04d"))
+		draw_circle(p + Vector2(0.0, -10.0), 1.8, Color("#f0d18a"))
+
 	draw_rect(Rect2(Vector2.ZERO, WORLD_SIZE), Color("#11120f"), false, 8.0)
 
 	if active_skill_effect_time > 0.0 and player != null:
