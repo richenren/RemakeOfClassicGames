@@ -28,6 +28,7 @@ func _run_tests() -> void:
 	_check(main.player != null, "主场景创建玩家")
 	_check(main.enemies.size() == 7, "开局生成 7 个普通敌人")
 	_test_hud_presentation(main)
+	_test_sprite_assets(main)
 
 	if main.player != null and not main.enemies.is_empty():
 		_test_combat_and_progression(main)
@@ -48,6 +49,14 @@ func _test_hud_presentation(main: Variant) -> void:
 	_check(hud._upgrade_category("control_art") == "道术强化", "主动道术升级卡显示道术类别")
 
 
+func _test_sprite_assets(main: Variant) -> void:
+	var atlas := load("res://assets/sprites/creatures_atlas.png") as Texture2D
+	_check(atlas != null, "原创道士与僵尸贴图图集可加载")
+	if atlas != null:
+		_check(atlas.get_size() == Vector2i(384, 256), "贴图图集尺寸与角色/怪物区域一致")
+	_check(main.player.is_moving == false, "玩家初始使用待机贴图状态")
+
+
 func _test_end_screen_layout() -> void:
 	var hud: Variant = HUD_SCRIPT.new()
 	root.add_child(hud)
@@ -66,6 +75,7 @@ func _test_player() -> void:
 	player.mobile_move = Vector2.RIGHT
 	player.tick(0.1)
 	_check(player.position.x > 100.0, "玩家触屏移动输入可驱动位移")
+	_check(player.is_moving, "玩家移动时切换为移动贴图状态")
 
 	player.hp = 100.0
 	player.invuln_time = 0.0
