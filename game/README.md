@@ -34,7 +34,7 @@
 - 导入/解析检查：`godot --headless --editor --path game --quit`。
 - 主场景启动检查：`godot --headless --path game --quit-after 5`。
 
-Godot 4.5.1 Headless CI 已通过 48 项自动化检查、0 项失败；导入/解析和主场景启动均通过。Windows 独立窗口基础试玩已验证键盘移动、自动攻击、血条、升级、暂停/继续和失败结算。本轮新增角色/怪物贴图、战场环境与 HUD 仍待 Windows 目视复测；尸王胜利结算仍待实机试玩。Android 真机测试不属于本轮范围。
+Godot 4.5.1 Headless CI 已通过 48 项自动化检查、0 项失败；导入/解析和主场景启动均通过（[查看最新运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40487191120)）。Windows 独立窗口基础试玩已验证键盘移动、自动攻击、血条、升级、暂停/继续和失败结算。本轮新增角色/怪物贴图、战场环境与 HUD 仍待 Windows 目视复测；尸王胜利结算仍待实机试玩。Android 真机测试不属于本轮范围。
 
 ## 已知问题
 
