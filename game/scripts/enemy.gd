@@ -117,7 +117,7 @@ func _draw() -> void:
 		draw_arc(Vector2(0.0, 9.0), collision_radius + 7.0, 0.0, TAU, 36, Color(0.45, 0.74, 0.62, 0.72), 2.0)
 
 	var tint := Color("#fff0d0") if hit_flash > 0.0 else Color.WHITE
-	draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, false, tint)
+	draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, tint, false)
 
 	# Ordinary enemies keep compact health bars above the sprite; the boss uses the dedicated HUD bar.
 	if not is_boss:
