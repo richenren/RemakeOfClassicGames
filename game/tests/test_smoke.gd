@@ -202,6 +202,8 @@ func _test_combat_and_progression(main: Variant) -> void:
 	boss.hp = 0.0
 	main._remove_dead_enemies()
 	_check(main.state == "victory", "尸王死亡后进入胜利结算")
+	var victory_objective: Dictionary = main.hud.objective_data()
+	_check(victory_objective.get("title", "").contains("任务完成"), "胜利后任务提示切换为已完成")
 
 
 func _check(condition: bool, description: String) -> void:
