@@ -2,6 +2,9 @@ extends Node2D
 
 const WORLD_MIN := Vector2(48.0, 48.0)
 const WORLD_MAX := Vector2(2352.0, 1552.0)
+const CREATURES_ATLAS: Texture2D = preload("res://assets/sprites/creatures_atlas.png")
+const PLAYER_IDLE_REGION := Rect2(37.0, 29.0, 53.0, 70.0)
+const PLAYER_MOVE_REGION := Rect2(169.0, 29.0, 46.0, 70.0)
 
 var main_ref: Node
 var max_hp: float = 100.0
@@ -18,6 +21,7 @@ var mobile_move: Vector2 = Vector2.ZERO
 var facing: Vector2 = Vector2.UP
 var collision_radius: float = 13.0
 var hit_flash: float = 0.0
+var is_moving: bool = false
 
 
 func tick(delta: float) -> void:
@@ -37,7 +41,8 @@ func tick(delta: float) -> void:
 	var move_vector := keyboard_move if keyboard_move.length_squared() > 0.0 else mobile_move
 	if move_vector.length_squared() > 1.0:
 		move_vector = move_vector.normalized()
-	if move_vector.length_squared() > 0.01:
+	is_moving = move_vector.length_squared() > 0.01
+	if is_moving:
 		facing = move_vector.normalized()
 		position += move_vector * move_speed * delta
 
@@ -65,35 +70,23 @@ func gain_xp(amount: int) -> void:
 
 
 func _draw() -> void:
-	draw_circle(Vector2(0.0, 7.0), 17.0, Color(0.03, 0.03, 0.025, 0.35))
+	# Soft ground shadow and a restrained talisman-gold rim help the sprite read on dark terrain.
+	draw_set_transform(Vector2(0.0, 13.0), 0.0, Vector2(1.45, 0.48))
+	draw_circle(Vector2.ZERO, 15.0, Color(0.015, 0.014, 0.012, 0.42))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	draw_circle(Vector2(0.0, 13.0), 12.0, Color(0.66, 0.49, 0.23, 0.12))
 
-	var robe_color := Color("#b18b52")
-	var robe_shadow := Color("#393b3a")
-	var robe_light := Color("#d1b47c")
-	if hit_flash > 0.0 or (invuln_time > 0.0 and int(Time.get_ticks_msec() / 80) % 2 == 0):
-		robe_color = Color("#f4e5c5")
-		robe_shadow = Color("#d8cdb7")
-		robe_light = Color("#fff5dd")
+	var sprite_region: Rect2 = PLAYER_MOVE_REGION if is_moving else PLAYER_IDLE_REGION
+	var sprite_rect := Rect2(-24.0, -32.0, 48.0, 64.0)
+	var tint := Color.WHITE
+	if hit_flash > 0.0:
+		tint = Color("#fff0d0")
+	elif invuln_time > 0.0 and int(Time.get_ticks_msec() / 80) % 2 == 0:
+		tint = Color(1.0, 1.0, 1.0, 0.62)
 
-	var robe := PackedVector2Array([
-		Vector2(0.0, -13.0),
-		Vector2(-11.0, -7.0),
-		Vector2(-14.0, 8.0),
-		Vector2(-8.0, 15.0),
-		Vector2(8.0, 15.0),
-		Vector2(14.0, 8.0),
-		Vector2(11.0, -7.0)
-	])
-	draw_colored_polygon(robe, robe_color)
-	draw_line(Vector2(-10.0, -5.0), Vector2(-6.0, 11.0), robe_shadow, 3.0)
-	draw_line(Vector2(10.0, -5.0), Vector2(6.0, 11.0), robe_light, 2.0)
-	draw_line(Vector2(-8.0, 1.0), Vector2(8.0, 1.0), Color("#7c382d"), 3.0)
-	draw_circle(Vector2(0.0, -12.0), 7.0, Color("#d5b18c"))
-	draw_arc(Vector2(0.0, -13.0), 7.0, PI, TAU, 16, Color("#211e1b"), 4.0)
-	draw_line(Vector2(-4.0, -18.0), Vector2(4.0, -18.0), Color("#211e1b"), 3.0)
-
-	var talisman_tip := facing.normalized() * 22.0
-	draw_line(facing * 9.0, talisman_tip, Color("#49382b"), 3.0)
-	draw_line(facing * 10.0, talisman_tip, Color("#d7ad4c"), 2.0)
-	draw_circle(talisman_tip, 4.0, Color("#e6bd55"))
-	draw_circle(talisman_tip, 1.6, Color("#a9432d"))
+	if is_moving and facing.x < -0.1:
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2(-1.0, 1.0))
+		draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, false, tint)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	else:
+		draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, false, tint)
