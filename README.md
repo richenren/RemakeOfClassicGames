@@ -36,7 +36,7 @@
 
 - [Godot 可玩原型与运行说明](game/README.md)
 - [原型测试范围与结果记录](game/TESTING.md)
-- [最新 Godot Headless 测试运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40486939581)
+- [最新 Godot Headless 测试运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40487191120)
 - [打开 game/ 项目目录](game/)
 
 ## 文档
