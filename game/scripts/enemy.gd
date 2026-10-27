@@ -1,5 +1,11 @@
 extends Node2D
 
+const CREATURES_ATLAS: Texture2D = preload("res://assets/sprites/creatures_atlas.png")
+const WALKER_REGION := Rect2(300.0, 29.0, 40.0, 70.0)
+const JUMPER_REGION := Rect2(43.0, 158.0, 42.0, 68.0)
+const ARMORED_REGION := Rect2(166.0, 157.0, 51.0, 70.0)
+const BOSS_REGION := Rect2(280.0, 146.0, 80.0, 91.0)
+
 var kind: String = "walker"
 var max_hp: float = 30.0
 var hp: float = 30.0
@@ -80,53 +86,45 @@ func apply_slow(duration: float, multiplier: float) -> void:
 
 
 func _draw() -> void:
-	var body_color := Color("#73776a")
-	var robe_color := Color("#454b43")
+	var sprite_region: Rect2 = WALKER_REGION
+	var sprite_rect := Rect2(-21.0, -30.0, 42.0, 59.0)
+	var bar_width := 40.0
 	match kind:
 		"jumper":
-			body_color = Color("#a7a18b")
-			robe_color = Color("#55483d")
+			sprite_region = JUMPER_REGION
+			sprite_rect = Rect2(-22.0, -29.0, 44.0, 57.0)
+			bar_width = 40.0
 		"armored":
-			body_color = Color("#777d7a")
-			robe_color = Color("#353d3e")
+			sprite_region = ARMORED_REGION
+			sprite_rect = Rect2(-27.0, -34.0, 54.0, 67.0)
+			bar_width = 46.0
 		"boss":
-			body_color = Color("#8b7866")
-			robe_color = Color("#302b2d")
+			sprite_region = BOSS_REGION
+			sprite_rect = Rect2(-49.0, -57.0, 98.0, 112.0)
 
-	if hit_flash > 0.0:
-		body_color = Color("#eee0bc")
-		robe_color = Color("#b9a989")
+	# Grounding shadows preserve readability when sprites overlap.
+	var shadow_radius := 18.0 if not is_boss else 42.0
+	draw_set_transform(Vector2(0.0, 13.0 if not is_boss else 23.0), 0.0, Vector2(1.45, 0.46))
+	draw_circle(Vector2.ZERO, shadow_radius, Color(0.01, 0.012, 0.01, 0.46))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	var r := collision_radius
-	draw_circle(Vector2(0.0, 4.0), r + 3.0, Color(0.02, 0.02, 0.02, 0.3))
-	var torso := PackedVector2Array([
-		Vector2(0.0, -r * 0.78),
-		Vector2(r * 0.72, -r * 0.25),
-		Vector2(r * 0.82, r * 0.52),
-		Vector2(0.0, r * 0.86),
-		Vector2(-r * 0.82, r * 0.52),
-		Vector2(-r * 0.72, -r * 0.25)
-	])
-	draw_colored_polygon(torso, robe_color)
-	draw_circle(Vector2(0.0, -r * 0.42), r * 0.48, body_color)
-	draw_circle(Vector2(-r * 0.2, -r * 0.45), maxf(1.5, r * 0.08), Color("#b94e3b"))
-	draw_circle(Vector2(r * 0.2, -r * 0.45), maxf(1.5, r * 0.08), Color("#b94e3b"))
-
-	if kind == "armored" or kind == "boss":
-		draw_line(Vector2(-r * 0.65, -r * 0.05), Vector2(r * 0.65, -r * 0.05), Color("#a08a60"), maxf(2.0, r * 0.12))
-		draw_line(Vector2(-r * 0.58, r * 0.3), Vector2(r * 0.58, r * 0.3), Color("#a08a60"), maxf(2.0, r * 0.1))
-	if kind == "boss":
-		draw_line(Vector2(-r * 0.7, -r * 0.65), Vector2(-r * 1.0, -r * 1.1), Color("#b39a69"), 4.0)
-		draw_line(Vector2(r * 0.7, -r * 0.65), Vector2(r * 1.0, -r * 1.1), Color("#b39a69"), 4.0)
-
-	var bar_width := 72.0 if is_boss else 30.0
-	var bar_height := 5.0 if is_boss else 3.0
-	var bar_y := -r - (19.0 if is_boss else 11.0)
-	draw_rect(Rect2(-bar_width * 0.5, bar_y, bar_width, bar_height), Color("#191715"))
-	var ratio := clampf(hp / maxf(1.0, max_hp), 0.0, 1.0)
-	var hp_color := Color("#a84c3e") if is_boss else Color("#9d5144")
-	if ratio < 0.3:
-		hp_color = Color("#d06b48")
-	draw_rect(Rect2(-bar_width * 0.5, bar_y, bar_width * ratio, bar_height), hp_color)
 	if is_boss:
-		draw_rect(Rect2(-bar_width * 0.5, bar_y, bar_width, bar_height), Color("#c0a36e"), false, 1.0)
+		draw_circle(Vector2(0.0, 16.0), 48.0, Color(0.36, 0.08, 0.07, 0.13))
+	elif kind == "armored":
+		draw_circle(Vector2(0.0, 12.0), 21.0, Color(0.45, 0.40, 0.29, 0.10))
+
+	if slow_timer > 0.0:
+		draw_arc(Vector2(0.0, 9.0), collision_radius + 7.0, 0.0, TAU, 36, Color(0.45, 0.74, 0.62, 0.72), 2.0)
+
+	var tint := Color("#fff0d0") if hit_flash > 0.0 else Color.WHITE
+	draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, false, tint)
+
+	# Ordinary enemies keep compact health bars above the sprite; the boss uses the dedicated HUD bar.
+	if not is_boss:
+		var bar_y := sprite_rect.position.y - 6.0
+		var bar_rect := Rect2(-bar_width * 0.5, bar_y, bar_width, 4.0)
+		draw_rect(bar_rect, Color("#171612"))
+		var ratio := clampf(hp / maxf(1.0, max_hp), 0.0, 1.0)
+		var hp_color := Color("#b45b4a") if ratio >= 0.3 else Color("#d17a4e")
+		draw_rect(Rect2(bar_rect.position, Vector2(bar_rect.size.x * ratio, bar_rect.size.y)), hp_color)
+		draw_rect(bar_rect, Color(0.72, 0.60, 0.42, 0.72), false, 1.0)
