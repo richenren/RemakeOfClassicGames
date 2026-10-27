@@ -22,13 +22,13 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 
 ## 最新执行结果（2026-10-26）
 
-[GitHub Actions #12：Godot Headless 测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40261370130)
+[GitHub Actions：结算面板修复后自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40469975347)
 
 - [x] Godot 4.5.1 Headless 导入与脚本解析：通过。
-- [x] 游戏逻辑烟雾测试：**33 项通过，0 项失败**。
+- [x] 游戏逻辑烟雾测试：**36 项通过，0 项失败**。
 - [x] 主场景 Headless 启动：通过。
 - [x] Windows 图形界面基础试玩：独立调试窗口正常显示地图、玩家、敌人；键盘移动、自动符箓攻击、血条、升级三选一、暂停/继续、失败结算均已实测通过。
-- [ ] Windows 完整验收仍待完成：尸王胜利结算尚未在本轮实机试玩中验证。失败结算的文字重叠已通过新增近乎不透明的居中结果面板修复，并增加 3 项面板布局自动化断言；待 CI 和本机图形界面复测确认。
+- [ ] Windows 完整验收仍待完成：尸王胜利结算尚未在本轮实机试玩中验证。失败结算的文字重叠已通过新增近乎不透明的居中结果面板修复；新增的 3 项面板布局自动化断言已在 CI 通过，仍待本机图形界面复测确认。
 - [ ] Android 真机触控、分辨率适配与性能测试。
 
 ### Windows 试玩发现的问题
@@ -38,4 +38,4 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 3. **编辑器内嵌游戏视口 HUD 左侧文字被裁切（低优先级）**：小尺寸内嵌视口无法完整显示 1280×720 HUD；独立调试窗口中显示正常。建议使用独立窗口或放大编辑器进行验收。
 4. **Windows WASAPI 音频设备日志（低优先级，暂不改游戏代码）**：错误来自引擎音频驱动，独立游戏窗口未复现，项目当前无音频资源。若后续加入音效，再检查 Windows 默认输出设备及占用情况。
 
-Headless 测试基准为 33 项通过、0 项失败。Windows 图形界面实测补充证明基础操作和失败流程可用，但尸王胜利结算及 Android 实机仍未验收。
+最新 Headless 测试结果为 36 项通过、0 项失败。Windows 图形界面实测补充证明基础操作和失败流程可用，但尸王胜利结算及 Android 实机仍未验收。
