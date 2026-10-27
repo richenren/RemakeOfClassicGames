@@ -27,6 +27,7 @@ func _run_tests() -> void:
 
 	_check(main.player != null, "主场景创建玩家")
 	_check(main.enemies.size() == 7, "开局生成 7 个普通敌人")
+	_test_render_hierarchy(main)
 	_test_hud_presentation(main)
 	_test_sprite_assets(main)
 
@@ -37,6 +38,18 @@ func _run_tests() -> void:
 	await process_frame
 	print("=== 测试汇总：%d 通过，%d 失败 ===" % [passed, failed])
 	quit(1 if failed > 0 else 0)
+
+
+func _test_render_hierarchy(main: Variant) -> void:
+	_check(main.player.visible and main.player.z_index >= 20, "主角位于背景上方且可见")
+	_check(not main.player.z_as_relative, "主角使用明确的世界绘制层级")
+	if not main.enemies.is_empty():
+		_check(main.enemies[0].visible and main.enemies[0].z_index >= 20, "怪物位于背景上方且可见")
+	var canvas_layer := main.hud.get_parent() as CanvasLayer
+	_check(canvas_layer != null, "HUD 挂载在 CanvasLayer 上")
+	if canvas_layer != null:
+		_check(canvas_layer.layer >= 10 and not canvas_layer.follow_viewport_enabled, "HUD 使用独立屏幕空间图层")
+	_check(main.hud.visible and main.hud.z_index >= 100, "HUD 可见且位于 UI 图层前景")
 
 
 func _test_hud_presentation(main: Variant) -> void:
