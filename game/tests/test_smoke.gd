@@ -53,7 +53,7 @@ func _test_sprite_assets(main: Variant) -> void:
 	var atlas := load("res://assets/sprites/creatures_atlas.png") as Texture2D
 	_check(atlas != null, "原创道士与僵尸贴图图集可加载")
 	if atlas != null:
-		_check(atlas.get_size() == Vector2i(384, 256), "贴图图集尺寸与角色/怪物区域一致")
+		_check(atlas.get_size() == Vector2(384.0, 256.0), "贴图图集尺寸与角色/怪物区域一致")
 	_check(main.player.is_moving == false, "玩家初始使用待机贴图状态")
 
 
