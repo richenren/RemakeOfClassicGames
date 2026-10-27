@@ -39,22 +39,34 @@ func _ready() -> void:
 	player = PLAYER_SCRIPT.new()
 	player.main_ref = self
 	player.position = WORLD_SIZE * 0.5
+	player.visible = true
+	player.z_as_relative = false
+	player.z_index = 20
 	add_child(player)
 
 	var camera := Camera2D.new()
-	camera.position_smoothing_enabled = true
-	camera.position_smoothing_speed = 5.0
+	camera.position = Vector2.ZERO
+	camera.enabled = true
+	# Avoid an initial camera lag that can leave the centered player outside the first frame.
+	camera.position_smoothing_enabled = false
 	camera.limit_left = 0
 	camera.limit_top = 0
 	camera.limit_right = int(WORLD_SIZE.x)
 	camera.limit_bottom = int(WORLD_SIZE.y)
 	player.add_child(camera)
 	camera.make_current()
+	camera.reset_smoothing()
 
+	# Keep screen-space UI on an explicit layer above the world canvas.
 	var canvas := CanvasLayer.new()
+	canvas.layer = 10
+	canvas.follow_viewport_enabled = false
 	add_child(canvas)
 	hud = HUD_SCRIPT.new()
 	hud.main_ref = self
+	hud.visible = true
+	hud.z_as_relative = false
+	hud.z_index = 100
 	canvas.add_child(hud)
 
 	for i in range(7):
@@ -202,6 +214,9 @@ func spawn_enemy(kind: String = "walker") -> void:
 	spawn_position.x = clampf(spawn_position.x, 40.0, WORLD_SIZE.x - 40.0)
 	spawn_position.y = clampf(spawn_position.y, 40.0, WORLD_SIZE.y - 40.0)
 	enemy.position = spawn_position
+	enemy.visible = true
+	enemy.z_as_relative = false
+	enemy.z_index = 20
 	add_child(enemy)
 	enemies.append(enemy)
 
@@ -221,6 +236,9 @@ func _auto_attack() -> void:
 
 	var projectile = PROJECTILE_SCRIPT.new()
 	projectile.setup(target, player.damage)
+	projectile.visible = true
+	projectile.z_as_relative = false
+	projectile.z_index = 30
 	var direction: Vector2 = (target.position - player.position).normalized()
 	player.facing = direction
 	projectile.position = player.position + direction * 18.0
@@ -286,6 +304,9 @@ func _remove_dead_enemies() -> void:
 func _spawn_xp_orb(spawn_position: Vector2, amount: int) -> void:
 	var orb = XP_ORB_SCRIPT.new()
 	orb.setup(amount)
+	orb.visible = true
+	orb.z_as_relative = false
+	orb.z_index = 25
 	orb.position = spawn_position
 	add_child(orb)
 	xp_orbs.append(orb)
