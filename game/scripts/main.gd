@@ -62,10 +62,10 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	active_skill_effect_time = maxf(0.0, active_skill_effect_time - delta)
 	if state == "playing":
 		elapsed_seconds += delta
 		active_skill_cooldown = maxf(0.0, active_skill_cooldown - delta)
-		active_skill_effect_time = maxf(0.0, active_skill_effect_time - delta)
 		player.tick(delta)
 
 		attack_timer -= delta
