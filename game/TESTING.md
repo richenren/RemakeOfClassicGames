@@ -28,7 +28,7 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 [GitHub Actions：任务与技能表现优化后自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40487191120)
 
 - [x] Godot 4.5.1 Headless 导入与脚本解析：通过。
-- [x] 游戏逻辑烟雾测试：**48 项通过，0 项失败**。
+- [x] 游戏逻辑与渲染层级烟雾测试：**54 项通过，0 项失败**。
 - [x] 主场景 Headless 启动：通过。
 - [x] Windows 图形界面基础试玩：独立调试窗口正常显示地图、玩家、敌人；键盘移动、自动符箓攻击、血条、升级三选一、暂停/继续、失败结算均已实测通过。本轮新增的阶段目标 HUD、主动道术冷却/施放反馈、升级卡片、原创人物/怪物贴图和战场环境美化尚未进行本机图形界面目视复测。
 - [ ] Windows 完整验收仍待完成：尸王胜利结算尚未在本轮实机试玩中验证。失败结算的文字重叠已通过新增近乎不透明的居中结果面板修复；新增的 3 项面板布局自动化断言已在 CI 通过，仍待本机图形界面复测确认。
@@ -41,4 +41,4 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 3. **编辑器内嵌游戏视口 HUD 左侧文字被裁切（低优先级）**：小尺寸内嵌视口无法完整显示 1280×720 HUD；独立调试窗口中显示正常。建议使用独立窗口或放大编辑器进行验收。
 4. **Windows WASAPI 音频设备日志（低优先级，暂不改游戏代码）**：错误来自引擎音频驱动，独立游戏窗口未复现，项目当前无音频资源。若后续加入音效，再检查 Windows 默认输出设备及占用情况。
 
-最新 Headless 测试结果为 48 项通过、0 项失败（[贴图接入后的 CI 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40487191120)）。Windows 基础操作和失败流程已实测；本轮新增 HUD、贴图与环境美化仍需 Windows 目视复测，尸王胜利结算仍未实机验收。Android 真机测试不属于本轮任务范围。
+最新 Headless 测试结果为 54 项通过、0 项失败（[渲染层级修复后的 CI 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40489268820)）。新增断言覆盖玩家/怪物可见性、前景绘制层级和独立 HUD CanvasLayer。Windows 实际窗口仍需目视复测，尸王胜利结算仍未实机验收。Android 真机测试不属于本轮任务范围。
