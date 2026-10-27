@@ -3,6 +3,7 @@ extends SceneTree
 const PLAYER_SCRIPT = preload("res://scripts/player.gd")
 const ENEMY_SCRIPT = preload("res://scripts/enemy.gd")
 const XP_ORB_SCRIPT = preload("res://scripts/xp_orb.gd")
+const HUD_SCRIPT = preload("res://scripts/hud.gd")
 const MAIN_SCENE = preload("res://scenes/main.tscn")
 
 var passed: int = 0
@@ -18,6 +19,7 @@ func _run_tests() -> void:
 	_test_player()
 	_test_enemy_variants()
 	_test_xp_orb()
+	_test_end_screen_layout()
 
 	var main: Variant = MAIN_SCENE.instantiate()
 	root.add_child(main)
@@ -33,6 +35,17 @@ func _run_tests() -> void:
 	await process_frame
 	print("=== 测试汇总：%d 通过，%d 失败 ===" % [passed, failed])
 	quit(1 if failed > 0 else 0)
+
+
+func _test_end_screen_layout() -> void:
+	var hud: Variant = HUD_SCRIPT.new()
+	root.add_child(hud)
+	var view := Vector2(1280.0, 720.0)
+	var panel: Rect2 = hud.end_panel_rect(view)
+	_check(panel.has_point(Vector2(view.x * 0.5 - 150.0, view.y * 0.5 - 65.0)), "结算面板覆盖标题区域")
+	_check(panel.has_point(Vector2(view.x * 0.5 - 145.0, view.y * 0.5 - 20.0)), "结算面板覆盖统计文字区域")
+	_check(panel.has_point(Vector2(view.x * 0.5 - 120.0, view.y * 0.5 + 28.0)), "结算面板覆盖重新开始提示区域")
+	hud.queue_free()
 
 
 func _test_player() -> void:
