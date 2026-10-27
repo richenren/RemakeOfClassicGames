@@ -92,10 +92,25 @@ func _draw_pause(view: Vector2) -> void:
 
 func _draw_end_screen(view: Vector2) -> void:
 	draw_rect(Rect2(Vector2.ZERO, view), Color(0.01, 0.01, 0.01, 0.78))
+
+	# Keep the result text readable even when the player or enemies remain behind the HUD.
+	var panel_rect := end_panel_rect(view)
+	draw_rect(panel_rect, Color(0.055, 0.05, 0.04, 0.99))
+	draw_rect(panel_rect, PANEL_EDGE, false, 2.0)
+
 	var title := "尸王伏诛 · 胜利" if main_ref.state == "victory" else "阳寿已尽 · 本局结束"
 	_text(Vector2(view.x * 0.5 - 150.0, view.y * 0.5 - 65.0), title, 30, Color("#f0d79b"))
 	_text(Vector2(view.x * 0.5 - 145.0, view.y * 0.5 - 20.0), "生存 %s    击杀 %d    等级 %d" % [_format_time(main_ref.elapsed_seconds), main_ref.kills, main_ref.player.level], 16, TEXT_COLOR)
 	_text(Vector2(view.x * 0.5 - 120.0, view.y * 0.5 + 28.0), "按 R 重新开始", 18, MUTED_COLOR)
+
+
+func end_panel_rect(view: Vector2) -> Rect2:
+	var panel_width := minf(560.0, view.x - 32.0)
+	var panel_height := 250.0
+	return Rect2(
+		Vector2((view.x - panel_width) * 0.5, (view.y - panel_height) * 0.5),
+		Vector2(panel_width, panel_height)
+	)
 
 
 func _draw_touch_controls(view: Vector2) -> void:
