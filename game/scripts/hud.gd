@@ -31,36 +31,37 @@ func _draw_hud(view: Vector2) -> void:
 	if player == null:
 		return
 
-	draw_rect(Rect2(18.0, 18.0, 280.0, 84.0), PANEL_COLOR)
-	draw_rect(Rect2(18.0, 18.0, 280.0, 84.0), Color("#5d5444"), false, 1.0)
-	_text(Vector2(30.0, 39.0), "镇邪录 · 原型战斗", 17, TEXT_COLOR)
+	var status_rect := Rect2(18.0, 18.0, 286.0, 88.0)
+	_draw_ornate_panel(status_rect, Color("#c6a566"))
+	_text(Vector2(30.0, 39.0), "镇邪录 · 破败义庄", 16, Color("#e7cf98"))
+	_draw_seal(Vector2(status_rect.end.x - 20.0, status_rect.position.y + 21.0), "令", Color("#b34a3d"))
 	_text(Vector2(30.0, 60.0), "生命  %d / %d" % [roundi(player.hp), roundi(player.max_hp)], 14, TEXT_COLOR)
-	_bar(Rect2(30.0, 67.0, 250.0, 8.0), player.hp / maxf(1.0, player.max_hp), Color("#b65343"))
-	_text(Vector2(30.0, 94.0), "等级 %d   击杀 %d" % [player.level, main_ref.kills], 13, MUTED_COLOR)
+	_bar(Rect2(30.0, 68.0, 250.0, 8.0), player.hp / maxf(1.0, player.max_hp), Color("#b65343"), true)
+	_text(Vector2(30.0, 94.0), "等级 %d   ·   击杀 %d" % [player.level, main_ref.kills], 12, MUTED_COLOR)
 
-	draw_rect(Rect2(view.x * 0.5 - 150.0, 18.0, 300.0, 48.0), PANEL_COLOR)
-	_text(Vector2(view.x * 0.5 - 136.0, 39.0), "生存时间  %s" % _format_time(main_ref.elapsed_seconds), 16, TEXT_COLOR)
+	var time_rect := Rect2(view.x * 0.5 - 160.0, 18.0, 320.0, 56.0)
+	_draw_ornate_panel(time_rect, Color("#b69a62"))
+	_text(Vector2(time_rect.position.x + 14.0, 39.0), "生存时间  %s" % _format_time(main_ref.elapsed_seconds), 16, TEXT_COLOR)
 	if _is_mobile():
-		_text(Vector2(view.x * 0.5 + 112.0, 39.0), "Ⅱ", 18, Color("#e8c86c"))
-	_text(Vector2(view.x * 0.5 - 136.0, 57.0), "灵气 %d / %d" % [player.xp, player.xp_to_next], 12, MUTED_COLOR)
-	_bar(Rect2(view.x * 0.5 + 10.0, 47.0, 124.0, 7.0), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#6ebba0"))
+		_text(Vector2(time_rect.end.x - 28.0, 39.0), "Ⅱ", 18, Color("#e8c86c"))
+	_text(Vector2(time_rect.position.x + 14.0, 57.0), "灵气 %d / %d" % [player.xp, player.xp_to_next], 12, MUTED_COLOR)
+	_bar(Rect2(time_rect.position.x + 150.0, 47.0, 152.0, 7.0), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#6ebba0"))
 
-	var skill_panel := Rect2(view.x - 248.0, 18.0, 230.0, 144.0)
-	draw_rect(skill_panel, PANEL_COLOR)
-	draw_rect(skill_panel, Color("#5d5444"), false, 1.0)
-	_text(Vector2(view.x - 234.0, 39.0), "基础符箓", 15, TEXT_COLOR)
-	_text(Vector2(view.x - 234.0, 60.0), "伤害 %d" % roundi(player.damage), 13, MUTED_COLOR)
-	_text(Vector2(view.x - 234.0, 80.0), "攻击间隔 %.2fs" % player.attack_interval, 13, MUTED_COLOR)
+	var skill_panel := Rect2(view.x - 258.0, 18.0, 240.0, 150.0)
+	_draw_ornate_panel(skill_panel, Color("#c6a566"))
+	_text(Vector2(skill_panel.position.x + 14.0, 39.0), "基础符箓", 15, TEXT_COLOR)
+	_text(Vector2(skill_panel.position.x + 14.0, 60.0), "伤害  %d" % roundi(player.damage), 13, MUTED_COLOR)
+	_text(Vector2(skill_panel.position.x + 14.0, 80.0), "攻击间隔  %.2fs" % player.attack_interval, 13, MUTED_COLOR)
 
 	var skill_ready: bool = main_ref.active_skill_cooldown <= 0.0
 	var skill_color := Color("#e8c86c") if skill_ready else Color("#9e8b6a")
-	_draw_skill_emblem(Vector2(view.x - 42.0, 103.0), skill_ready, skill_color)
-	_text(Vector2(view.x - 234.0, 103.0), "主动道术 · 镇尸诀", 13, skill_color)
-	_text(Vector2(view.x - 234.0, 122.0), "就绪" if skill_ready else "冷却 %ds" % ceili(main_ref.active_skill_cooldown), 12, TEXT_COLOR)
+	_draw_skill_emblem(Vector2(skill_panel.end.x - 24.0, skill_panel.position.y + 86.0), skill_ready, skill_color)
+	_text(Vector2(skill_panel.position.x + 14.0, 103.0), "主动道术 · 镇尸诀", 13, skill_color)
+	_text(Vector2(skill_panel.position.x + 14.0, 122.0), "就绪" if skill_ready else "冷却 %ds" % ceili(main_ref.active_skill_cooldown), 12, TEXT_COLOR)
 	var skill_ratio := 1.0 if skill_ready else 1.0 - clampf(main_ref.active_skill_cooldown / maxf(0.1, main_ref.active_skill_base_cooldown), 0.0, 1.0)
-	_bar(Rect2(view.x - 234.0, 130.0, 132.0, 6.0), skill_ratio, Color("#d1a84e"))
-	_text(Vector2(view.x - 94.0, 140.0), "触发" if _is_mobile() else "SPACE", 10, MUTED_COLOR)
-	_text(Vector2(view.x - 234.0, 156.0), "治疗次数 %d/2" % main_ref.heal_charges, 12, MUTED_COLOR)
+	_bar(Rect2(skill_panel.position.x + 14.0, 130.0, 132.0, 6.0), skill_ratio, Color("#d1a84e"))
+	_text(Vector2(skill_panel.position.x + 154.0, 140.0), "触发" if _is_mobile() else "SPACE", 10, MUTED_COLOR)
+	_text(Vector2(skill_panel.position.x + 14.0, 156.0), "治疗次数  %d/2" % main_ref.heal_charges, 12, MUTED_COLOR)
 
 	if main_ref.state != "game_over" and main_ref.state != "victory":
 		_draw_objective_panel(view)
@@ -68,14 +69,17 @@ func _draw_hud(view: Vector2) -> void:
 	var boss = main_ref.get_boss()
 	if boss != null:
 		var boss_width := minf(500.0, view.x * 0.48)
-		var boss_x := (view.x - boss_width) * 0.5
-		_text(Vector2(boss_x, 93.0), "尸王" + (" · 暴走" if boss.hp / boss.max_hp <= 0.5 else ""), 15, Color("#e7c88a"))
-		_bar(Rect2(boss_x, 101.0, boss_width, 11.0), boss.hp / maxf(1.0, boss.max_hp), Color("#a44439"), true)
+		var boss_rect := Rect2((view.x - boss_width) * 0.5, 84.0, boss_width, 39.0)
+		_draw_ornate_panel(boss_rect, Color("#a84b3c"))
+		_text(boss_rect.position + Vector2(14.0, 16.0), "尸王" + (" · 暴走" if boss.hp / boss.max_hp <= 0.5 else ""), 13, Color("#e7c88a"))
+		_bar(Rect2(boss_rect.position.x + 14.0, boss_rect.position.y + 23.0, boss_rect.size.x - 28.0, 7.0), boss.hp / maxf(1.0, boss.max_hp), Color("#a44439"), true)
 
+	var controls_rect := Rect2(view.x * 0.5 - (270.0 if not _is_mobile() else 155.0), view.y - 43.0, 540.0 if not _is_mobile() else 310.0, 28.0)
+	_draw_ornate_panel(controls_rect, Color("#8f805d"))
 	if not _is_mobile():
-		_text(Vector2(view.x * 0.5 - 260.0, view.y - 18.0), "WASD / 方向键移动    SPACE 镇尸诀    E 治疗    ESC 暂停", 14, MUTED_COLOR)
+		_text(Vector2(controls_rect.position.x + 17.0, controls_rect.position.y + 19.0), "WASD / 方向键  移动     ·     SPACE  镇尸诀     ·     E  治疗     ·     ESC  暂停", 12, MUTED_COLOR)
 	else:
-		_text(Vector2(view.x * 0.5 - 120.0, view.y - 18.0), "左侧移动 · 右侧技能 / 治疗", 13, MUTED_COLOR)
+		_text(Vector2(controls_rect.position.x + 16.0, controls_rect.position.y + 19.0), "左侧移动   ·   右侧道术 / 治疗", 12, MUTED_COLOR)
 
 
 func _draw_level_up(view: Vector2) -> void:
@@ -92,9 +96,8 @@ func _draw_level_up(view: Vector2) -> void:
 		var card: Dictionary = main_ref.level_cards[i]
 		var rect := Rect2(start_x + i * (card_width + gap), y, card_width, card_height)
 		var accent := _upgrade_color(str(card.get("id", "")))
-		draw_rect(rect, Color("#24251f"))
+		_draw_ornate_panel(rect, accent)
 		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 5.0)), accent)
-		draw_rect(rect, accent.darkened(0.25), false, 2.0)
 		_draw_upgrade_emblem(rect.position + Vector2(30.0, 38.0), str(card.get("id", "")), accent)
 		_text(rect.position + Vector2(56.0, 30.0), "%d  %s" % [i + 1, str(card.get("name", "未知强化"))], 17, Color("#f1d58f"))
 		_text(rect.position + Vector2(56.0, 52.0), _upgrade_category(str(card.get("id", ""))), 11, accent)
@@ -103,18 +106,46 @@ func _draw_level_up(view: Vector2) -> void:
 		_text(rect.position + Vector2(16.0, card_height - 18.0), "按 %d 选择  ·  点击卡片" % (i + 1), 12, MUTED_COLOR)
 
 
-func _draw_objective_panel(view: Vector2) -> void:
+func _draw_objective_panel(_view: Vector2) -> void:
 	var objective := objective_data()
 	if objective.is_empty():
 		return
-	var rect := Rect2(18.0, 112.0, 280.0, 66.0)
+	var rect := Rect2(18.0, 116.0, 286.0, 70.0)
 	var accent: Color = Color("#c9a65b") if objective["kind"] == "boss" else Color("#8fba9b")
-	draw_rect(rect, PANEL_COLOR)
-	draw_rect(rect, Color("#5d5444"), false, 1.0)
-	draw_rect(Rect2(rect.position, Vector2(4.0, rect.size.y)), accent)
-	_text(rect.position + Vector2(14.0, 22.0), str(objective["title"]), 14, accent)
-	_text(rect.position + Vector2(14.0, 43.0), str(objective["detail"]), 12, TEXT_COLOR)
-	_bar(Rect2(rect.position.x + 14.0, rect.position.y + 52.0, rect.size.x - 28.0, 5.0), float(objective["progress"]), accent)
+	if objective["kind"] == "failed":
+		accent = Color("#b45b4a")
+	_draw_ornate_panel(rect, accent)
+	_draw_seal(rect.position + Vector2(23.0, 25.0), "战" if objective["kind"] == "boss" else "令", accent)
+	_text(rect.position + Vector2(43.0, 22.0), str(objective["title"]), 14, accent)
+	_text(rect.position + Vector2(43.0, 42.0), str(objective["detail"]), 12, TEXT_COLOR)
+	_bar(Rect2(rect.position.x + 14.0, rect.position.y + 56.0, rect.size.x - 28.0, 5.0), float(objective["progress"]), accent)
+
+
+func _draw_ornate_panel(rect: Rect2, accent: Color) -> void:
+	draw_rect(rect, Color(0.055, 0.052, 0.045, 0.94))
+	draw_rect(rect, Color("#64563e"), false, 1.0)
+	draw_rect(Rect2(rect.position + Vector2(3.0, 3.0), rect.size - Vector2(6.0, 6.0)), Color(0.72, 0.60, 0.39, 0.10), false, 1.0)
+	draw_line(rect.position + Vector2(8.0, 1.0), rect.position + Vector2(29.0, 1.0), accent, 2.0)
+	var x := rect.position.x
+	var y := rect.position.y
+	var right := rect.end.x
+	var bottom := rect.end.y
+	var corner := 9.0
+	draw_line(Vector2(x + 4.0, y + corner), Vector2(x + 4.0, y + 4.0), accent, 1.0)
+	draw_line(Vector2(x + 4.0, y + 4.0), Vector2(x + corner, y + 4.0), accent, 1.0)
+	draw_line(Vector2(right - corner, y + 4.0), Vector2(right - 4.0, y + 4.0), accent, 1.0)
+	draw_line(Vector2(right - 4.0, y + 4.0), Vector2(right - 4.0, y + corner), accent, 1.0)
+	draw_line(Vector2(x + 4.0, bottom - corner), Vector2(x + 4.0, bottom - 4.0), accent, 1.0)
+	draw_line(Vector2(x + 4.0, bottom - 4.0), Vector2(x + corner, bottom - 4.0), accent, 1.0)
+	draw_line(Vector2(right - corner, bottom - 4.0), Vector2(right - 4.0, bottom - 4.0), accent, 1.0)
+	draw_line(Vector2(right - 4.0, bottom - corner), Vector2(right - 4.0, bottom - 4.0), accent, 1.0)
+
+
+func _draw_seal(center: Vector2, label: String, accent: Color) -> void:
+	draw_circle(center, 11.0, Color("#211c16"))
+	draw_arc(center, 11.0, 0.0, TAU, 32, accent, 1.3)
+	draw_arc(center, 7.5, 0.0, TAU, 24, Color(accent.r, accent.g, accent.b, 0.45), 1.0)
+	_text(center + Vector2(-5.0, 4.0), label, 10, accent)
 
 
 func objective_data() -> Dictionary:
@@ -140,11 +171,15 @@ func objective_data() -> Dictionary:
 
 
 func _draw_skill_emblem(center: Vector2, ready: bool, color: Color) -> void:
-	draw_circle(center, 12.0, Color(0.08, 0.07, 0.05, 0.95))
-	draw_arc(center, 12.0, 0.0, TAU, 32, color, 2.0 if ready else 1.0)
-	draw_line(center + Vector2(0.0, -7.0), center + Vector2(0.0, 7.0), color, 1.5)
-	draw_line(center + Vector2(-5.0, -3.0), center + Vector2(5.0, 3.0), color, 1.5)
-	draw_line(center + Vector2(-5.0, 3.0), center + Vector2(5.0, -3.0), color, 1.5)
+	draw_circle(center, 13.0, Color("#211c16"))
+	draw_arc(center, 13.0, 0.0, TAU, 32, color, 2.0 if ready else 1.0)
+	var talisman := PackedVector2Array([
+		center + Vector2(-5.0, -8.0), center + Vector2(5.0, -8.0),
+		center + Vector2(6.0, 7.0), center + Vector2(-6.0, 7.0)
+	])
+	draw_colored_polygon(talisman, Color("#d7b86c"))
+	draw_line(center + Vector2(-3.0, -4.0), center + Vector2(3.0, -1.0), Color("#6b352b"), 1.0)
+	draw_line(center + Vector2(-3.0, 1.0), center + Vector2(3.0, 4.0), Color("#6b352b"), 1.0)
 
 
 func _draw_upgrade_emblem(center: Vector2, upgrade_id: String, color: Color) -> void:
