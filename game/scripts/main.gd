@@ -22,6 +22,9 @@ var spawn_timer: float = 0.6
 var attack_timer: float = 0.4
 var active_skill_cooldown: float = 0.0
 var active_skill_base_cooldown: float = 12.0
+var active_skill_effect_time: float = 0.0
+const ACTIVE_SKILL_EFFECT_DURATION := 0.34
+const ACTIVE_SKILL_RADIUS := 155.0
 var heal_charges: int = 2
 var boss_spawned: bool = false
 var level_cards: Array[Dictionary] = []
@@ -62,6 +65,7 @@ func _process(delta: float) -> void:
 	if state == "playing":
 		elapsed_seconds += delta
 		active_skill_cooldown = maxf(0.0, active_skill_cooldown - delta)
+		active_skill_effect_time = maxf(0.0, active_skill_effect_time - delta)
 		player.tick(delta)
 
 		attack_timer -= delta
@@ -348,10 +352,12 @@ func cast_active_skill() -> void:
 	if state != "playing" or active_skill_cooldown > 0.0:
 		return
 	active_skill_cooldown = active_skill_base_cooldown
+	active_skill_effect_time = ACTIVE_SKILL_EFFECT_DURATION
+	queue_redraw()
 	for enemy in enemies:
 		if not is_instance_valid(enemy) or enemy.hp <= 0.0:
 			continue
-		if enemy.position.distance_to(player.position) <= 155.0:
+		if enemy.position.distance_to(player.position) <= ACTIVE_SKILL_RADIUS:
 			enemy.apply_slow(2.0, 0.35)
 			enemy.take_damage(8.0)
 			if enemy.is_boss:
@@ -397,3 +403,15 @@ func _draw() -> void:
 		draw_arc(Vector2(p.x, p.y - 16.0), 13.0, PI, TAU, 16, Color("#7a7965"), 3.0)
 		draw_line(p + Vector2(-7.0, -7.0), p + Vector2(7.0, 4.0), Color("#77745f"), 2.0)
 	draw_rect(Rect2(Vector2.ZERO, WORLD_SIZE), Color("#11120f"), false, 8.0)
+
+	if active_skill_effect_time > 0.0 and player != null:
+		var progress := 1.0 - active_skill_effect_time / ACTIVE_SKILL_EFFECT_DURATION
+		var alpha := clampf(active_skill_effect_time / ACTIVE_SKILL_EFFECT_DURATION, 0.0, 1.0)
+		var radius := ACTIVE_SKILL_RADIUS * (0.88 + progress * 0.12)
+		draw_arc(player.position, radius, 0.0, TAU, 72, Color(0.88, 0.72, 0.36, alpha * 0.9), 4.0)
+		draw_arc(player.position, radius * 0.82, 0.0, TAU, 64, Color(0.65, 0.48, 0.28, alpha * 0.55), 2.0)
+		for i in range(8):
+			var angle := TAU * float(i) / 8.0
+			var inner := Vector2(cos(angle), sin(angle)) * radius * 0.9
+			var outer := Vector2(cos(angle), sin(angle)) * radius
+			draw_line(player.position + inner, player.position + outer, Color(0.93, 0.81, 0.5, alpha * 0.8), 2.0)
