@@ -62,7 +62,9 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	active_skill_effect_time = maxf(0.0, active_skill_effect_time - delta)
+	if active_skill_effect_time > 0.0:
+		active_skill_effect_time = maxf(0.0, active_skill_effect_time - delta)
+		queue_redraw()
 	if state == "playing":
 		elapsed_seconds += delta
 		active_skill_cooldown = maxf(0.0, active_skill_cooldown - delta)
