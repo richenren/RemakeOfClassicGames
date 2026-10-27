@@ -86,7 +86,7 @@ func _draw() -> void:
 
 	if is_moving and facing.x < -0.1:
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2(-1.0, 1.0))
-		draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, false, tint)
+		draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, tint, false)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	else:
-		draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, false, tint)
+		draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, tint, false)
