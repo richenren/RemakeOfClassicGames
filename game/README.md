@@ -63,4 +63,4 @@
 
 - 本目录是原型，不是完整 V0.1 交付版本。
 - 数值仅用于验证战斗闭环，后续应移入可配置资源并通过试玩平衡。
-- Godot 4.5.1 Headless CI 已通过：工程导入/解析通过、33 项游戏逻辑测试通过且 0 失败、主场景启动通过（[查看测试运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40261370130)）。Windows 交互试玩和 Android 真机验证尚未完成。
+- Godot 4.5.1 Headless CI 已通过：工程导入/解析、44 项自动化测试、主场景启动均通过（[查看最新测试运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40470964779)）。Windows 基础战斗已试玩；本轮新增目标 HUD、镇尸诀反馈和升级卡片仍待 Windows 目视复测。Android 真机测试不属于本轮范围。
