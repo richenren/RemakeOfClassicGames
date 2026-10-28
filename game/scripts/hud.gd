@@ -1,5 +1,7 @@
 extends Node2D
 
+const SKILL_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_art_atlas.svg")
+
 var main_ref
 const TEXT_COLOR := Color("#efe6d2")
 const MUTED_COLOR := Color("#b8ad99")
@@ -84,41 +86,58 @@ func _draw_hud(view: Vector2) -> void:
 
 
 func _draw_level_up(view: Vector2) -> void:
-	# A lighter veil keeps the battlefield visible while the card artwork becomes the focus.
-	draw_rect(Rect2(Vector2.ZERO, view), Color(0.008, 0.009, 0.008, 0.76))
-	var panel_width := minf(1040.0, view.x - 28.0)
-	var panel_rect := Rect2((view.x - panel_width) * 0.5, view.y * 0.5 - 204.0, panel_width, 408.0)
-	draw_rect(panel_rect, Color(0.035, 0.032, 0.027, 0.74))
-	draw_rect(panel_rect, Color(0.55, 0.44, 0.28, 0.62), false, 1.0)
-	draw_line(panel_rect.position + Vector2(28.0, 64.0), panel_rect.position + Vector2(panel_rect.size.x - 28.0, 64.0), Color(0.66, 0.53, 0.33, 0.45), 1.0)
-	_text(Vector2(view.x * 0.5 - 150.0, view.y * 0.5 - 158.0), "修为精进 · 选择一项", 28, Color("#f0d79b"))
-	_text(Vector2(view.x * 0.5 - 210.0, view.y * 0.5 - 126.0), "择一术法，改变本局构筑方向  ·  选择期间战斗与计时暂停", 14, Color("#c7b99d"))
+	# Keep the arena visible, but give the upgrade cards the visual weight of
+	# collectible talismans rather than plain stat boxes.
+	draw_rect(Rect2(Vector2.ZERO, view), Color(0.008, 0.009, 0.008, 0.72))
+	var panel_width := minf(1080.0, view.x - 28.0)
+	var panel_height := minf(440.0, view.y - 24.0)
+	var panel_rect := Rect2((view.x - panel_width) * 0.5, (view.y - panel_height) * 0.5, panel_width, panel_height)
+	draw_rect(panel_rect, Color(0.035, 0.032, 0.027, 0.92))
+	draw_rect(panel_rect, Color(0.55, 0.44, 0.28, 0.72), false, 1.2)
+	draw_rect(panel_rect.grow(-7.0), Color(0.72, 0.59, 0.36, 0.12), false, 1.0)
+	for corner in [panel_rect.position, Vector2(panel_rect.end.x, panel_rect.position.y), Vector2(panel_rect.position.x, panel_rect.end.y), panel_rect.end]:
+		var sx := 1.0 if corner.x < view.x * 0.5 else -1.0
+		var sy := 1.0 if corner.y < view.y * 0.5 else -1.0
+		draw_line(corner + Vector2(sx * 10.0, 0.0), corner + Vector2(sx * 28.0, 0.0), Color("#b69a62"), 1.0)
+		draw_line(corner + Vector2(0.0, sy * 10.0), corner + Vector2(0.0, sy * 25.0), Color("#b69a62"), 1.0)
+	_text(Vector2(view.x * 0.5 - 150.0, panel_rect.position.y + 49.0), "修为精进 · 选择一项", 28, Color("#f0d79b"))
+	_text(Vector2(view.x * 0.5 - 210.0, panel_rect.position.y + 78.0), "择一术法，改变本局构筑方向  ·  选择期间战斗与计时暂停", 14, Color("#c7b99d"))
+	draw_line(panel_rect.position + Vector2(28.0, 96.0), panel_rect.position + Vector2(panel_rect.size.x - 28.0, 96.0), Color(0.66, 0.53, 0.33, 0.58), 1.0)
 
-	var card_width := minf(300.0, (view.x - 84.0) / 3.0 - 22.0)
-	var card_height := 190.0
-	var gap := 22.0
+	var card_width := minf(320.0, (view.x - 90.0) / 3.0 - 18.0)
+	var card_height := minf(220.0, panel_height - 132.0)
+	var gap := 18.0
 	var total_width := card_width * 3.0 + gap * 2.0
 	var start_x := (view.x - total_width) * 0.5
-	var y := view.y * 0.5 - 95.0
+	var y := panel_rect.position.y + 114.0
 	for i in range(mini(3, main_ref.level_cards.size())):
 		var card: Dictionary = main_ref.level_cards[i]
 		var rect := Rect2(start_x + i * (card_width + gap), y, card_width, card_height)
 		var card_id := str(card.get("id", ""))
 		var accent := _upgrade_color(card_id)
-		_draw_ornate_panel(rect, accent)
+		var hovered := rect.has_point(get_viewport().get_mouse_position())
+		draw_rect(rect, Color(0.055, 0.05, 0.043, 0.99))
+		draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.95 if hovered else 0.72), false, 1.5 if hovered else 1.0)
 		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 5.0)), accent)
-		draw_rect(Rect2(rect.position + Vector2(8.0, 9.0), rect.size - Vector2(16.0, 18.0)), Color(accent.r, accent.g, accent.b, 0.12), false, 1.0)
-		_draw_card_art(rect.position + Vector2(43.0, 59.0), str(card.get("icon", card_id)), accent, 27.0)
-		_text(rect.position + Vector2(82.0, 37.0), str(card.get("name", "未知强化")), 17, Color("#f1dba4"))
-		_text(rect.position + Vector2(82.0, 60.0), str(card.get("category", _upgrade_category(card_id))), 11, accent)
-		_text(rect.position + Vector2(18.0, 119.0), str(card.get("desc", "")), 13, TEXT_COLOR)
-		draw_line(rect.position + Vector2(16.0, 145.0), rect.position + Vector2(rect.size.x - 16.0, 145.0), Color("#5b5140"), 1.0)
-		_text(rect.position + Vector2(18.0, 173.0), "按 %d 选择  ·  点击卡片" % (i + 1), 12, MUTED_COLOR)
+		draw_rect(Rect2(rect.position + Vector2(8.0, 10.0), rect.size - Vector2(16.0, 20.0)), Color(accent.r, accent.g, accent.b, 0.07 if not hovered else 0.13), false, 1.0)
+		# Four short corner strokes echo the borders of a paper talisman.
+		for corner in [rect.position + Vector2(8.0, 10.0), rect.position + Vector2(rect.size.x - 8.0, 10.0), rect.position + Vector2(8.0, rect.size.y - 10.0), rect.position + rect.size - Vector2(8.0, 10.0)]:
+			var sx := 1.0 if corner.x < rect.position.x + rect.size.x * 0.5 else -1.0
+			var sy := 1.0 if corner.y < rect.position.y + rect.size.y * 0.5 else -1.0
+			draw_line(corner, corner + Vector2(sx * 9.0, 0.0), Color(accent.r, accent.g, accent.b, 0.65), 1.0)
+			draw_line(corner, corner + Vector2(0.0, sy * 9.0), Color(accent.r, accent.g, accent.b, 0.65), 1.0)
+		_draw_card_art(rect.position + Vector2(47.0, 62.0), str(card.get("icon", card_id)), accent, 31.0)
+		_text(rect.position + Vector2(88.0, 37.0), str(card.get("name", "未知强化")), 17, Color("#f1dba4"))
+		_text(rect.position + Vector2(88.0, 61.0), str(card.get("category", _upgrade_category(card_id))), 12, accent)
 		if str(card.get("kind", "")) == "skill_evolution":
-			_text(rect.position + Vector2(rect.size.x - 50.0, 19.0), "进化", 10, accent)
+			_text(rect.position + Vector2(rect.size.x - 52.0, 21.0), "进化", 10, accent)
 		elif str(card.get("kind", "")) == "skill_branch":
-			_text(rect.position + Vector2(rect.size.x - 48.0, 19.0), "分支", 10, accent)
-
+			_text(rect.position + Vector2(rect.size.x - 52.0, 21.0), "分支", 10, accent)
+		_text(rect.position + Vector2(18.0, 130.0), str(card.get("desc", "")), 13, TEXT_COLOR)
+		draw_line(rect.position + Vector2(16.0, 169.0), rect.position + Vector2(rect.size.x - 16.0, 169.0), Color("#5b5140"), 1.0)
+		_text(rect.position + Vector2(18.0, 198.0), "按 %d 选择  ·  点击卡片" % (i + 1), 12, Color("#d0c1a4") if hovered else MUTED_COLOR)
+		if hovered:
+			draw_rect(rect.grow(2.0), Color(accent.r, accent.g, accent.b, 0.42), false, 2.0)
 
 func _draw_objective_panel(_view: Vector2) -> void:
 	var objective := objective_data()
@@ -264,8 +283,13 @@ func _draw_card_art(center: Vector2, icon_id: String, accent: Color, radius: flo
 	var scale_factor := radius / 24.0
 	draw_set_transform(center, 0.0, Vector2(scale_factor, scale_factor))
 	draw_circle(Vector2.ZERO, 24.0, Color(0.055, 0.05, 0.042, 0.98))
-	draw_circle(Vector2.ZERO, 20.5, Color(accent.r, accent.g, accent.b, 0.08))
+	draw_circle(Vector2.ZERO, 20.5, Color(accent.r, accent.g, accent.b, 0.10))
 	draw_arc(Vector2.ZERO, 22.0, 0.0, TAU, 40, Color(accent.r, accent.g, accent.b, 0.92), 1.7)
+	var art_region := _skill_art_region(icon_id)
+	if art_region.size.x > 0.0:
+		draw_texture_rect_region(SKILL_ART_ATLAS, Rect2(-20.0, -20.0, 40.0, 40.0), art_region, Color.WHITE, false)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		return
 
 	if icon_id.contains("fire"):
 		draw_colored_polygon(PackedVector2Array([Vector2(0.0, -15.0), Vector2(9.0, -3.0), Vector2(7.0, 9.0), Vector2(0.0, 15.0), Vector2(-7.0, 8.0), Vector2(-8.0, -2.0)]), Color("#d9784d"))
@@ -322,6 +346,22 @@ func _draw_card_art(center: Vector2, icon_id: String, accent: Color, radius: flo
 	else:
 		draw_colored_polygon(PackedVector2Array([Vector2(0.0, -14.0), Vector2(4.0, -5.0), Vector2(14.0, -4.0), Vector2(6.0, 3.0), Vector2(9.0, 13.0), Vector2(0.0, 7.0), Vector2(-9.0, 13.0), Vector2(-6.0, 3.0), Vector2(-14.0, -4.0), Vector2(-4.0, -5.0)]), accent)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _skill_art_region(icon_id: String) -> Rect2:
+	if icon_id.contains("fire"):
+		return Rect2(0.0, 0.0, 128.0, 128.0)
+	if icon_id.contains("thunder"):
+		return Rect2(128.0, 0.0, 128.0, 128.0)
+	if icon_id.contains("copper_coin") or icon_id.contains("coin"):
+		return Rect2(256.0, 0.0, 128.0, 128.0)
+	if icon_id.contains("peachwood") or icon_id.contains("sword_manual"):
+		return Rect2(384.0, 0.0, 128.0, 128.0)
+	if icon_id.contains("water") or icon_id.contains("ice") or icon_id.contains("cold_relic"):
+		return Rect2(512.0, 0.0, 128.0, 128.0)
+	if icon_id.contains("earth") or icon_id.contains("formation_manual"):
+		return Rect2(640.0, 0.0, 128.0, 128.0)
+	return Rect2()
 
 
 func _draw_upgrade_emblem(center: Vector2, upgrade_id: String, color: Color) -> void:
@@ -432,12 +472,13 @@ func _draw_touch_controls(view: Vector2) -> void:
 
 func card_index_at(screen_position: Vector2) -> int:
 	var view := get_viewport_rect().size
-	var card_width := minf(300.0, (view.x - 84.0) / 3.0 - 22.0)
-	var card_height := 190.0
-	var gap := 22.0
+	var panel_height := minf(440.0, view.y - 24.0)
+	var card_width := minf(320.0, (view.x - 90.0) / 3.0 - 18.0)
+	var card_height := minf(220.0, panel_height - 132.0)
+	var gap := 18.0
 	var total_width := card_width * 3.0 + gap * 2.0
 	var start_x := (view.x - total_width) * 0.5
-	var y := view.y * 0.5 - 95.0
+	var y := (view.y - panel_height) * 0.5 + 114.0
 	for i in range(mini(3, main_ref.level_cards.size())):
 		var rect := Rect2(start_x + i * (card_width + gap), y, card_width, card_height)
 		if rect.has_point(screen_position):

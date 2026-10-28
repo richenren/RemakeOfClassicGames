@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="128" viewBox="0 0 768 128">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7e8b7"/>
+      <stop offset="0.55" stop-color="#d9b875"/>
+      <stop offset="1" stop-color="#9d7043"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff0b0"/>
+      <stop offset="0.5" stop-color="#d4a94e"/>
+      <stop offset="1" stop-color="#87552b"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b8f0ef"/>
+      <stop offset="0.5" stop-color="#5ab7c7"/>
+      <stop offset="1" stop-color="#2d6d83"/>
+    </linearGradient>
+  </defs>
+  <!-- Fire talisman -->
+  <g transform="translate(64 64)">
+    <path d="M-28 23 C-36 9 -25 1 -22 -11 C-16 -4 -13 0 -14 8 C-5 -4 -7 -17 4 -31 C8 -16 21 -10 18 4 C28 -1 30 -11 31 -15 C43 3 32 19 23 26 Z" fill="#b94e2e" opacity=".82"/>
+    <path d="M-19 -39 L18 -36 L23 33 L-22 36 Z" fill="url(#paper)" stroke="#76502f" stroke-width="2.4"/>
+    <path d="M-15 -32 L14 -30 L18 27 L-17 29 Z" fill="none" stroke="#f8e5a8" stroke-width="1.2" opacity=".8"/>
+    <path d="M-6 -24 L8 -19 L-5 -8 L9 -2 L-6 12 L5 20" fill="none" stroke="#8e3027" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M-1 30 C-11 17 -3 9 1 4 C2 13 12 15 8 25 Z" fill="#e66d38"/>
+    <path d="M1 23 L3 15 L5 25 Z" fill="#ffdc8a"/>
+  </g>
+  <!-- Thunder talisman -->
+  <g transform="translate(192 64)">
+    <path d="M-26 -39 L24 -35 L20 35 L-23 34 Z" fill="url(#paper)" stroke="#76502f" stroke-width="2.4"/>
+    <path d="M-19 -31 L17 -28 L14 28 L-16 28 Z" fill="none" stroke="#f8e5a8" stroke-width="1.2" opacity=".8"/>
+    <circle cx="0" cy="-18" r="4" fill="#9d3025"/>
+    <path d="M6 -31 L-12 -4 L-2 -4 L-8 18 L15 -12 L4 -12 Z" fill="#d5a735" stroke="#7d4c26" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M-11 23 Q0 14 11 23" fill="none" stroke="#9d3025" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- Copper coin sword -->
+  <g transform="translate(320 64)">
+    <circle cx="0" cy="0" r="29" fill="#8a5d2f" opacity=".45"/>
+    <circle cx="0" cy="0" r="25" fill="url(#gold)" stroke="#f5d88b" stroke-width="2.4"/>
+    <circle cx="0" cy="0" r="17" fill="none" stroke="#8a5b2e" stroke-width="2"/>
+    <rect x="-5.5" y="-5.5" width="11" height="11" rx="1" fill="#382d20" stroke="#f5d88b" stroke-width="1.3"/>
+    <path d="M9 25 L21 -23 L27 -30 L27 -18 L14 28 Z" fill="#e6dfc6" stroke="#795b3b" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M12 18 L20 -13" stroke="#fff4c7" stroke-width="2"/>
+    <path d="M5 22 L17 25" stroke="#9b3f2d" stroke-width="5" stroke-linecap="round"/>
+    <path d="M10 17 L21 20" stroke="#e3b65b" stroke-width="2"/>
+  </g>
+  <!-- Peachwood sword -->
+  <g transform="translate(448 64)">
+    <path d="M-3 30 L2 18 L-17 -15 L-11 -29 L-2 -20 L17 12 L8 19 L3 32 Z" fill="#a66a42" stroke="#5d3b2b" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M-11 -25 L-6 -20 L12 12 L7 15 Z" fill="#e6d3a0"/>
+    <path d="M-22 -12 L-6 -22 L1 -13 L-15 -3 Z" fill="url(#gold)" stroke="#79502f" stroke-width="1.7"/>
+    <path d="M-18 -10 L-9 -16" stroke="#8f382b" stroke-width="2"/>
+    <path d="M-2 19 L10 12" stroke="#c34f39" stroke-width="4" stroke-linecap="round"/>
+    <path d="M-1 25 L5 21" stroke="#e6bd71" stroke-width="2"/>
+  </g>
+  <!-- Water formation / ice evolution -->
+  <g transform="translate(576 64)" fill="none" stroke="url(#blue)" stroke-linecap="round">
+    <circle r="29" stroke-width="2.5"/>
+    <circle r="22" stroke-width="1.5" opacity=".9"/>
+    <circle r="11" stroke-width="2"/>
+    <path d="M-22 -7 Q-12 -17 -2 -7 T18 -7" stroke-width="3"/>
+    <path d="M-20 6 Q-10 -4 0 6 T20 6" stroke-width="3"/>
+    <path d="M0 -31 L0 -22 M0 22 L0 31 M-31 0 L-22 0 M22 0 L31 0" stroke="#b7e9df" stroke-width="2"/>
+    <path d="M-14 -25 L-8 -16 M14 -25 L8 -16 M-14 25 L-8 16 M14 25 L8 16" stroke="#70c8d8" stroke-width="1.7"/>
+  </g>
+  <!-- Earth formation -->
+  <g transform="translate(704 64)">
+    <circle r="29" fill="#8b7750" opacity=".22"/>
+    <path d="M-28 19 L-18 -3 L-9 8 L4 -24 L15 4 L23 -9 L30 19 Z" fill="#746647" stroke="#c5b17a" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M-20 19 L-12 4 L-7 13 L4 -13 L13 10 L19 0 L25 19 Z" fill="#9c8a5d" opacity=".8"/>
+    <path d="M-29 24 Q0 18 29 24" fill="none" stroke="#ddc68a" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M-1 -5 L-7 7 L0 4 L-4 15 L8 1 L2 2 Z" fill="#e4d39a"/>
+  </g>
+</svg>
