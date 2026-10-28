@@ -1,6 +1,7 @@
 extends Node2D
 
 const SKILL_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_art_atlas.svg")
+const CARD_TAOIST_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist.svg")
 
 var main_ref
 const TEXT_COLOR := Color("#efe6d2")
@@ -126,9 +127,17 @@ func _draw_level_up(view: Vector2) -> void:
 			var sy := 1.0 if corner.y < rect.position.y + rect.size.y * 0.5 else -1.0
 			draw_line(corner, corner + Vector2(sx * 9.0, 0.0), Color(accent.r, accent.g, accent.b, 0.65), 1.0)
 			draw_line(corner, corner + Vector2(0.0, sy * 9.0), Color(accent.r, accent.g, accent.b, 0.65), 1.0)
-		_draw_card_art(rect.position + Vector2(47.0, 62.0), str(card.get("icon", card_id)), accent, 31.0)
-		_text(rect.position + Vector2(88.0, 37.0), str(card.get("name", "未知强化")), 17, Color("#f1dba4"))
-		_text(rect.position + Vector2(88.0, 61.0), str(card.get("category", _upgrade_category(card_id))), 12, accent)
+		var card_kind := str(card.get("kind", ""))
+		var icon_id := str(card.get("icon", card_id))
+		var has_skill_illustration := card_kind in ["skill_acquire", "skill_level", "skill_branch", "skill_evolution"]
+		var title_x := 88.0
+		if has_skill_illustration:
+			_draw_skill_card_illustration(rect, icon_id, accent)
+			title_x = 88.0 + 20.0 * clampf(card_width / 320.0, 0.72, 1.0)
+		else:
+			_draw_card_art(rect.position + Vector2(47.0, 62.0), icon_id, accent, 31.0)
+		_text(rect.position + Vector2(title_x, 37.0), str(card.get("name", "未知强化")), 17, Color("#f1dba4"))
+		_text(rect.position + Vector2(title_x, 61.0), str(card.get("category", _upgrade_category(card_id))), 12, accent)
 		if str(card.get("kind", "")) == "skill_evolution":
 			_text(rect.position + Vector2(rect.size.x - 52.0, 21.0), "进化", 10, accent)
 		elif str(card.get("kind", "")) == "skill_branch":
@@ -277,6 +286,63 @@ func _draw_skill_emblem(center: Vector2, ready: bool, color: Color) -> void:
 	draw_colored_polygon(talisman, Color("#d7b86c"))
 	draw_line(center + Vector2(-3.0, -4.0), center + Vector2(3.0, -1.0), Color("#6b352b"), 1.0)
 	draw_line(center + Vector2(-3.0, 1.0), center + Vector2(3.0, 4.0), Color("#6b352b"), 1.0)
+
+
+func _draw_skill_card_illustration(card_rect: Rect2, icon_id: String, accent: Color) -> void:
+	var art_scale := clampf(card_rect.size.x / 320.0, 0.72, 1.0)
+	var art_rect := Rect2(card_rect.position + Vector2(12.0, 18.0) * art_scale, Vector2(82.0, 98.0) * art_scale)
+	draw_rect(art_rect, Color(0.012, 0.011, 0.009, 0.92))
+	draw_rect(art_rect, Color(accent.r, accent.g, accent.b, 0.72), false, 1.0)
+	draw_rect(art_rect.grow(-4.0), Color(accent.r, accent.g, accent.b, 0.12), false, 1.0)
+	var center := art_rect.get_center()
+	# Skill-specific energy is drawn behind the Taoist illustration so each card
+	# reads like a small scene rather than a generic stat icon.
+	if icon_id.contains("fire"):
+		draw_circle(center + Vector2(0.0, 24.0 * art_scale), 26.0 * art_scale, Color(0.9, 0.18, 0.025, 0.16))
+		draw_arc(center + Vector2(0.0, 23.0 * art_scale), 29.0 * art_scale, PI * 1.05, PI * 1.95, 28, Color("#f16a32"), 2.4 * art_scale)
+		for i in range(5):
+			var x := art_rect.position.x + 13.0 * art_scale + float(i) * 14.0 * art_scale
+			var base := Vector2(x, art_rect.end.y - 11.0 * art_scale)
+			var tip := base + Vector2(sin(float(i) * 1.7) * 3.0, -8.0 - float(i % 3) * 3.0) * art_scale
+			draw_colored_polygon(PackedVector2Array([base + Vector2(-3.0, 0.0), tip, base + Vector2(3.0, 0.0)]), Color("#e85a2c", 0.78))
+	elif icon_id.contains("thunder") or icon_id.contains("five_thunder"):
+		draw_circle(center, 31.0 * art_scale, Color(0.28, 0.3, 1.0, 0.13))
+		_draw_card_lightning_bolt(art_rect.position + Vector2(9.0, 20.0) * art_scale, art_rect.position + Vector2(29.0, 48.0) * art_scale, Color("#6c77ff"))
+		_draw_card_lightning_bolt(Vector2(art_rect.end.x - 9.0 * art_scale, art_rect.position.y + 22.0 * art_scale), Vector2(art_rect.end.x - 29.0 * art_scale, art_rect.position.y + 56.0 * art_scale), Color("#7c8cff"))
+	elif icon_id.contains("water") or icon_id.contains("ice"):
+		for i in range(3):
+			draw_arc(center + Vector2(0.0, 20.0 * art_scale), (18.0 + float(i) * 7.0) * art_scale, 0.0, TAU, 36, Color(0.3, 0.75, 0.95, 0.65 - float(i) * 0.13), 1.8 * art_scale)
+	elif icon_id.contains("earth"):
+		for i in range(6):
+			var angle := TAU * float(i) / 6.0
+			var start := center + Vector2(cos(angle), sin(angle)) * 20.0 * art_scale
+			var finish := center + Vector2(cos(angle), sin(angle)) * 31.0 * art_scale
+			draw_line(start, finish, Color("#d0ad61", 0.8), 2.0 * art_scale)
+	elif icon_id.contains("sword") or icon_id.contains("copper") or icon_id.contains("peachwood"):
+		draw_arc(center + Vector2(0.0, 12.0 * art_scale), 31.0 * art_scale, -PI * 0.88, PI * 0.62, 36, Color("#e6c77c", 0.82), 2.2 * art_scale)
+		draw_arc(center + Vector2(0.0, 12.0 * art_scale), 24.0 * art_scale, -PI * 0.78, PI * 0.48, 30, Color("#f4e4b1", 0.58), 1.2 * art_scale)
+	else:
+		_draw_card_art(center, icon_id, accent, 16.0)
+	var portrait_rect := Rect2(art_rect.position + Vector2(8.0, 6.0) * art_scale, Vector2(66.0, 82.0) * art_scale)
+	draw_texture_rect(CARD_TAOIST_TEXTURE, portrait_rect, false, Color.WHITE)
+	# Tiny seal at the foot of the illustration ties the art back to the card's skill.
+	draw_arc(center + Vector2(0.0, 39.0 * art_scale), 10.0 * art_scale, 0.0, TAU, 24, Color(accent.r, accent.g, accent.b, 0.8), 1.2 * art_scale)
+
+
+func _draw_card_lightning_bolt(start_position: Vector2, end_position: Vector2, accent: Color) -> void:
+	var axis := end_position - start_position
+	if axis.length_squared() < 1.0:
+		return
+	var normal := Vector2(-axis.y, axis.x).normalized()
+	var points: Array[Vector2] = [start_position]
+	for i in range(1, 4):
+		var t := float(i) / 4.0
+		var jitter := sin(float(i) * 8.0 + axis.length()) * 4.0
+		points.append(start_position + axis * t + normal * jitter)
+	points.append(end_position)
+	for i in range(points.size() - 1):
+		draw_line(points[i], points[i + 1], Color(accent.r, accent.g, accent.b, 0.65), 4.0, true)
+		draw_line(points[i], points[i + 1], Color("#e8f3ff", 0.92), 1.2, true)
 
 
 func _draw_card_art(center: Vector2, icon_id: String, accent: Color, radius: float = 24.0) -> void:
