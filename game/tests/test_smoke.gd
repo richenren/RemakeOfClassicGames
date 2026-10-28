@@ -28,6 +28,7 @@ func _run_tests() -> void:
 
 	_check(main.player != null, "主场景创建玩家")
 	_check(main.enemies.size() == 7, "开局生成 7 个普通敌人")
+	_test_camera_follow(main)
 	_test_render_hierarchy(main)
 	_test_hud_presentation(main)
 	_test_sprite_assets(main)
@@ -41,6 +42,21 @@ func _run_tests() -> void:
 	await process_frame
 	print("=== 测试汇总：%d 通过，%d 失败 ===" % [passed, failed])
 	quit(1 if failed > 0 else 0)
+
+
+func _test_camera_follow(main: Variant) -> void:
+	var camera := main.get_node_or_null("GameplayCamera") as Camera2D
+	_check(camera != null, "主场景创建独立 GameplayCamera")
+	if camera == null or main.player == null:
+		return
+	_check(main.get_viewport().get_camera_2d() == camera, "GameplayCamera 成为当前活动相机")
+	_check(camera.global_position.is_equal_approx(main.player.global_position), "启动时相机中心对准主角")
+	var original_position: Vector2 = main.player.position
+	main.player.position = original_position + Vector2(25.0, 10.0)
+	main._process(0.0)
+	_check(camera.global_position.is_equal_approx(main.player.global_position), "主角移动后相机同步跟随")
+	main.player.position = original_position
+	main._process(0.0)
 
 
 func _test_render_hierarchy(main: Variant) -> void:

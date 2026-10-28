@@ -12,6 +12,7 @@ const BOSS_PHASE_ENEMY_CAP := 18
 
 var player
 var hud
+var gameplay_camera: Camera2D
 var enemies: Array = []
 var projectiles: Array = []
 var xp_orbs: Array = []
@@ -108,20 +109,8 @@ func _ready() -> void:
 	player.z_index = 20
 	add_child(player)
 
-	var camera := Camera2D.new()
-	camera.position = Vector2.ZERO
-	camera.enabled = true
-	# Avoid an initial camera lag that can leave the centered player outside the first frame.
-	camera.position_smoothing_enabled = false
-	camera.limit_left = 0
-	camera.limit_top = 0
-	camera.limit_right = int(WORLD_SIZE.x)
-	camera.limit_bottom = int(WORLD_SIZE.y)
-	player.add_child(camera)
-	camera.make_current()
-	camera.reset_smoothing()
-
-	# Keep screen-space UI on an explicit layer above the world canvas.
+	# Create the screen-space UI and opening wave before activating the camera.
+	# This keeps the game playable even if a camera API behaves differently on a local engine build.
 	var canvas := CanvasLayer.new()
 	canvas.layer = 10
 	canvas.follow_viewport_enabled = false
@@ -136,8 +125,30 @@ func _ready() -> void:
 	for i in range(7):
 		spawn_enemy(_random_enemy_kind())
 
+	# Keep the camera as a sibling of the player and explicitly track global position.
+	# Parenting the camera to a custom-drawn actor can make initial canvas transforms
+	# harder to diagnose on some editor/runtime combinations.
+	gameplay_camera = Camera2D.new()
+	gameplay_camera.name = "GameplayCamera"
+	gameplay_camera.enabled = true
+	gameplay_camera.position_smoothing_enabled = false
+	gameplay_camera.limit_left = 0
+	gameplay_camera.limit_top = 0
+	gameplay_camera.limit_right = int(WORLD_SIZE.x)
+	gameplay_camera.limit_bottom = int(WORLD_SIZE.y)
+	gameplay_camera.position = player.position
+	add_child(gameplay_camera)
+	gameplay_camera.make_current()
+
 
 func _process(delta: float) -> void:
+	# Reassert the gameplay camera each frame so a stale or replaced current camera
+	# cannot leave the player and opening enemies outside the visible world.
+	if is_instance_valid(gameplay_camera) and is_instance_valid(player):
+		gameplay_camera.global_position = player.global_position
+		if get_viewport().get_camera_2d() != gameplay_camera:
+			gameplay_camera.make_current()
+
 	if active_skill_effect_time > 0.0:
 		active_skill_effect_time = maxf(0.0, active_skill_effect_time - delta)
 		queue_redraw()
