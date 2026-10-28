@@ -692,7 +692,9 @@ func _skill_card_art_region(icon_id: String) -> Rect2:
 			return Rect2(3200.0, 0.0, 320.0, 208.0)
 		if icon_id.contains("thunder"):
 			return Rect2(3520.0, 0.0, 320.0, 208.0)
-	if icon_id.contains("peachwood") or icon_id.contains("greenwood") or icon_id.contains("body_jade"):
+	if icon_id.contains("greenwood") or icon_id.contains("body_jade"):
+		return Rect2(2240.0, 0.0, 320.0, 208.0)
+	if icon_id.contains("peachwood"):
 		return Rect2(960.0, 0.0, 320.0, 208.0)
 	if icon_id.contains("fire") or icon_id.contains("heavenfire") or icon_id.contains("talisman_scroll"):
 		return Rect2(0.0, 0.0, 320.0, 208.0)

@@ -346,6 +346,8 @@ func _test_skill_art_assets() -> void:
 	_check(hud._skill_card_art_region("thunder_talisman").position.x == 320.0, "雷符卡使用横向雷符主视觉")
 	_check(hud._skill_card_art_region("copper_coin_sword").position.x == 640.0, "铜钱剑卡使用横向御剑主视觉")
 	_check(hud._skill_card_art_region("peachwood_sword").position.x == 960.0, "桃木剑卡使用横向青木剑主视觉")
+	_check(hud._skill_card_art_region("greenwood_guardian").position.x == 2240.0, "青木守护使用木系灵枝插画")
+	_check(hud._skill_card_art_region("body_jade").position.x == 2240.0, "护身玉佩使用灵玉主视觉")
 	_check(hud._skill_card_art_region("water_array").position.x == 1280.0, "水阵卡使用横向水阵主视觉")
 	_check(hud._skill_card_art_region("earth_formation").position.x == 1600.0, "地脉阵卡使用横向地脉主视觉")
 	_check(hud._skill_card_art_region("cultivation_metal").position.x == 1920.0, "金系修炼卡有独立横向插画")
