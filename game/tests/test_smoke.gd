@@ -196,7 +196,11 @@ func _test_skill_art_assets() -> void:
 	root.add_child(hud)
 	_check(hud._skill_art_region("fire_talisman").position.x == 0.0, "火符使用专属插画帧")
 	_check(hud._skill_art_region("thunder_talisman").position.x == 128.0, "雷符使用专属插画帧")
+	_check(hud._skill_art_region("copper_coin_sword").position.x == 256.0, "铜钱剑使用独立武器插画帧")
+	_check(hud._skill_art_region("peachwood_sword").position.x == 384.0, "桃木剑使用独立武器插画帧")
 	_check(hud._skill_art_region("water_array").position.x == 512.0, "水阵使用专属插画帧")
+	_check(hud._skill_art_region("earth_formation").position.x == 640.0, "地脉阵使用专属插画帧")
+	_check(hud.has_method("_center_text") and hud.has_method("_draw_wrapped_text"), "升级卡支持居中标题与多行技能说明")
 	hud.queue_free()
 
 

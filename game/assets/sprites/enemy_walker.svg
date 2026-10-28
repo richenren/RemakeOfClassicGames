@@ -1,13 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="96" height="128" viewBox="0 0 96 128">
-<defs><linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c7c9b7"/><stop offset=".6" stop-color="#7d8277"/><stop offset="1" stop-color="#373d39"/></linearGradient><linearGradient id="robe" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4a4941"/><stop offset=".55" stop-color="#252827"/><stop offset="1" stop-color="#111615"/></linearGradient></defs>
-<!-- legs and torn hem --><path d="M30 83 L42 88 L38 112 L29 120 L22 114 L27 100Z M52 86 L65 82 L72 106 L67 119 L58 119 L56 101Z" fill="#343631" stroke="#171a18" stroke-width="1.5"/><path d="M22 112 L32 112 L33 121 L20 123Z M58 112 L69 111 L76 120 L62 123Z" fill="#211f1b" stroke="#71654c" stroke-width="1.2"/>
-<path d="M30 47 Q18 51 17 68 L10 82 L20 91 L30 82 L26 103 L40 111 L55 108 L68 100 L65 78 L77 90 L87 81 L78 65 Q74 52 63 48Z" fill="url(#robe)" stroke="#121615" stroke-width="2"/>
-<!-- ragged robe panels --><path d="M28 67 L38 78 L32 100 L25 93Z M58 68 L49 82 L61 102 L68 91Z" fill="#6d6251" opacity=".8"/><path d="M37 60 L50 64 L59 104 L44 112 L36 98Z" fill="#343a36" stroke="#1b201e" stroke-width="1.3"/>
-<!-- reaching arms --><path d="M27 54 L18 59 L7 73 L12 81 L24 72 L35 66Z M65 54 L74 58 L89 71 L84 80 L72 71 L59 66Z" fill="url(#robe)" stroke="#181b19" stroke-width="1.5"/><path d="M12 76 L18 72 L25 78 L21 88 L14 91 L8 84Z M84 75 L78 72 L71 78 L75 88 L82 91 L88 84Z" fill="url(#skin)" stroke="#454b44" stroke-width="1.2"/>
-<!-- bandaged wrists and claws --><path d="M10 78 L21 75 L23 81 L13 85Z M73 78 L84 75 L86 81 L76 85Z" fill="#b2a991" stroke="#6a675a" stroke-width="1"/><path d="M11 87 L6 93 L8 96 L14 91 M16 88 L13 96 L16 98 L20 91 M82 87 L88 93 L86 96 L80 91 M77 88 L80 96 L77 98 L73 91" fill="none" stroke="#b8b9a7" stroke-width="2" stroke-linecap="round"/>
-<!-- neck and head --><path d="M39 45 L38 55 L55 57 L57 44Z" fill="#656b61"/><path d="M31 23 Q34 12 47 13 Q60 14 63 27 L59 43 Q53 51 45 49 Q35 46 32 38Z" fill="url(#skin)" stroke="#242a27" stroke-width="1.6"/>
-<!-- matted hair and topknot --><path d="M31 28 Q26 17 37 9 Q47 4 55 12 Q65 15 63 29 L58 24 L52 22 L46 26 L39 21Z" fill="#171b1b" stroke="#090d0d" stroke-width="1.5"/><path d="M40 12 Q38 4 45 3 Q53 4 54 12 L50 17 L43 16Z" fill="#272521" stroke="#111615" stroke-width="1.2"/><path d="M30 25 L34 20 L36 38 L31 42Z M60 24 L64 32 L59 43 L56 36Z" fill="#242826"/>
-<!-- face details --><path d="M35 30 L42 28 M49 28 L57 30" stroke="#202522" stroke-width="2" stroke-linecap="round"/><ellipse cx="39" cy="33" rx="2.2" ry="2.7" fill="#c8f0dd"/><ellipse cx="53" cy="33" rx="2.2" ry="2.7" fill="#c8f0dd"/><circle cx="39" cy="33" r="1.1" fill="#18201c"/><circle cx="53" cy="33" r="1.1" fill="#18201c"/><path d="M46 33 L43 39 L48 40" fill="none" stroke="#53584d" stroke-width="1.5"/><path d="M37 42 Q45 47 54 41 L52 47 L43 49Z" fill="#211e1b" stroke="#111412" stroke-width="1"/><path d="M39 43 L42 46 L44 43 L47 47 L49 43 L52 45" fill="#d6d2bd" stroke="#7c8073" stroke-width=".8"/>
-<!-- forehead talisman --><path d="M43 13 L54 14 L56 33 L45 35Z" fill="#e7c778" stroke="#6e4a28" stroke-width="1.2"/><path d="M46 17 L52 18 L48 22 L53 25 L48 30" fill="none" stroke="#a32f28" stroke-width="1.4" stroke-linecap="round"/>
-<!-- torn cloth marks --><path d="M31 60 L42 71 L37 83 M59 61 L53 75 L62 85" fill="none" stroke="#8e342b" stroke-width="2" opacity=".9"/><path d="M28 89 L34 94 M61 92 L67 96" stroke="#9e9580" stroke-width="1.5"/>
+<defs>
+ <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e0e2d0"/><stop offset=".55" stop-color="#a2a997"/><stop offset="1" stop-color="#4b514b"/></linearGradient>
+ <linearGradient id="robe" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#344b60"/><stop offset=".52" stop-color="#1d2b3b"/><stop offset="1" stop-color="#0b111a"/></linearGradient>
+ <linearGradient id="trim" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e6c47a"/><stop offset="1" stop-color="#80572d"/></linearGradient>
+ <linearGradient id="hat" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#30343a"/><stop offset="1" stop-color="#090d12"/></linearGradient>
+</defs>
+<!-- Qing official boots and trouser legs -->
+<path d="M31 87 L43 90 L40 109 L32 117 L24 114 L28 101Z M52 88 L64 84 L71 103 L67 117 L58 118 L56 102Z" fill="#151a20" stroke="#6c5a3b" stroke-width="1.4"/>
+<path d="M22 111 L34 110 L35 120 L20 122Z M58 111 L69 109 L75 119 L61 122Z" fill="#11161b" stroke="#b28a4b" stroke-width="1.2"/>
+<!-- dark indigo Qing robe with long square sleeves -->
+<path d="M34 47 Q25 51 23 62 L12 76 L20 86 L31 78 L29 101 L40 113 L57 113 L68 101 L65 78 L77 86 L85 76 L74 62 Q70 51 61 47Z" fill="url(#robe)" stroke="#080d12" stroke-width="2"/>
+<path d="M33 60 L41 72 L35 100 L29 94Z M62 60 L55 72 L64 100 L70 94Z" fill="#405367" stroke="#172331" stroke-width="1"/>
+<!-- gold shoulder braid and high collar -->
+<path d="M34 49 L47 58 L40 70 L29 57Z M62 49 L49 58 L56 70 L68 57Z" fill="#b89a5d" stroke="#4d3b29" stroke-width="1.2"/>
+<path d="M38 48 L48 57 L45 64 L34 54Z M59 48 L49 57 L53 64 L64 54Z" fill="#e1d1ad" stroke="#705533" stroke-width="1"/>
+<path d="M39 61 L48 65 L57 61 L61 103 L48 112 L35 103Z" fill="#152333" stroke="#9c7b48" stroke-width="1.3"/>
+<!-- arms rigidly extended, sleeve cuffs and pale hands -->
+<path d="M31 53 L24 57 L9 67 L7 77 L17 82 L28 72 L39 65Z M64 53 L72 57 L87 67 L89 77 L79 82 L68 72 L57 65Z" fill="url(#robe)" stroke="#0b1117" stroke-width="1.6"/>
+<path d="M9 69 L19 66 L27 72 L23 83 L15 87 L7 79Z M87 69 L77 66 L69 72 L73 83 L81 87 L89 79Z" fill="url(#skin)" stroke="#50574f" stroke-width="1.2"/>
+<path d="M8 69 L20 66 L25 72 L22 78 L11 80Z M71 72 L76 66 L88 69 L85 80 L74 78Z" fill="#d7c7a3" stroke="#816a46" stroke-width="1.1"/>
+<path d="M12 83 L8 90 L12 92 L17 86 M18 83 L15 91 L19 93 L22 86 M84 83 L88 90 L84 92 L79 86 M78 83 L81 91 L77 93 L74 86" fill="none" stroke="#d4d4c3" stroke-width="1.8" stroke-linecap="round"/>
+<!-- red sash and square official chest insignia -->
+<path d="M32 91 Q48 97 64 91 L65 98 Q48 104 31 98Z" fill="#8d302b" stroke="#4c1f22" stroke-width="1.2"/>
+<path d="M41 72 L55 72 L57 88 L48 94 L39 88Z" fill="#d0b477" stroke="#6b4a2b" stroke-width="1.1"/>
+<path d="M44 76 L52 76 L53 86 L48 89 L43 86Z" fill="#233746" stroke="#f0d69a" stroke-width=".8"/>
+<path d="M45 78 L51 84 M51 78 L45 84" stroke="#e2c47a" stroke-width="1"/>
+<path d="M36 101 L32 113 L38 119 L43 105 M60 101 L64 113 L58 119 L54 105" fill="#172332" stroke="#78613f" stroke-width="1"/>
+<!-- neck, pale angular face, red lips -->
+<path d="M39 42 L38 52 L57 53 L57 42Z" fill="#5e655c"/>
+<path d="M34 22 Q36 13 48 13 Q60 14 62 24 L59 39 Q54 47 48 47 Q39 45 35 38Z" fill="url(#skin)" stroke="#343a35" stroke-width="1.4"/>
+<path d="M35 29 L42 27 M51 27 L59 29" stroke="#2b2926" stroke-width="1.8" stroke-linecap="round"/>
+<ellipse cx="40" cy="31" rx="2.1" ry="2.6" fill="#f2c16d"/><ellipse cx="54" cy="31" rx="2.1" ry="2.6" fill="#f2c16d"/>
+<circle cx="40" cy="31" r="1" fill="#201e1a"/><circle cx="54" cy="31" r="1" fill="#201e1a"/>
+<path d="M47 31 L44 37 L48 38" fill="none" stroke="#666b5e" stroke-width="1.3"/>
+<path d="M40 41 Q48 44 56 40 L53 45 L43 45Z" fill="#551f23" stroke="#261719" stroke-width=".8"/>
+<!-- Qing dynasty official hat: domed cap, wide brim, red finial -->
+<path d="M27 20 Q28 13 35 11 L37 6 Q48 1 59 7 L62 13 Q69 15 69 20 L27 20Z" fill="url(#hat)" stroke="#080b0f" stroke-width="1.6"/>
+<path d="M23 19 Q48 15 73 19 L78 23 Q49 27 18 23Z" fill="#10151c" stroke="#746041" stroke-width="1.3"/>
+<path d="M37 11 Q48 7 59 11" fill="none" stroke="#60616a" stroke-width="1.2"/>
+<circle cx="48" cy="5" r="3.2" fill="#b63d32" stroke="#e5b56b" stroke-width="1"/>
+<path d="M48 8 L48 14" stroke="#b63d32" stroke-width="2"/>
+<!-- queue braid over one shoulder -->
+<path d="M60 22 Q68 29 63 38 L68 49 L64 56 L61 49 L58 40 Q63 30 57 24Z" fill="#111419" stroke="#3b3025" stroke-width="1.1"/>
+<path d="M62 34 L65 37 M61 41 L65 44 M62 48 L66 50" stroke="#a27a42" stroke-width=".8"/>
+<!-- forehead yellow talisman -->
+<path d="M43 14 L53 14 L55 32 L44 34Z" fill="#f1d48b" stroke="#76502b" stroke-width="1.1"/>
+<path d="M46 17 L52 19 L47 22 L52 25 L47 30" fill="none" stroke="#a32c27" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- robe embroidery and torn hem -->
+<path d="M31 62 L40 72 L36 87 M64 62 L56 72 L61 88 M40 98 L44 104 L40 110 M56 98 L52 104 L56 110" fill="none" stroke="#b8995c" stroke-width="1.2" opacity=".9"/>
+<path d="M29 101 L25 108 L31 111 M66 101 L71 108 L65 112" fill="none" stroke="#a98c5c" stroke-width="1.2"/>
 </svg>

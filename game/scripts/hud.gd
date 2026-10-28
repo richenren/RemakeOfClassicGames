@@ -1,7 +1,6 @@
 extends Node2D
 
 const SKILL_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_art_atlas.svg")
-const CARD_TAOIST_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist.svg")
 
 var main_ref
 const TEXT_COLOR := Color("#efe6d2")
@@ -130,21 +129,28 @@ func _draw_level_up(view: Vector2) -> void:
 		var card_kind := str(card.get("kind", ""))
 		var icon_id := str(card.get("icon", card_id))
 		var has_skill_illustration := card_kind in ["skill_acquire", "skill_level", "skill_branch", "skill_evolution"]
-		var title_x := 88.0
 		if has_skill_illustration:
 			_draw_skill_card_illustration(rect, icon_id, accent)
-			title_x = 88.0 + 20.0 * clampf(card_width / 320.0, 0.72, 1.0)
+			_center_text(Rect2(rect.position.x + 10.0, rect.position.y + 88.0, rect.size.x - 20.0, 24.0), str(card.get("name", "未知术法")), 18, Color("#f1dba4"))
+			_center_text(Rect2(rect.position.x + 10.0, rect.position.y + 109.0, rect.size.x - 20.0, 18.0), str(card.get("category", _upgrade_category(card_id))), 11, accent)
+			if card_kind == "skill_evolution" or card_kind == "skill_branch":
+				var tag := "进化" if card_kind == "skill_evolution" else "分支"
+				var tag_rect := Rect2(rect.end.x - 52.0, rect.position.y + 14.0, 38.0, 16.0)
+				draw_rect(tag_rect, Color(accent.r, accent.g, accent.b, 0.18))
+				draw_rect(tag_rect, Color(accent.r, accent.g, accent.b, 0.75), false, 1.0)
+				_center_text(tag_rect, tag, 10, accent)
+			var divider_y := rect.size.y - 39.0
+			var desc_rect := Rect2(rect.position.x + 17.0, rect.position.y + 132.0, rect.size.x - 34.0, divider_y - 139.0)
+			_draw_wrapped_text(desc_rect, str(card.get("desc", "")), 12, TEXT_COLOR, 2)
+			draw_line(rect.position + Vector2(16.0, divider_y), rect.position + Vector2(rect.size.x - 16.0, divider_y), Color("#756344", 0.8), 1.0)
+			_text(Vector2(rect.position.x + 18.0, rect.end.y - 16.0), "按 %d 选择  ·  点击卡片" % (i + 1), 11, Color("#d0c1a4") if hovered else MUTED_COLOR)
 		else:
 			_draw_card_art(rect.position + Vector2(47.0, 62.0), icon_id, accent, 31.0)
-		_text(rect.position + Vector2(title_x, 37.0), str(card.get("name", "未知强化")), 17, Color("#f1dba4"))
-		_text(rect.position + Vector2(title_x, 61.0), str(card.get("category", _upgrade_category(card_id))), 12, accent)
-		if str(card.get("kind", "")) == "skill_evolution":
-			_text(rect.position + Vector2(rect.size.x - 52.0, 21.0), "进化", 10, accent)
-		elif str(card.get("kind", "")) == "skill_branch":
-			_text(rect.position + Vector2(rect.size.x - 52.0, 21.0), "分支", 10, accent)
-		_text(rect.position + Vector2(18.0, 130.0), str(card.get("desc", "")), 13, TEXT_COLOR)
-		draw_line(rect.position + Vector2(16.0, 169.0), rect.position + Vector2(rect.size.x - 16.0, 169.0), Color("#5b5140"), 1.0)
-		_text(rect.position + Vector2(18.0, 198.0), "按 %d 选择  ·  点击卡片" % (i + 1), 12, Color("#d0c1a4") if hovered else MUTED_COLOR)
+			_text(rect.position + Vector2(88.0, 37.0), str(card.get("name", "未知强化")), 17, Color("#f1dba4"))
+			_text(rect.position + Vector2(88.0, 61.0), str(card.get("category", _upgrade_category(card_id))), 12, accent)
+			_draw_wrapped_text(Rect2(rect.position.x + 18.0, rect.position.y + 113.0, rect.size.x - 36.0, 45.0), str(card.get("desc", "")), 12, TEXT_COLOR, 2)
+			draw_line(rect.position + Vector2(16.0, 169.0), rect.position + Vector2(rect.size.x - 16.0, 169.0), Color("#5b5140"), 1.0)
+			_text(rect.position + Vector2(18.0, 198.0), "按 %d 选择  ·  点击卡片" % (i + 1), 12, Color("#d0c1a4") if hovered else MUTED_COLOR)
 		if hovered:
 			draw_rect(rect.grow(2.0), Color(accent.r, accent.g, accent.b, 0.42), false, 2.0)
 
@@ -289,60 +295,54 @@ func _draw_skill_emblem(center: Vector2, ready: bool, color: Color) -> void:
 
 
 func _draw_skill_card_illustration(card_rect: Rect2, icon_id: String, accent: Color) -> void:
-	var art_scale := clampf(card_rect.size.x / 320.0, 0.72, 1.0)
-	var art_rect := Rect2(card_rect.position + Vector2(12.0, 18.0) * art_scale, Vector2(82.0, 98.0) * art_scale)
-	draw_rect(art_rect, Color(0.012, 0.011, 0.009, 0.92))
-	draw_rect(art_rect, Color(accent.r, accent.g, accent.b, 0.72), false, 1.0)
-	draw_rect(art_rect.grow(-4.0), Color(accent.r, accent.g, accent.b, 0.12), false, 1.0)
+	# A skill card is an illustrated talisman / weapon vignette, never a character portrait.
+	var art_height := minf(80.0, card_rect.size.y * 0.37)
+	var art_rect := Rect2(card_rect.position + Vector2(12.0, 9.0), Vector2(card_rect.size.x - 24.0, art_height))
 	var center := art_rect.get_center()
-	# Skill-specific energy is drawn behind the Taoist illustration so each card
-	# reads like a small scene rather than a generic stat icon.
-	if icon_id.contains("fire"):
-		draw_circle(center + Vector2(0.0, 24.0 * art_scale), 26.0 * art_scale, Color(0.9, 0.18, 0.025, 0.16))
-		draw_arc(center + Vector2(0.0, 23.0 * art_scale), 29.0 * art_scale, PI * 1.05, PI * 1.95, 28, Color("#f16a32"), 2.4 * art_scale)
-		for i in range(5):
-			var x := art_rect.position.x + 13.0 * art_scale + float(i) * 14.0 * art_scale
-			var base := Vector2(x, art_rect.end.y - 11.0 * art_scale)
-			var tip := base + Vector2(sin(float(i) * 1.7) * 3.0, -8.0 - float(i % 3) * 3.0) * art_scale
-			draw_colored_polygon(PackedVector2Array([base + Vector2(-3.0, 0.0), tip, base + Vector2(3.0, 0.0)]), Color("#e85a2c", 0.78))
-	elif icon_id.contains("thunder") or icon_id.contains("five_thunder"):
-		draw_circle(center, 31.0 * art_scale, Color(0.28, 0.3, 1.0, 0.13))
-		_draw_card_lightning_bolt(art_rect.position + Vector2(9.0, 20.0) * art_scale, art_rect.position + Vector2(29.0, 48.0) * art_scale, Color("#6c77ff"))
-		_draw_card_lightning_bolt(Vector2(art_rect.end.x - 9.0 * art_scale, art_rect.position.y + 22.0 * art_scale), Vector2(art_rect.end.x - 29.0 * art_scale, art_rect.position.y + 56.0 * art_scale), Color("#7c8cff"))
-	elif icon_id.contains("water") or icon_id.contains("ice"):
-		for i in range(3):
-			draw_arc(center + Vector2(0.0, 20.0 * art_scale), (18.0 + float(i) * 7.0) * art_scale, 0.0, TAU, 36, Color(0.3, 0.75, 0.95, 0.65 - float(i) * 0.13), 1.8 * art_scale)
-	elif icon_id.contains("earth"):
-		for i in range(6):
-			var angle := TAU * float(i) / 6.0
-			var start := center + Vector2(cos(angle), sin(angle)) * 20.0 * art_scale
-			var finish := center + Vector2(cos(angle), sin(angle)) * 31.0 * art_scale
-			draw_line(start, finish, Color("#d0ad61", 0.8), 2.0 * art_scale)
-	elif icon_id.contains("sword") or icon_id.contains("copper") or icon_id.contains("peachwood"):
-		draw_arc(center + Vector2(0.0, 12.0 * art_scale), 31.0 * art_scale, -PI * 0.88, PI * 0.62, 36, Color("#e6c77c", 0.82), 2.2 * art_scale)
-		draw_arc(center + Vector2(0.0, 12.0 * art_scale), 24.0 * art_scale, -PI * 0.78, PI * 0.48, 30, Color("#f4e4b1", 0.58), 1.2 * art_scale)
+	draw_rect(art_rect, Color(0.018, 0.016, 0.014, 0.96))
+	draw_rect(art_rect, Color(accent.r, accent.g, accent.b, 0.32), false, 1.0)
+	draw_rect(art_rect.grow(-4.0), Color(accent.r, accent.g, accent.b, 0.08), false, 1.0)
+	# Layered rings and fine strokes create the restrained glow seen in the approved concept.
+	draw_circle(center, art_height * 0.39, Color(accent.r, accent.g, accent.b, 0.08))
+	draw_arc(center, art_height * 0.43, PI * 0.08, PI * 0.92, 40, Color(accent.r, accent.g, accent.b, 0.7), 1.0)
+	draw_arc(center, art_height * 0.43, PI * 1.08, PI * 1.92, 40, Color("#d6b56c", 0.48), 1.0)
+	for i in range(5):
+		var px := art_rect.position.x + 12.0 + float(i) * (art_rect.size.x - 24.0) / 4.0
+		draw_circle(Vector2(px, art_rect.position.y + 7.0), 1.0, Color(accent.r, accent.g, accent.b, 0.62))
+	var art_region := _skill_art_region(icon_id)
+	var icon_size := minf(78.0, art_height + 5.0)
+	if art_region.size.x > 0.0:
+		draw_texture_rect_region(SKILL_ART_ATLAS, Rect2(center - Vector2(icon_size, icon_size) * 0.5, Vector2(icon_size, icon_size)), art_region, Color.WHITE, false)
 	else:
-		_draw_card_art(center, icon_id, accent, 16.0)
-	var portrait_rect := Rect2(art_rect.position + Vector2(8.0, 6.0) * art_scale, Vector2(66.0, 82.0) * art_scale)
-	draw_texture_rect(CARD_TAOIST_TEXTURE, portrait_rect, false, Color.WHITE)
-	# Tiny seal at the foot of the illustration ties the art back to the card's skill.
-	draw_arc(center + Vector2(0.0, 39.0 * art_scale), 10.0 * art_scale, 0.0, TAU, 24, Color(accent.r, accent.g, accent.b, 0.8), 1.2 * art_scale)
+		_draw_card_art(center, icon_id, accent, 28.0)
+	# Thin gold rules and seal-like corner marks make each art panel feel collectible.
+	for corner in [art_rect.position + Vector2(5.0, 5.0), Vector2(art_rect.end.x - 5.0, art_rect.position.y + 5.0), Vector2(art_rect.position.x + 5.0, art_rect.end.y - 5.0), art_rect.end - Vector2(5.0, 5.0)]:
+		var sx := 1.0 if corner.x < center.x else -1.0
+		var sy := 1.0 if corner.y < center.y else -1.0
+		draw_line(corner, corner + Vector2(7.0 * sx, 0.0), Color("#d7b76f", 0.72), 1.0)
+		draw_line(corner, corner + Vector2(0.0, 7.0 * sy), Color("#d7b76f", 0.72), 1.0)
 
 
-func _draw_card_lightning_bolt(start_position: Vector2, end_position: Vector2, accent: Color) -> void:
-	var axis := end_position - start_position
-	if axis.length_squared() < 1.0:
-		return
-	var normal := Vector2(-axis.y, axis.x).normalized()
-	var points: Array[Vector2] = [start_position]
-	for i in range(1, 4):
-		var t := float(i) / 4.0
-		var jitter := sin(float(i) * 8.0 + axis.length()) * 4.0
-		points.append(start_position + axis * t + normal * jitter)
-	points.append(end_position)
-	for i in range(points.size() - 1):
-		draw_line(points[i], points[i + 1], Color(accent.r, accent.g, accent.b, 0.65), 4.0, true)
-		draw_line(points[i], points[i + 1], Color("#e8f3ff", 0.92), 1.2, true)
+func _center_text(rect: Rect2, value: String, size: int, color: Color) -> void:
+	draw_string(ThemeDB.fallback_font, Vector2(rect.position.x, rect.position.y + size), value, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, color)
+
+
+func _draw_wrapped_text(rect: Rect2, value: String, size: int, color: Color, max_lines: int = 2) -> void:
+	var lines: Array[String] = []
+	var current := ""
+	for character in value:
+		var candidate := current + character
+		if not current.is_empty() and ThemeDB.fallback_font.get_string_size(candidate, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size).x > rect.size.x:
+			lines.append(current)
+			current = character
+			if lines.size() >= max_lines:
+				break
+		else:
+			current = candidate
+	if lines.size() < max_lines and not current.is_empty():
+		lines.append(current)
+	for i in range(lines.size()):
+		draw_string(ThemeDB.fallback_font, Vector2(rect.position.x, rect.position.y + size + float(i) * (size + 3)), lines[i], HORIZONTAL_ALIGNMENT_LEFT, rect.size.x, size, color)
 
 
 func _draw_card_art(center: Vector2, icon_id: String, accent: Color, radius: float = 24.0) -> void:
@@ -457,7 +457,7 @@ func _upgrade_color(upgrade_id: String) -> Color:
 	if normalized.contains("fire"):
 		return Color("#d9784d")
 	if normalized.contains("thunder") or normalized.contains("five_thunder"):
-		return Color("#e7cf69")
+		return Color("#7988ff")
 	if normalized.contains("copper_coin") or normalized.contains("peachwood") or normalized.contains("sword_manual"):
 		return Color("#c9a66a")
 	if normalized.contains("water") or normalized.contains("ice") or normalized.contains("cold_relic"):
