@@ -284,7 +284,7 @@ func _update_mobile_move(screen_position: Vector2) -> void:
 
 
 func _camera_zoom_for_size(view_size: Vector2) -> float:
-	return clampf(minf(view_size.x / 1280.0, view_size.y / 720.0), 0.62, 1.0)
+	return clampf(minf(view_size.x / 1280.0, view_size.y / 720.0), 0.5, 1.0)
 
 func _random_enemy_kind() -> String:
 	var roll := randf()

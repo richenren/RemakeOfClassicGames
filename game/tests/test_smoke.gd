@@ -55,7 +55,7 @@ func _test_camera_follow(main: Variant) -> void:
 	_check(camera.global_position.is_equal_approx(main.player.global_position), "启动时相机中心对准主角")
 	_check(is_equal_approx(main._camera_zoom_for_size(Vector2(1280.0, 720.0)), 1.0), "基准窗口保持 1:1 战斗镜头")
 	_check(is_equal_approx(main._camera_zoom_for_size(Vector2(800.0, 600.0)), 0.625), "800×600 窗口自动缩小镜头以扩大可见战场")
-	_check(is_equal_approx(main._camera_zoom_for_size(Vector2(640.0, 360.0)), 0.62), "640×360 窗口镜头保持最小可用缩放")
+	_check(is_equal_approx(main._camera_zoom_for_size(Vector2(640.0, 360.0)), 0.5), "640×360 窗口按比例缩小镜头，保留基准战场视野比例")
 	var original_position: Vector2 = main.player.position
 	main.player.position = original_position + Vector2(25.0, 10.0)
 	main._process(0.0)

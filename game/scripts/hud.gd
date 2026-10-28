@@ -134,12 +134,12 @@ func _draw_compact_hud(view: Vector2, layout: Dictionary) -> void:
 	_text(Vector2(skill_rect.position.x + 8.0, skill_rect.position.y + 31.0), "就绪" if skill_ready else "冷却 %ds" % ceili(main_ref.active_skill_cooldown), 9, TEXT_COLOR)
 	var skill_ratio := 1.0 if skill_ready else 1.0 - clampf(main_ref.active_skill_cooldown / maxf(0.1, main_ref.active_skill_base_cooldown), 0.0, 1.0)
 	_bar(Rect2(skill_rect.position.x + 8.0, skill_rect.position.y + 36.0, skill_rect.size.x - 16.0, 4.0), skill_ratio, Color("#d1a84e"))
-	_text(Vector2(skill_rect.position.x + 8.0, skill_rect.position.y + 52.0), "治疗 %d/2 · 伤害%d" % [main_ref.heal_charges, roundi(player.damage)], 8, MUTED_COLOR)
+	_text(Vector2(skill_rect.position.x + 8.0, skill_rect.position.y + 52.0), "治疗 %d/2 · 伤害%d" % [main_ref.heal_charges, roundi(player.damage)], 9, MUTED_COLOR)
 	if main_ref.state != "game_over" and main_ref.state != "victory":
 		_draw_ornate_panel(objective_rect, Color("#c9a65b") if main_ref.boss_spawned else Color("#8fba9b"))
 		var objective := objective_data()
 		_text(Vector2(objective_rect.position.x + 8.0, objective_rect.position.y + 12.0), str(objective.get("title", "当前目标")), 9, Color("#e7cf98"))
-		_text(Vector2(objective_rect.position.x + 8.0, objective_rect.position.y + 23.0), str(objective.get("detail", "")), 8, TEXT_COLOR)
+		_text(Vector2(objective_rect.position.x + 8.0, objective_rect.position.y + 23.0), str(objective.get("detail", "")), 9, TEXT_COLOR)
 		_bar(Rect2(objective_rect.position.x + 8.0, objective_rect.end.y - 4.0, objective_rect.size.x - 16.0, 2.0), float(objective.get("progress", 0.0)), Color("#c9a65b"))
 	var boss = main_ref.get_boss()
 	if boss != null:
@@ -150,7 +150,7 @@ func _draw_compact_hud(view: Vector2, layout: Dictionary) -> void:
 	_draw_ornate_panel(build_rect, Color("#8b7758"))
 	_text(Vector2(build_rect.position.x + 7.0, build_rect.position.y + 14.0), "构筑", 9, Color("#e7cf98"))
 	var primary_text := "待立道" if main_ref.primary_element.is_empty() else "主修%s" % main_ref._element_name(main_ref.primary_element)
-	_text(Vector2(build_rect.position.x + 5.0, build_rect.position.y + 28.0), primary_text, 8, MUTED_COLOR)
+	_text(Vector2(build_rect.position.x + 5.0, build_rect.position.y + 28.0), primary_text, 9, MUTED_COLOR)
 	var owned_skill_ids: Array = []
 	for skill_variant in main_ref.AUTO_SKILL_DEFS.keys():
 		var skill_id := str(skill_variant)
@@ -172,7 +172,7 @@ func _draw_compact_hud(view: Vector2, layout: Dictionary) -> void:
 				var skill_data: Dictionary = main_ref.skills[skill_id]
 				var shown_id := str(skill_data.get("evolved", "")) if not str(skill_data.get("evolved", "")).is_empty() else skill_id
 				_draw_card_art(center, shown_id, _upgrade_color(shown_id), 9.0)
-				_text(center + Vector2(7.0, 3.0), str(skill_data.get("level", 1)), 8, TEXT_COLOR)
+				_text(center + Vector2(7.0, 3.0), str(skill_data.get("level", 1)), 9, TEXT_COLOR)
 				label = _short_skill_label(skill_id, shown_id)
 		else:
 			var artifact_index := i - 4
@@ -180,17 +180,17 @@ func _draw_compact_hud(view: Vector2, layout: Dictionary) -> void:
 				var artifact_id := str(artifact_ids[artifact_index])
 				var artifact_data: Dictionary = main_ref.artifacts[artifact_id]
 				_draw_card_art(center, artifact_id, _upgrade_color(artifact_id), 9.0)
-				_text(center + Vector2(7.0, 3.0), str(artifact_data.get("level", 1)), 8, TEXT_COLOR)
+				_text(center + Vector2(7.0, 3.0), str(artifact_data.get("level", 1)), 9, TEXT_COLOR)
 				label = _compact_artifact_label(artifact_id)
 		if label == "—":
 			draw_circle(center, 8.0, Color(0.08, 0.075, 0.065, 0.82))
 			draw_arc(center, 8.0, 0.0, TAU, 20, Color(0.55, 0.49, 0.38, 0.35), 1.0)
-		_center_text(Rect2(center.x - slot_width * 0.5, build_rect.position.y + 22.0, slot_width, 12.0), label, 8, MUTED_COLOR)
+		_center_text(Rect2(center.x - slot_width * 0.5, build_rect.position.y + 22.0, slot_width, 12.0), label, 9, MUTED_COLOR)
 	_draw_ornate_panel(controls_rect, Color("#8f805d"))
 	if not _is_mobile():
 		_center_text(controls_rect, "WASD 移动 · SPACE 镇尸诀 · E 治疗 · ESC 暂停", 9, MUTED_COLOR)
 	else:
-		_center_text(controls_rect, "左侧移动 · 右侧道术 / 治疗", 8, MUTED_COLOR)
+		_center_text(controls_rect, "左侧移动 · 右侧道术 / 治疗", 9, MUTED_COLOR)
 
 
 func _compact_artifact_label(artifact_id: String) -> String:
@@ -850,12 +850,12 @@ func _draw_touch_controls(view: Vector2) -> void:
 	draw_circle(skill_center, skill_radius, Color(0.055, 0.05, 0.04, 0.84))
 	draw_arc(skill_center, skill_radius, 0.0, TAU, 40, skill_color, 2.4 * scale)
 	_draw_skill_emblem(skill_center, skill_ready, skill_color)
-	_center_text(Rect2(skill_center.x - 32.0 * scale, skill_center.y + skill_radius * 0.38, 64.0 * scale, 15.0 * scale), "镇尸诀", maxi(8, roundi(10.0 * scale)), TEXT_COLOR)
+	_center_text(Rect2(skill_center.x - 32.0 * scale, skill_center.y + skill_radius * 0.38, 64.0 * scale, 15.0 * scale), "镇尸诀", maxi(9, roundi(10.0 * scale)), TEXT_COLOR)
 	var heal_center: Vector2 = touch["heal_center"]
 	var heal_radius: float = touch["heal_radius"]
 	draw_circle(heal_center, heal_radius, Color(0.055, 0.05, 0.04, 0.84))
 	draw_arc(heal_center, heal_radius, 0.0, TAU, 32, Color("#c16b55"), 2.0 * scale)
-	_center_text(Rect2(heal_center.x - 20.0 * scale, heal_center.y - 10.0 * scale, 40.0 * scale, 20.0 * scale), "疗 %d" % main_ref.heal_charges, maxi(8, roundi(10.0 * scale)), TEXT_COLOR)
+	_center_text(Rect2(heal_center.x - 20.0 * scale, heal_center.y - 10.0 * scale, 40.0 * scale, 20.0 * scale), "疗 %d" % main_ref.heal_charges, maxi(9, roundi(10.0 * scale)), TEXT_COLOR)
 
 func card_index_at(screen_position: Vector2) -> int:
 	var view := get_viewport_rect().size
