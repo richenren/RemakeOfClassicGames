@@ -237,22 +237,22 @@ func apply_burn(duration: float, damage_per_second: float) -> void:
 
 func _draw() -> void:
 	var sprite_texture: Texture2D = WALKER_TEXTURE
-	var sprite_rect := Rect2(-32.0, -44.0, 64.0, 88.0)
-	var bar_width := 58.0
+	var sprite_rect := Rect2(-38.0, -52.0, 76.0, 104.0)
+	var bar_width := 68.0
 	match kind:
 		"walker":
 			if is_moving and floori(gait_phase / PI) % 2 == 0:
 				sprite_texture = WALKER_WALK_TEXTURE
 		"jumper":
 			sprite_texture = JUMPER_TEXTURE
-			sprite_rect = Rect2(-34.0, -40.0, 68.0, 80.0)
-			bar_width = 54.0
+			sprite_rect = Rect2(-39.0, -47.0, 78.0, 94.0)
+			bar_width = 60.0
 		"armored":
 			sprite_texture = ARMORED_TEXTURE
 			if is_moving and floori(gait_phase / PI) % 2 == 0:
 				sprite_texture = ARMORED_WALK_TEXTURE
-			sprite_rect = Rect2(-40.0, -50.0, 80.0, 100.0)
-			bar_width = 66.0
+			sprite_rect = Rect2(-46.0, -58.0, 92.0, 116.0)
+			bar_width = 76.0
 		"boss":
 			sprite_texture = BOSS_PHASE2_TEXTURE if boss_phase == 2 else (BOSS_WALK_TEXTURE if is_moving and floori(gait_phase / PI) % 2 == 0 else BOSS_TEXTURE)
 			sprite_rect = Rect2(-78.0, -90.0, 156.0, 180.0)

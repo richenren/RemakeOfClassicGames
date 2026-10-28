@@ -104,7 +104,7 @@ func _draw_level_up(view: Vector2) -> void:
 	var subtitle_size := maxi(9, roundi(14.0 * scale))
 
 	# Dim the live battle without hiding the cemetery scene and player silhouette.
-	draw_rect(Rect2(Vector2.ZERO, view), Color(0.006, 0.009, 0.014, 0.61))
+	draw_rect(Rect2(Vector2.ZERO, view), Color(0.006, 0.009, 0.014, 0.48))
 	draw_rect(panel_rect, Color("#0b0a09", 0.96))
 	draw_rect(panel_rect, Color("#c6a15b", 0.92), false, 1.6 * scale)
 	draw_rect(panel_rect.grow(-7.0 * scale), Color("#8d7145", 0.24), false, 1.0 * scale)
@@ -145,7 +145,7 @@ func _draw_level_up(view: Vector2) -> void:
 			draw_line(corner, corner + Vector2(sx * 10.0 * scale, 0.0), Color(accent.r, accent.g, accent.b, 0.85), 1.1 * scale)
 			draw_line(corner, corner + Vector2(0.0, sy * 10.0 * scale), Color(accent.r, accent.g, accent.b, 0.85), 1.1 * scale)
 
-		var art_height := minf(176.0 * scale, rect.size.y * 0.45)
+		var art_height := minf(206.0 * scale, rect.size.y * 0.52)
 		var art_rect := Rect2(rect.position + Vector2(8.0, 8.0) * scale, Vector2(rect.size.x - 16.0 * scale, art_height))
 		_draw_skill_card_illustration(art_rect, icon_id, accent)
 
@@ -311,16 +311,16 @@ func _hud_layout(view: Vector2) -> Dictionary:
 
 func _level_up_layout(view: Vector2) -> Dictionary:
 	var margin := maxf(8.0, minf(18.0, view.x * 0.018))
-	var panel_width := maxf(120.0, minf(980.0, view.x - margin * 2.0))
-	var panel_height := maxf(160.0, minf(520.0, view.y - margin * 2.0))
+	var panel_width := maxf(120.0, minf(1080.0, minf(view.x * 0.82, view.x - margin * 2.0)))
+	var panel_height := maxf(160.0, minf(520.0, minf(view.y * 0.78, view.y - margin * 2.0)))
 	var scale := clampf(minf(view.x / 1280.0, view.y / 720.0), 0.62, 1.0)
 	var panel_rect := Rect2((view.x - panel_width) * 0.5, (view.y - panel_height) * 0.5, panel_width, panel_height)
-	var header_height := minf(122.0 * scale, panel_height * 0.25)
+	var header_height := minf(122.0 * scale, panel_height * 0.24)
 	var inner_margin := clampf(panel_width * 0.032, 12.0, 30.0)
-	var gap := clampf(panel_width * 0.018, 8.0, 18.0)
+	var gap := clampf(panel_width * 0.022, 10.0, 24.0)
 	var card_width := maxf(40.0, (panel_width - inner_margin * 2.0 - gap * 2.0) / 3.0)
 	var card_y := panel_rect.position.y + header_height
-	var card_height := maxf(90.0, panel_rect.end.y - card_y - 18.0 * scale)
+	var card_height := maxf(90.0, panel_rect.end.y - card_y - 22.0 * scale)
 	var cards: Array = []
 	for i in range(3):
 		cards.append(Rect2(panel_rect.position.x + inner_margin + float(i) * (card_width + gap), card_y, card_width, card_height))
@@ -468,7 +468,7 @@ func _draw_skill_card_illustration(art_rect: Rect2, icon_id: String, accent: Col
 	if icon_id.begins_with("cultivation_"):
 		art_region = _cultivation_art_region(icon_id)
 		art_texture = ELEMENT_CULTIVATION_ATLAS
-	var icon_size := minf(art_rect.size.y * 0.9, art_rect.size.x * 0.60)
+	var icon_size := minf(art_rect.size.y * 0.98, art_rect.size.x * 0.76)
 	var icon_center := center
 	if art_region.size.x > 0.0:
 		draw_texture_rect_region(art_texture, Rect2(icon_center - Vector2(icon_size, icon_size) * 0.5, Vector2(icon_size, icon_size)), art_region, Color.WHITE, false)
