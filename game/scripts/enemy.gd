@@ -240,6 +240,9 @@ func _draw() -> void:
 	var sprite_rect := Rect2(-26.0, -36.0, 52.0, 72.0)
 	var bar_width := 48.0
 	match kind:
+		"walker":
+			if is_moving and floori(gait_phase / PI) % 2 == 0:
+				sprite_texture = WALKER_WALK_TEXTURE
 		"jumper":
 			sprite_texture = JUMPER_TEXTURE
 			sprite_rect = Rect2(-30.0, -34.0, 60.0, 68.0)
