@@ -28,10 +28,10 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 
 ## 最新执行结果（2026-10-27）
 
-[GitHub Actions：技能构筑、卡片与步态更新后自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40617522269)
+[GitHub Actions：技能构筑、卡片与步态更新后自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40617823140)
 
 - [x] Godot 4.5.1 Headless 导入与脚本解析：通过。
-- [x] 游戏逻辑、技能构筑与动画状态烟雾测试：**66 项通过，0 项失败**。
+- [x] 游戏逻辑、技能构筑与动画状态烟雾测试：**71 项通过，0 项失败**。
 - [x] 主场景 Headless 启动：通过。
 - [x] 既有 Windows 图形界面基础试玩：独立调试窗口正常显示地图、玩家、敌人；键盘移动、自动符箓攻击、血条、升级三选一、暂停/继续、失败结算已实测通过。当前新增的技能卡片图标、正式技能构筑、程序步态和技能特效仍待本机图形界面目视复测。
 - [ ] Windows 完整验收仍待完成：尸王胜利结算尚未在本轮实机试玩中验证。失败结算的文字重叠已通过新增近乎不透明的居中结果面板修复；新增的 3 项面板布局自动化断言已在 CI 通过，仍待本机图形界面复测确认。
@@ -44,4 +44,4 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 3. **编辑器内嵌游戏视口 HUD 左侧文字被裁切（低优先级）**：小尺寸内嵌视口无法完整显示 1280×720 HUD；独立调试窗口中显示正常。建议使用独立窗口或放大编辑器进行验收。
 4. **Windows WASAPI 音频设备日志（低优先级，暂不改游戏代码）**：错误来自引擎音频驱动，独立游戏窗口未复现，项目当前无音频资源。若后续加入音效，再检查 Windows 默认输出设备及占用情况。
 
-最新 Headless 测试结果为 66 项通过、0 项失败（[技能构筑与步态更新后的 CI 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40617522269)）。新增断言覆盖正式技能获取、Lv3 双分支、冰魄阵进化条件、技能投射物和玩家/敌人步态状态。Windows 实际窗口仍需目视复测，尸王胜利结算仍未实机验收。Android 真机测试不属于本轮任务范围。
+最新 Headless 测试结果为 71 项通过、0 项失败（[技能构筑与步态更新后的 CI 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40617823140)）。新增断言覆盖正式技能获取、Lv3 双分支、冰魄阵进化条件、技能投射物和玩家/敌人步态状态。Windows 实际窗口仍需目视复测，尸王胜利结算仍未实机验收。Android 真机测试不属于本轮任务范围。
