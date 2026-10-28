@@ -36,7 +36,7 @@
 - 导入/解析检查：`godot --headless --editor --path game --quit`。
 - 主场景启动检查：`godot --headless --path game --quit-after 5`。
 
-Godot 4.5.1 Headless CI 已通过 90 项自动化检查、0 项失败；导入/解析和主场景启动均通过（[查看最新运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40628210670)）。已验证独立角色 SVG 导入、火焰区域持续伤害、雷符链路闪电、技能候选权重、经验收益与尸王机制。Windows 独立窗口仍需确认角色面部可读性、动作帧切换与特效观感；Android 真机测试不属于本轮范围。
+Godot 4.5.1 Headless CI 已通过 98 项自动化检查、0 项失败；导入/解析和主场景启动均通过（[查看最新运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40644755837)）。已验证修长道士/清朝僵尸 SVG 导入、六种技能卡插画映射、火焰区域持续伤害、雷符链路闪电、技能候选权重与尸王机制。Windows 独立窗口仍需确认实际美术观感与卡片排版；Android 真机测试不属于本轮范围。
 
 ## 已知问题
 
@@ -67,4 +67,4 @@ Godot 4.5.1 Headless CI 已通过 90 项自动化检查、0 项失败；导入/�
 
 - 本目录是原型，不是完整 V0.1 交付版本。
 - 数值仅用于验证战斗闭环，后续应移入可配置资源并通过试玩平衡。
-- 独立角色美术、火焰区域与连锁闪电更新后的验证结果见 [最新 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40627608061)。Windows 视觉复测仍待完成；Android 真机测试不属于本轮范围。
+- 角色比例、清朝僵尸造型、技能卡独立插画与战斗逻辑更新后的验证结果见 [最新 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40644755837)。Windows 视觉复测仍待完成；Android 真机测试不属于本轮范围。
