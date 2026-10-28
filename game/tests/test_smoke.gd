@@ -350,6 +350,12 @@ func _test_skill_art_assets() -> void:
 	_check(hud._skill_card_art_region("body_jade").position.x == 2240.0, "护身玉佩使用灵玉主视觉")
 	_check(hud._skill_card_art_region("water_array").position.x == 1280.0, "水阵卡使用横向水阵主视觉")
 	_check(hud._skill_card_art_region("earth_formation").position.x == 1600.0, "地脉阵卡使用横向地脉主视觉")
+	var card_svg_source := FileAccess.get_file_as_string("res://assets/sprites/skill_card_art_atlas.svg")
+	var earth_start := card_svg_source.find('<g transform="translate(1600 0)">')
+	var earth_end := card_svg_source.find('<g transform="translate(1920 0)">')
+	var earth_art := card_svg_source.substr(earth_start, earth_end - earth_start) if earth_start >= 0 and earth_end > earth_start else ""
+	_check(earth_art.contains("<title>土系地脉阵：裂地岩柱与石屑震波</title>"), "土系地脉阵插画明确表达裂地岩柱与石屑震波")
+	_check(not earth_art.contains("#ef6529") and not earth_art.contains("#ffd16c"), "土系地脉阵插画不复用火系高饱和火焰配色")
 	_check(hud._skill_card_art_region("cultivation_metal").position.x == 1920.0, "金系修炼卡有独立横向插画")
 	_check(hud._skill_card_art_region("cultivation_thunder").position.x == 3520.0, "雷系修炼卡有独立横向插画")
 	_check(hud._cultivation_art_region("cultivation_metal").position.x == 0.0, "金系修炼使用专属剑意插画")
