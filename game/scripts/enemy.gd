@@ -1,10 +1,13 @@
 extends Node2D
 
-const CREATURES_ATLAS: Texture2D = preload("res://assets/sprites/creatures_atlas.png")
-const WALKER_REGION := Rect2(300.0, 29.0, 40.0, 70.0)
-const JUMPER_REGION := Rect2(43.0, 158.0, 42.0, 68.0)
-const ARMORED_REGION := Rect2(166.0, 157.0, 51.0, 70.0)
-const BOSS_REGION := Rect2(280.0, 146.0, 80.0, 91.0)
+const WALKER_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_walker.svg")
+const WALKER_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_walker_walk.svg")
+const JUMPER_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_jumper.svg")
+const ARMORED_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_armored.svg")
+const ARMORED_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_armored_walk.svg")
+const BOSS_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss.svg")
+const BOSS_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss_walk.svg")
+const BOSS_PHASE2_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss_phase2.svg")
 
 var kind: String = "walker"
 var max_hp: float = 30.0
@@ -233,21 +236,23 @@ func apply_burn(duration: float, damage_per_second: float) -> void:
 
 
 func _draw() -> void:
-	var sprite_region: Rect2 = WALKER_REGION
-	var sprite_rect := Rect2(-21.0, -30.0, 42.0, 59.0)
-	var bar_width := 40.0
+	var sprite_texture: Texture2D = WALKER_TEXTURE
+	var sprite_rect := Rect2(-26.0, -36.0, 52.0, 72.0)
+	var bar_width := 48.0
 	match kind:
 		"jumper":
-			sprite_region = JUMPER_REGION
-			sprite_rect = Rect2(-22.0, -29.0, 44.0, 57.0)
-			bar_width = 40.0
-		"armored":
-			sprite_region = ARMORED_REGION
-			sprite_rect = Rect2(-27.0, -34.0, 54.0, 67.0)
+			sprite_texture = JUMPER_TEXTURE
+			sprite_rect = Rect2(-30.0, -34.0, 60.0, 68.0)
 			bar_width = 46.0
+		"armored":
+			sprite_texture = ARMORED_TEXTURE
+			if is_moving and floori(gait_phase / PI) % 2 == 0:
+				sprite_texture = ARMORED_WALK_TEXTURE
+			sprite_rect = Rect2(-34.0, -43.0, 68.0, 86.0)
+			bar_width = 54.0
 		"boss":
-			sprite_region = BOSS_REGION
-			sprite_rect = Rect2(-49.0, -57.0, 98.0, 112.0)
+			sprite_texture = BOSS_PHASE2_TEXTURE if boss_phase == 2 else (BOSS_WALK_TEXTURE if is_moving and floori(gait_phase / PI) % 2 == 0 else BOSS_TEXTURE)
+			sprite_rect = Rect2(-68.0, -78.0, 136.0, 156.0)
 
 	var stride := sin(gait_phase) if is_moving else 0.0
 	var bob := -hop_height
@@ -304,10 +309,10 @@ func _draw() -> void:
 	var sprite_tilt := clampf(facing_direction.x * 0.055, -0.055, 0.055) + gait_lean if is_moving else sin(animation_time) * 0.006
 	var stretch_y := 1.0 + absf(sin(gait_phase)) * 0.008 if is_moving else 1.0
 	draw_set_transform(Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * tilt_scale, stretch_y))
-	draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, tint, false)
+	draw_texture_rect(sprite_texture, sprite_rect, false, tint)
 	# Tiny alternating footfalls and dust give the single-pose creature sprites a readable stride.
 	if is_moving:
-		var foot_y := 47.0 if is_boss else (29.0 if kind == "armored" else 25.0)
+		var foot_y := 68.0 if is_boss else (48.0 if kind == "armored" else (39.0 if kind == "walker" else 37.0))
 		var stride_offset := sin(gait_phase) * 4.0
 		var foot_color := Color("#30271f") if kind != "armored" else Color("#25221d")
 		draw_line(Vector2(-6.0, foot_y - 4.0), Vector2(-6.0 + stride_offset, foot_y), foot_color, 3.2)

@@ -35,6 +35,7 @@ func _run_tests() -> void:
 
 	if main.player != null and not main.enemies.is_empty():
 		_test_combat_and_progression(main)
+	_test_combat_visuals(main)
 
 	main.queue_free()
 	await process_frame
@@ -66,10 +67,21 @@ func _test_hud_presentation(main: Variant) -> void:
 
 
 func _test_sprite_assets(main: Variant) -> void:
-	var atlas := load("res://assets/sprites/creatures_atlas.png") as Texture2D
-	_check(atlas != null, "原创道士与僵尸贴图图集可加载")
-	if atlas != null:
-		_check(atlas.get_size() == Vector2(384.0, 256.0), "贴图图集尺寸与角色/怪物区域一致")
+	var player_idle := load("res://assets/sprites/player_taoist.svg") as Texture2D
+	var player_walk := load("res://assets/sprites/player_taoist_walk.svg") as Texture2D
+	var walker := load("res://assets/sprites/enemy_walker.svg") as Texture2D
+	var walker_walk := load("res://assets/sprites/enemy_walker_walk.svg") as Texture2D
+	var jumper := load("res://assets/sprites/enemy_jumper.svg") as Texture2D
+	var armored := load("res://assets/sprites/enemy_armored.svg") as Texture2D
+	var boss := load("res://assets/sprites/enemy_boss.svg") as Texture2D
+	var boss_phase2 := load("res://assets/sprites/enemy_boss_phase2.svg") as Texture2D
+	_check(player_idle != null and player_walk != null, "道士待机与行走高清透明 SVG 可加载")
+	_check(walker != null and walker_walk != null and jumper != null and armored != null, "三类僵尸独立美术资源可加载")
+	_check(boss != null and boss_phase2 != null, "尸王一阶段与二阶段独立美术资源可加载")
+	if player_idle != null:
+		_check(player_idle.get_size() == Vector2(128.0, 160.0), "道士资源采用 128×160 高清角色画布")
+	if boss != null:
+		_check(boss.get_size() == Vector2(192.0, 224.0), "尸王资源使用更大画布以保证面部与服饰细节")
 	_check(main.player.is_moving == false, "玩家初始使用待机贴图状态")
 
 
@@ -254,6 +266,30 @@ func _test_xp_orb() -> void:
 	orb.position = Vector2.ZERO
 	_check(orb.tick(0.016, Vector2.ZERO, 92.0), "玩家接触灵气球时可拾取")
 	orb.queue_free()
+
+
+func _test_combat_visuals(main: Variant) -> void:
+	var temp_enemy: Variant = ENEMY_SCRIPT.new()
+	temp_enemy.setup("walker")
+	temp_enemy.position = main.player.position + Vector2(50.0, 0.0)
+	main.add_child(temp_enemy)
+	main.enemies.append(temp_enemy)
+	main.skills.clear()
+	main.skills["fire_talisman"] = {"level": 1, "branch": "", "evolved": ""}
+	main.fire_zone_timer = 0.01
+	main.fire_zones.clear()
+	main._tick_fire_zones(0.02)
+	_check(main.fire_zones.size() == 1, "火符按固定间隔自动生成持续火焰区域")
+	var hp_before: float = temp_enemy.hp
+	main._tick_fire_zones(0.3)
+	_check(temp_enemy.hp < hp_before, "持续火焰区域周期性灼烧范围内敌人")
+	main._spawn_chain_effect(Vector2.ZERO, Vector2(80.0, 0.0), 0.24)
+	_check(str(main.skill_effects.back().get("kind", "")) == "lightning_chain", "雷符连锁伤害会生成可见的连接闪电")
+	main.fire_zones.clear()
+	main.skill_effects.clear()
+	main.skills.clear()
+	main.enemies.erase(temp_enemy)
+	temp_enemy.queue_free()
 
 
 func _test_combat_and_progression(main: Variant) -> void:

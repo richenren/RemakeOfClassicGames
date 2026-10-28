@@ -2,9 +2,8 @@ extends Node2D
 
 const WORLD_MIN := Vector2(48.0, 48.0)
 const WORLD_MAX := Vector2(2352.0, 1552.0)
-const CREATURES_ATLAS: Texture2D = preload("res://assets/sprites/creatures_atlas.png")
-const PLAYER_IDLE_REGION := Rect2(37.0, 29.0, 53.0, 70.0)
-const PLAYER_MOVE_REGION := Rect2(169.0, 29.0, 46.0, 70.0)
+const PLAYER_IDLE_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist.svg")
+const PLAYER_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_walk.svg")
 
 var main_ref: Node
 var max_hp: float = 100.0
@@ -96,12 +95,12 @@ func _draw() -> void:
 	var stretch_y := 1.0 - (gait * 0.012 if is_moving else 0.0)
 	var gait_lean := sin(gait_phase) * 0.028 if is_moving else 0.0
 	var sprite_tilt := clampf(facing.x * 0.06, -0.06, 0.06) + gait_lean if is_moving else sin(animation_time * 0.8) * 0.008
-	# The existing atlas has two distinct Taoist poses. Alternate them on each
-	# half-step instead of holding a single static moving pose for the whole run.
-	var sprite_region: Rect2 = PLAYER_IDLE_REGION
-	if is_moving:
-		sprite_region = PLAYER_MOVE_REGION if floori(gait_phase / PI) % 2 == 0 else PLAYER_IDLE_REGION
-	var sprite_rect := Rect2(-24.0, -32.0, 48.0, 64.0)
+	# Use two hand-detailed, transparent poses rather than rotating one static atlas cell.
+	# The walk frame changes with the footfall cadence, so robe and arms visibly follow the stride.
+	var sprite_texture: Texture2D = PLAYER_IDLE_TEXTURE
+	if is_moving and floori(gait_phase / PI) % 2 == 0:
+		sprite_texture = PLAYER_WALK_TEXTURE
+	var sprite_rect := Rect2(-31.0, -40.0, 62.0, 80.0)
 	var tint := Color.WHITE
 	if hit_flash > 0.0:
 		tint = Color("#fff0d0")
@@ -116,10 +115,10 @@ func _draw() -> void:
 
 	if is_moving and footstep_flash > 0.0:
 		var dust_alpha := footstep_flash / 0.13 * 0.22
-		draw_circle(Vector2(-8.0 * footstep_side, 25.0), 4.0, Color(0.70, 0.62, 0.43, dust_alpha))
-		draw_circle(Vector2(-11.0 * footstep_side, 27.0), 2.5, Color(0.70, 0.62, 0.43, dust_alpha * 0.75))
+		draw_circle(Vector2(-8.0 * footstep_side, 37.0), 4.0, Color(0.70, 0.62, 0.43, dust_alpha))
+		draw_circle(Vector2(-11.0 * footstep_side, 39.0), 2.5, Color(0.70, 0.62, 0.43, dust_alpha * 0.75))
 
 	var flip_x := -1.0 if facing.x < -0.1 else 1.0
 	draw_set_transform(Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * squash_x, stretch_y))
-	draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, tint, false)
+	draw_texture_rect(sprite_texture, sprite_rect, false, tint)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

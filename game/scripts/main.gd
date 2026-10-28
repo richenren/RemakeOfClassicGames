@@ -90,6 +90,8 @@ var artifacts: Dictionary = {}
 var general_upgrade_levels: Dictionary = {"swift_step": 0, "spirit_gain": 0, "spirit_sense": 0, "vitality": 0}
 var active_skill_level: int = 1
 var skill_effects: Array[Dictionary] = []
+var fire_zones: Array[Dictionary] = []
+var fire_zone_timer: float = 3.5
 
 var joystick_touch_id: int = -1
 
@@ -160,6 +162,7 @@ func _process(delta: float) -> void:
 			spawn_enemy("boss")
 
 		_tick_combat_skills(delta)
+		_tick_fire_zones(delta)
 		_tick_enemies(delta)
 		_tick_projectiles(delta)
 		_remove_dead_enemies()
@@ -1017,7 +1020,8 @@ func _apply_chain_damage(origin_enemy, damage: float, max_targets: int) -> void:
 			break
 		next_target.take_damage(damage)
 		hit_targets.append(next_target)
-		_spawn_skill_effect("lightning", next_target.position, 24.0, 0.2)
+		_spawn_chain_effect(origin_enemy.position, next_target.position, 0.26)
+		_spawn_skill_effect("lightning", next_target.position, 28.0, 0.24)
 
 
 func _spawn_skill_effect(effect_kind: String, center: Vector2, radius: float, duration: float) -> void:
@@ -1026,6 +1030,69 @@ func _spawn_skill_effect(effect_kind: String, center: Vector2, radius: float, du
 		skill_effects.remove_at(0)
 	skill_effects.append({"kind": effect_kind, "position": center, "radius": radius, "time": duration, "duration": duration})
 	queue_redraw()
+
+
+func _spawn_chain_effect(start_position: Vector2, end_position: Vector2, duration: float = 0.26) -> void:
+	if skill_effects.size() >= 80:
+		skill_effects.remove_at(0)
+	skill_effects.append({
+		"kind": "lightning_chain",
+		"position": start_position,
+		"from": start_position,
+		"to": end_position,
+		"radius": start_position.distance_to(end_position),
+		"time": duration,
+		"duration": duration
+	})
+	queue_redraw()
+
+
+func _tick_fire_zones(delta: float) -> void:
+	if skills.has("fire_talisman"):
+		fire_zone_timer -= delta
+		if fire_zone_timer <= 0.0:
+			var target = _find_combat_target(player.position, 620.0)
+			if target != null:
+				var skill_data: Dictionary = skills["fire_talisman"]
+				var level := int(skill_data.get("level", 1))
+				var radius := 78.0 + float(level - 1) * 7.0
+				var duration := 3.0
+				fire_zones.append({
+					"position": target.position,
+					"radius": radius,
+					"time": duration,
+					"duration": duration,
+					"tick_timer": 0.25,
+					"damage": 2.8 + float(level) * 0.9
+				})
+				if fire_zones.size() > 4:
+					fire_zones.remove_at(0)
+				_spawn_skill_effect("fire", target.position, 34.0, 0.32)
+				fire_zone_timer = maxf(3.8, 5.0 - float(level - 1) * 0.22)
+			else:
+				fire_zone_timer = 0.6
+
+	for i in range(fire_zones.size() - 1, -1, -1):
+		var zone: Dictionary = fire_zones[i]
+		zone["time"] = float(zone.get("time", 0.0)) - delta
+		zone["tick_timer"] = float(zone.get("tick_timer", 0.0)) - delta
+		if float(zone["time"]) <= 0.0:
+			fire_zones.remove_at(i)
+			continue
+		if float(zone["tick_timer"]) <= 0.0:
+			var center: Vector2 = zone.get("position", Vector2.ZERO)
+			var radius := float(zone.get("radius", 78.0))
+			var tick_damage := float(zone.get("damage", 3.0))
+			for enemy in enemies:
+				if not is_instance_valid(enemy) or enemy.hp <= 0.0:
+					continue
+				if enemy.position.distance_to(center) <= radius:
+					enemy.take_damage(tick_damage)
+					enemy.apply_burn(0.7, tick_damage * 0.3)
+			zone["tick_timer"] = 0.5
+		fire_zones[i] = zone
+	if not fire_zones.is_empty():
+		queue_redraw()
 
 
 func _tick_skill_effects(delta: float) -> void:
@@ -1069,13 +1136,19 @@ func _draw_skill_effects() -> void:
 				draw_arc(center, radius, 0.0, TAU, 40, Color(0.8, 0.82, 0.78, life * 0.4), 1.5)
 			"fire":
 				var burst_radius := radius * (0.25 + progress * 1.0)
-				draw_circle(center, burst_radius * 0.62, Color(0.94, 0.36, 0.12, life * 0.24))
-				draw_arc(center, burst_radius, 0.0, TAU, 36, Color(1.0, 0.62, 0.25, life * 0.72), 2.0)
+				draw_circle(center, burst_radius * 0.62, Color(0.94, 0.24, 0.06, life * 0.3))
+				draw_arc(center, burst_radius, 0.0, TAU, 36, Color(1.0, 0.48, 0.14, life * 0.78), 2.6)
 				for i in range(7):
 					var angle := TAU * float(i) / 7.0 + progress * 0.42
+					var direction := Vector2(cos(angle), sin(angle))
+					var tangent := Vector2(-direction.y, direction.x)
 					var inner := radius * (0.12 + progress * 0.12)
 					var outer := radius * (0.45 + progress * 0.68)
-					draw_line(center + Vector2(cos(angle), sin(angle)) * inner, center + Vector2(cos(angle), sin(angle)) * outer, Color(1.0, 0.72, 0.32, life), 2.0)
+					draw_line(center + direction * inner, center + direction * outer, Color(1.0, 0.72, 0.32, life), 2.2, true)
+					var flame_base := center + direction * burst_radius * 0.42
+					var flame_tip := center + direction * (burst_radius * 0.42 + radius * (0.14 + 0.12 * sin(progress * 12.0 + float(i))))
+					draw_colored_polygon(PackedVector2Array([flame_base - tangent * 4.0, flame_tip, flame_base + tangent * 4.0]), Color(1.0, 0.34, 0.06, life * 0.82))
+					draw_line(flame_base, flame_tip, Color(1.0, 0.84, 0.42, life * 0.88), 1.4, true)
 			"slash":
 				draw_line(center + Vector2(-radius * 0.75, radius * 0.55), center + Vector2(radius * 0.72, -radius * 0.55), Color(0.98, 0.86, 0.58, life), 3.2)
 				draw_line(center + Vector2(-radius * 0.38, radius * 0.72), center + Vector2(radius * 0.48, -radius * 0.25), Color(0.78, 0.63, 0.36, life * 0.75), 1.8)
@@ -1095,10 +1168,65 @@ func _draw_skill_effects() -> void:
 			"wood":
 				draw_arc(center, radius, 0.0, TAU, 40, Color(0.7, 0.73, 0.5, life * 0.7), 2.0)
 			"lightning":
-				draw_arc(center, radius, 0.0, TAU, 32, Color(0.96, 0.84, 0.4, life * 0.8), 2.5)
+				draw_circle(center, radius * 0.58, Color(0.32, 0.42, 1.0, life * 0.22))
+				draw_arc(center, radius, 0.0, TAU, 36, Color(0.52, 0.62, 1.0, life * 0.82), 2.2)
+				draw_arc(center, radius * 0.56, 0.0, TAU, 28, Color(0.83, 0.92, 1.0, life * 0.74), 1.5)
+				_draw_lightning_bolt(center + Vector2(-radius * 0.28, -radius * 1.15), center + Vector2(-radius * 0.06, radius * 0.12), life, 0.7)
+				_draw_lightning_bolt(center + Vector2(radius * 0.26, -radius * 1.08), center + Vector2(radius * 0.08, radius * 0.12), life, 2.1)
+				_draw_lightning_bolt(center + Vector2(-radius * 0.05, -radius * 0.7), center + Vector2(radius * 0.18, radius * 0.16), life * 0.8, 3.8)
+			"lightning_chain":
+				var chain_start: Vector2 = effect.get("from", center)
+				var chain_end: Vector2 = effect.get("to", center)
+				_draw_lightning_bolt(chain_start, chain_end, life, progress * 4.0)
+				var chain_mid := chain_start.lerp(chain_end, 0.55)
+				var chain_side := Vector2(-(chain_end - chain_start).y, (chain_end - chain_start).x).normalized()
+				_draw_lightning_bolt(chain_mid, chain_mid + chain_side * minf(20.0, radius * 0.12), life * 0.58, progress * 7.0)
 			"control":
 				draw_arc(center, radius, 0.0, TAU, 64, Color(0.92, 0.76, 0.38, life * 0.85), 3.0)
 				draw_arc(center, radius * 0.78, 0.0, TAU, 56, Color(0.74, 0.56, 0.3, life * 0.55), 1.5)
+
+
+func _draw_lightning_bolt(start_position: Vector2, end_position: Vector2, alpha: float, seed_offset: float = 0.0) -> void:
+	var axis := end_position - start_position
+	if axis.length_squared() < 1.0:
+		return
+	var normal := Vector2(-axis.y, axis.x).normalized()
+	var points: Array[Vector2] = [start_position]
+	for i in range(1, 6):
+		var t := float(i) / 6.0
+		var jitter := sin(float(i) * 8.7 + seed_offset + elapsed_seconds * 35.0) * minf(12.0, axis.length() * 0.07)
+		points.append(start_position + axis * t + normal * jitter)
+	points.append(end_position)
+	for i in range(points.size() - 1):
+		draw_line(points[i], points[i + 1], Color(0.30, 0.38, 1.0, alpha * 0.56), 6.0, true)
+		draw_line(points[i], points[i + 1], Color(0.58, 0.78, 1.0, alpha * 0.94), 2.7, true)
+		draw_line(points[i], points[i + 1], Color(0.96, 0.99, 1.0, alpha), 1.0, true)
+
+
+func _draw_fire_zones() -> void:
+	for zone in fire_zones:
+		var center: Vector2 = zone.get("position", Vector2.ZERO)
+		var radius := float(zone.get("radius", 78.0))
+		var duration := maxf(0.01, float(zone.get("duration", 3.0)))
+		var life := clampf(float(zone.get("time", 0.0)) / duration, 0.0, 1.0)
+		var pulse := 0.5 + 0.5 * sin(elapsed_seconds * 7.0)
+		draw_circle(center, radius * 0.78, Color(0.72, 0.12, 0.025, 0.12 * life))
+		draw_arc(center, radius * (0.9 + pulse * 0.04), 0.0, TAU, 56, Color(1.0, 0.26, 0.035, life * 0.78), 3.0)
+		draw_arc(center, radius * 0.64, 0.0, TAU, 48, Color(1.0, 0.52, 0.12, life * 0.48), 1.8)
+		for i in range(9):
+			var angle := TAU * float(i) / 9.0 + elapsed_seconds * 0.38
+			var direction := Vector2(cos(angle), sin(angle))
+			var tangent := Vector2(-direction.y, direction.x)
+			var base := center + direction * radius * 0.66
+			var flame_length := radius * (0.15 + 0.07 * (0.5 + 0.5 * sin(elapsed_seconds * 8.0 + float(i) * 1.9)))
+			var tip := base + direction * flame_length
+			draw_colored_polygon(PackedVector2Array([base - tangent * 5.0, tip, base + tangent * 5.0]), Color(1.0, 0.30, 0.025, life * 0.68))
+			draw_line(base, tip, Color(1.0, 0.78, 0.24, life * 0.9), 1.7, true)
+		for i in range(8):
+			var rune_angle := TAU * float(i) / 8.0
+			var rune_start := center + Vector2(cos(rune_angle), sin(rune_angle)) * radius * 0.48
+			var rune_end := center + Vector2(cos(rune_angle), sin(rune_angle)) * radius * 0.55
+			draw_line(rune_start, rune_end, Color(1.0, 0.68, 0.2, life * 0.55), 1.6, true)
 
 
 func cast_active_skill() -> void:
@@ -1232,3 +1360,4 @@ func _draw() -> void:
 			draw_line(player.position + inner, player.position + outer, Color(0.93, 0.81, 0.5, alpha * 0.8), 2.0)
 
 	_draw_skill_effects()
+	_draw_fire_zones()
