@@ -140,21 +140,21 @@ func _draw_build_strip(view: Vector2) -> void:
 	_draw_ornate_panel(rect, Color("#8b7758"))
 	_text(rect.position + Vector2(12.0, 17.0), "当前构筑", 12, Color("#e7cf98"))
 
-	var skill_order: Array[String] = ["fire_talisman", "thunder_talisman", "copper_coin_sword", "peachwood_sword", "water_array", "earth_formation"]
-	var skill_labels: Array[String] = ["火符", "雷符", "铜剑", "桃剑", "水阵", "地脉"]
+	var owned_skill_ids: Array = main_ref.skills.keys()
+	owned_skill_ids.sort()
 	for i in range(4):
 		var center := rect.position + Vector2(31.0 + float(i) * 59.0, 43.0)
-		var skill_id := skill_order[i]
-		if main_ref.skills.has(skill_id):
+		if i < owned_skill_ids.size():
+			var skill_id := str(owned_skill_ids[i])
 			var skill_data: Dictionary = main_ref.skills[skill_id]
 			var shown_id := str(skill_data.get("evolved", "")) if not str(skill_data.get("evolved", "")).is_empty() else skill_id
 			_draw_card_art(center, shown_id, _upgrade_color(shown_id), 15.0)
 			_text(center + Vector2(11.0, 5.0), str(skill_data.get("level", 1)), 9, TEXT_COLOR)
+			_text(center + Vector2(-18.0, 25.0), _short_skill_label(skill_id, shown_id), 8, MUTED_COLOR)
 		else:
 			draw_circle(center, 14.0, Color(0.08, 0.075, 0.065, 0.85))
 			draw_arc(center, 14.0, 0.0, TAU, 24, Color(0.55, 0.49, 0.38, 0.35), 1.0)
 			draw_line(center + Vector2(-4.0, 0.0), center + Vector2(4.0, 0.0), Color(0.55, 0.49, 0.38, 0.3), 1.0)
-		_text(center + Vector2(-14.0, 25.0), skill_labels[i], 9, MUTED_COLOR)
 
 	var artifact_ids: Array = main_ref.artifacts.keys()
 	artifact_ids.sort()
@@ -176,6 +176,27 @@ func _draw_build_strip(view: Vector2) -> void:
 		int(main_ref.general_upgrade_levels.get("vitality", 0))
 	]
 	_text(rect.position + Vector2(12.0, 130.0), general_text, 9, MUTED_COLOR)
+
+
+func _short_skill_label(skill_id: String, shown_id: String) -> String:
+	if shown_id == "ice_array":
+		return "冰魄阵"
+	if shown_id == "five_thunder":
+		return "五雷敕令"
+	match skill_id:
+		"fire_talisman":
+			return "火符"
+		"thunder_talisman":
+			return "雷符"
+		"copper_coin_sword":
+			return "铜剑"
+		"peachwood_sword":
+			return "桃剑"
+		"water_array":
+			return "水阵"
+		"earth_formation":
+			return "地脉"
+	return "术法"
 
 
 func _draw_ornate_panel(rect: Rect2, accent: Color) -> void:
