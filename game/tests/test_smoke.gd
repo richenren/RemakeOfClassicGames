@@ -30,6 +30,7 @@ func _run_tests() -> void:
 	_test_render_hierarchy(main)
 	_test_hud_presentation(main)
 	_test_sprite_assets(main)
+	_test_skill_build_system(main)
 
 	if main.player != null and not main.enemies.is_empty():
 		_test_combat_and_progression(main)
@@ -58,8 +59,9 @@ func _test_hud_presentation(main: Variant) -> void:
 	_check(objective.get("title", "").contains("镇压尸潮"), "战斗 HUD 显示当前阶段目标")
 	_check(objective.get("detail", "").contains("倒计时"), "战斗 HUD 显示尸王登场倒计时")
 	_check(float(objective.get("progress", -1.0)) >= 0.0 and float(objective.get("progress", 2.0)) <= 1.0, "任务进度条比例限制在 0 到 1")
-	_check(hud._upgrade_category("rapid_talisman") == "攻击强化", "技能升级卡显示攻击类别")
-	_check(hud._upgrade_category("control_art") == "道术强化", "主动道术升级卡显示道术类别")
+	_check(hud._upgrade_category("fire_talisman") == "攻击技能", "攻击技能卡显示正确类别")
+	_check(hud._upgrade_category("general_swift_step") == "通用强化", "通用强化卡显示正确类别")
+	_check(hud._upgrade_category("active_skill_upgrade") == "主动道术", "主动道术升级卡显示正确类别")
 
 
 func _test_sprite_assets(main: Variant) -> void:
@@ -68,6 +70,69 @@ func _test_sprite_assets(main: Variant) -> void:
 	if atlas != null:
 		_check(atlas.get_size() == Vector2(384.0, 256.0), "贴图图集尺寸与角色/怪物区域一致")
 	_check(main.player.is_moving == false, "玩家初始使用待机贴图状态")
+
+
+func _test_skill_build_system(main: Variant) -> void:
+	_check(main.AUTO_SKILL_DEFS.size() == 6, "首版配置六种自动攻击技能")
+	_check(main.ARTIFACT_DEFS.size() == 6, "首版配置六种被动法器")
+	_check(main.GENERAL_UPGRADE_DEFS.size() == 4, "通用强化池只包含四项设计内容")
+
+	main._open_upgrade_choices()
+	var skill_card_index := -1
+	var general_count := 0
+	for i in range(main.level_cards.size()):
+		var card: Dictionary = main.level_cards[i]
+		if str(card.get("kind", "")) == "skill_acquire":
+			skill_card_index = i
+		if str(card.get("kind", "")) == "general_upgrade":
+			general_count += 1
+	_check(skill_card_index >= 0, "早期升级候选优先提供正式攻击技能")
+	_check(general_count <= 1, "每次升级最多出现一张通用强化卡")
+	if skill_card_index >= 0:
+		main._select_upgrade(skill_card_index)
+	_check(main.skills.size() == 1, "选择攻击技能后正式技能进入构筑")
+	main.skills.clear()
+	main.skill_cooldowns.clear()
+	main.level_cards.clear()
+	main.state = "playing"
+
+	main.skills["fire_talisman"] = {"level": 2, "branch": "", "evolved": ""}
+	main._open_upgrade_choices()
+	var branch_count := 0
+	for card in main.level_cards:
+		if str(card.get("kind", "")) == "skill_branch" and str(card.get("skill_id", "")) == "fire_talisman":
+			branch_count += 1
+	_check(branch_count == 2, "技能达到 Lv3 时同时提供两个关键分支")
+	main.skills.clear()
+	main.level_cards.clear()
+	main.state = "playing"
+
+	main.skills["water_array"] = {"level": 5, "branch": "cold", "evolved": ""}
+	main.artifacts["cold_relic"] = {"level": 1}
+	var evolutions: Array[Dictionary] = main._collect_evolution_candidates()
+	var has_ice_evolution := false
+	for card in evolutions:
+		if str(card.get("evolution_id", "")) == "ice_array":
+			has_ice_evolution = true
+	_check(has_ice_evolution, "水阵 Lv5 持有寒魄法器时解锁冰魄阵进化")
+	main.skills.clear()
+	main.artifacts.clear()
+	main.level_cards.clear()
+	main.state = "playing"
+
+	if not main.enemies.is_empty():
+		var target: Variant = main.enemies[0]
+		target.position = main.player.position + Vector2(100.0, 0.0)
+		main.skills["fire_talisman"] = {"level": 1, "branch": "", "evolved": ""}
+		main.skill_cooldowns["fire_talisman"] = 0.0
+		var projectile_count := main.projectiles.size()
+		main._cast_auto_skill("fire_talisman", target)
+		_check(main.projectiles.size() > projectile_count, "已获得的火符会实际发射独立技能投射物")
+		for projectile in main.projectiles:
+			projectile.queue_free()
+		main.projectiles.clear()
+		main.skills.clear()
+		main.skill_cooldowns.clear()
 
 
 func _test_end_screen_layout() -> void:
@@ -89,6 +154,7 @@ func _test_player() -> void:
 	player.tick(0.1)
 	_check(player.position.x > 100.0, "玩家触屏移动输入可驱动位移")
 	_check(player.is_moving, "玩家移动时切换为移动贴图状态")
+	_check(player.gait_phase > 0.0, "玩家移动时更新步态动画相位")
 
 	player.hp = 100.0
 	player.invuln_time = 0.0
@@ -109,6 +175,7 @@ func _test_enemy_variants() -> void:
 	var old_x: float = walker.position.x
 	walker.tick(0.5, Vector2(100.0, 0.0), Vector2.ZERO)
 	_check(walker.position.x > old_x, "普通敌人会追踪玩家")
+	_check(walker.gait_phase > 0.0, "普通敌人追踪时更新步态动画")
 	walker.queue_free()
 
 	var jumper: Variant = ENEMY_SCRIPT.new()
@@ -200,10 +267,9 @@ func _test_combat_and_progression(main: Variant) -> void:
 	_check(main.state == "level_up" and main.level_cards.size() == 3, "经验达到阈值后进入三选一升级")
 	if main.state == "level_up":
 		main.level_cards.clear()
-		main.level_cards.append({"id": "talisman_power", "name": "符箓精进", "desc": "测试强化"})
-		var damage_before: float = player.damage
+		main.level_cards.append({"id": "acquire_fire_talisman", "kind": "skill_acquire", "skill_id": "fire_talisman", "name": "火符", "desc": "测试技能"})
 		main._select_upgrade(0)
-		_check(player.damage > damage_before, "选择符箓强化后基础伤害提高")
+		_check(main.skills.has("fire_talisman"), "选择正式技能后写入局内技能构筑")
 		_check(main.state == "playing", "选择升级后恢复战斗")
 
 	var pause_event := InputEventKey.new()
