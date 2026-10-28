@@ -2,7 +2,7 @@
 
 个人与家庭使用的 Windows 电脑 + Android 安卓手机双端 2D 游戏开发项目。
 
-> 当前阶段：首款游戏《镇邪录》已进入 Godot 可玩原型开发。Godot 4.5.1 Headless CI 已通过，54 项逻辑、资源与渲染层级检查通过、0 项失败；已接入原创道士/僵尸贴图并美化 HUD 与义庄荒地。针对启动后角色/HUD 不可见的问题，已显式指定前景绘制层级并修正相机首帧跟随。Windows 实际显示仍待目视复测。Android 真机测试不在本轮范围。
+> 当前阶段：首款游戏《镇邪录》已进入 Godot 可玩原型开发。Godot 4.5.1 Headless CI 已通过，66 项逻辑、资源、技能构筑与动画状态检查通过、0 项失败；升级卡加入原创绘制图标和更完整的卡片样式，已实现六种自动攻击技能、六种被动法器、四项通用强化、Lv3 分支及水/雷两条进化原型，并为道士和不同僵尸加入程序步态动作。Windows 实际观感仍待目视复测，Android 真机测试不在本轮范围。
 
 ## 项目目标
 
@@ -65,4 +65,4 @@
 
 ## 下一步
 
-当前已在 `feat/godot-playable-prototype-v0.1` 分支建立 Godot 工程、基础战斗原型与自动化测试；最新 CI 的 54 项测试全部通过（[测试记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40489268820)）。下一步在 Windows 独立窗口目视确认角色/怪物贴图、战场环境、HUD 和结算面板，再继续完善法坛和完整尸王机制。Android 真机测试留到后续阶段，NAS 同步留到 V0.2。
+当前已在 `feat/godot-playable-prototype-v0.1` 分支建立 Godot 工程、基础战斗原型与自动化测试；最新 CI 的 66 项测试全部通过（[测试记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40617522269)）。当前技能池已恢复正式技能/法器/分支/进化候选，但战前主动道术选择、局外存档/功德/境界、法坛任务、逐帧动画和完整尸王招式仍待实现。下一步先在 Windows 独立窗口复测卡片图标、技能触发和步态动作，再继续完善任务与 Boss 机制。Android 真机测试留到后续阶段，NAS 同步留到 V0.2。
