@@ -37,7 +37,7 @@
 - 导入/解析检查：`godot --headless --editor --path game --quit`。
 - 主场景启动检查：`godot --headless --path game --quit-after 5`。
 
-本轮加入主修锁定、元素修炼、六系法宝进化，并正在完成战场美术、角色显示比例、升级卡与 HUD 响应式布局重构。新一轮 Godot 4.5.1 CI 将验证 SVG 导入、布局几何与现有战斗逻辑；Windows 独立窗口仍需目视验收实际观感，Android 真机测试不属于本轮范围。
+本轮已完成战场美术、角色显示比例、升级卡与 HUD 响应式布局重构；Godot 4.5.1 Headless CI 已通过 **144 项自动化检查、0 项失败**（[查看本轮 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40655418805)）。Windows 独立窗口仍需目视验收实际观感和实际点击热区，Android 真机测试不属于本轮范围。
 
 ## 已知问题
 
@@ -68,4 +68,4 @@
 
 - 本目录是原型，不是完整 V0.1 交付版本。
 - 数值仅用于验证战斗闭环，后续应移入可配置资源并通过试玩平衡。
-- 角色比例、清朝僵尸造型、技能卡独立插画与战斗逻辑更新后的验证结果见 [最新 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40644755837)。Windows 视觉复测仍待完成；Android 真机测试不属于本轮范围。
+- 角色比例、清朝僵尸造型、技能卡独立插画与战斗逻辑更新后的验证结果见 [最新 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40655418805)。Windows 视觉复测仍待完成；Android 真机测试不属于本轮范围。
