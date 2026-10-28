@@ -6,6 +6,20 @@
  <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8d6b2"/><stop offset=".65" stop-color="#d69e78"/><stop offset="1" stop-color="#8c5946"/></linearGradient>
  <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#39302a"/><stop offset=".55" stop-color="#171819"/><stop offset="1" stop-color="#080d10"/></linearGradient>
 </defs>
+<!-- A slim peachwood sword and flowing waist ribbons give the Taoist a more dynamic silhouette. -->
+<g id="peachwood-sword">
+ <path d="M100 91L111 49L120 17L124 18L117 52L105 95Z" fill="#a6b0b2" stroke="#493b2b" stroke-width="1.6"/>
+ <path d="M112 48L120 17L122 18L116 49Z" fill="#fff0c7" opacity=".94"/>
+ <path d="M97 89L111 94L108 100L94 95Z" fill="#d2a65a" stroke="#64462b" stroke-width="1.4"/>
+ <path d="M100 94L93 107L89 105L96 92Z" fill="#5d2b25" stroke="#2b1b18" stroke-width="1.2"/>
+ <path d="M93 106L89 116M96 105L95 118" stroke="#a8342b" stroke-width="2.2" stroke-linecap="round"/>
+</g>
+<g id="flowing-sashes">
+ <path d="M45 103C31 108 25 120 13 128C29 129 42 121 51 111Z" fill="#8d2e29" stroke="#4c2420" stroke-width="1.4"/>
+ <path d="M43 108C32 115 28 120 22 124" fill="none" stroke="#d8b76e" stroke-width="1.2"/>
+ <path d="M81 103C97 108 104 117 117 123C109 110 98 103 85 99Z" fill="#c7a15a" stroke="#6b4c2d" stroke-width="1.2"/>
+ <path d="M84 105C97 111 105 116 111 120" fill="none" stroke="#f2d99a" stroke-width="1.1"/>
+</g>
 <!-- alternating long stride -->
 <path d="M48 109 L60 112 L48 133 L33 143 L25 139 L38 124Z" fill="#202327" stroke="#9a7847" stroke-width="1.4"/>
 <path d="M66 110 L78 108 L90 129 L88 141 L77 149 L70 136Z" fill="#202327" stroke="#9a7847" stroke-width="1.4"/>

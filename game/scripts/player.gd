@@ -4,6 +4,7 @@ const WORLD_MIN := Vector2(48.0, 48.0)
 const WORLD_MAX := Vector2(2352.0, 1552.0)
 const PLAYER_IDLE_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist.svg")
 const PLAYER_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_walk.svg")
+const PLAYER_DRAW_SIZE := Vector2(88.0, 112.0)
 
 var main_ref: Node
 var max_hp: float = 100.0
@@ -100,7 +101,7 @@ func _draw() -> void:
 	var sprite_texture: Texture2D = PLAYER_IDLE_TEXTURE
 	if is_moving and floori(gait_phase / PI) % 2 == 0:
 		sprite_texture = PLAYER_WALK_TEXTURE
-	var sprite_rect := Rect2(-31.0, -40.0, 62.0, 80.0)
+	var sprite_rect := Rect2(-PLAYER_DRAW_SIZE * 0.5, PLAYER_DRAW_SIZE)
 	var tint := Color.WHITE
 	if hit_flash > 0.0:
 		tint = Color("#fff0d0")
@@ -108,15 +109,15 @@ func _draw() -> void:
 		tint = Color(1.0, 1.0, 1.0, 0.62)
 
 	# The shadow stays on the ground while the body bobs and leans during each step.
-	draw_set_transform(Vector2(0.0, 13.0 + absf(bob) * 0.15), 0.0, Vector2(1.45 + gait * 0.04, 0.48 - gait * 0.015))
+	draw_set_transform(Vector2(0.0, 31.0 + absf(bob) * 0.15), 0.0, Vector2(1.45 + gait * 0.04, 0.48 - gait * 0.015))
 	draw_circle(Vector2.ZERO, 15.0, Color(0.015, 0.014, 0.012, 0.42))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	draw_circle(Vector2(0.0, 13.0), 12.0, Color(0.66, 0.49, 0.23, 0.12))
+	draw_circle(Vector2(0.0, 30.0), 17.0, Color(0.66, 0.49, 0.23, 0.12))
 
 	if is_moving and footstep_flash > 0.0:
 		var dust_alpha := footstep_flash / 0.13 * 0.22
-		draw_circle(Vector2(-8.0 * footstep_side, 37.0), 4.0, Color(0.70, 0.62, 0.43, dust_alpha))
-		draw_circle(Vector2(-11.0 * footstep_side, 39.0), 2.5, Color(0.70, 0.62, 0.43, dust_alpha * 0.75))
+		draw_circle(Vector2(-10.0 * footstep_side, 51.0), 4.0, Color(0.70, 0.62, 0.43, dust_alpha))
+		draw_circle(Vector2(-13.0 * footstep_side, 53.0), 2.5, Color(0.70, 0.62, 0.43, dust_alpha * 0.75))
 
 	var flip_x := -1.0 if facing.x < -0.1 else 1.0
 	draw_set_transform(Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * squash_x, stretch_y))

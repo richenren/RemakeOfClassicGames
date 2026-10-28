@@ -2,6 +2,7 @@ extends Node2D
 
 const SKILL_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_art_atlas.svg")
 const ELEMENT_CULTIVATION_ATLAS: Texture2D = preload("res://assets/sprites/element_cultivation_atlas.svg")
+const PLAYER_PORTRAIT_TEXTURE: Texture2D = preload("res://assets/sprites/player_portrait.svg")
 
 var main_ref
 const TEXT_COLOR := Color("#efe6d2")
@@ -34,37 +35,47 @@ func _draw_hud(view: Vector2) -> void:
 	if player == null:
 		return
 
-	var status_rect := Rect2(18.0, 18.0, 286.0, 88.0)
+	var layout := _hud_layout(view)
+	var scale: float = layout["scale"]
+	var status_rect: Rect2 = layout["status"]
 	_draw_ornate_panel(status_rect, Color("#c6a566"))
-	_text(Vector2(30.0, 39.0), "镇邪录 · 破败义庄", 16, Color("#e7cf98"))
-	_draw_seal(Vector2(status_rect.end.x - 20.0, status_rect.position.y + 21.0), "令", Color("#b34a3d"))
-	_text(Vector2(30.0, 60.0), "生命  %d / %d" % [roundi(player.hp), roundi(player.max_hp)], 14, TEXT_COLOR)
-	_bar(Rect2(30.0, 68.0, 250.0, 8.0), player.hp / maxf(1.0, player.max_hp), Color("#b65343"), true)
-	_text(Vector2(30.0, 94.0), "等级 %d   ·   击杀 %d" % [player.level, main_ref.kills], 12, MUTED_COLOR)
 
-	var time_rect := Rect2(view.x * 0.5 - 160.0, 18.0, 320.0, 56.0)
+	# Character portrait anchors the HUD and makes the actual player identity visible.
+	var portrait_size := clampf(54.0 * scale, 38.0, 54.0)
+	var portrait_center := status_rect.position + Vector2(12.0 * scale + portrait_size * 0.5, status_rect.size.y * 0.5)
+	draw_circle(portrait_center, portrait_size * 0.54, Color("#0b0e10"))
+	draw_arc(portrait_center, portrait_size * 0.55, 0.0, TAU, 48, Color("#d5ad61"), 2.0 * scale)
+	draw_texture_rect(PLAYER_PORTRAIT_TEXTURE, Rect2(portrait_center - Vector2(portrait_size, portrait_size) * 0.5, Vector2(portrait_size, portrait_size)), false)
+	var info_x := status_rect.position.x + portrait_size + 22.0 * scale
+	_text(Vector2(info_x, status_rect.position.y + 22.0 * scale), "镇邪录 · 破败义庄", maxi(11, roundi(16.0 * scale)), Color("#e7cf98"))
+	_draw_seal(Vector2(status_rect.end.x - 15.0 * scale, status_rect.position.y + 19.0 * scale), "令", Color("#b34a3d"))
+	_text(Vector2(info_x, status_rect.position.y + 43.0 * scale), "生命  %d / %d" % [roundi(player.hp), roundi(player.max_hp)], maxi(10, roundi(13.0 * scale)), TEXT_COLOR)
+	var hp_bar_width := maxf(50.0, status_rect.end.x - info_x - 12.0 * scale)
+	_bar(Rect2(info_x, status_rect.position.y + 51.0 * scale, hp_bar_width, 7.0 * scale), player.hp / maxf(1.0, player.max_hp), Color("#c54e42"), true)
+	_text(Vector2(info_x, status_rect.position.y + 76.0 * scale), "等级 %d   ·   击杀 %d" % [player.level, main_ref.kills], maxi(9, roundi(12.0 * scale)), MUTED_COLOR)
+
+	var time_rect: Rect2 = layout["time"]
 	_draw_ornate_panel(time_rect, Color("#b69a62"))
-	_text(Vector2(time_rect.position.x + 14.0, 39.0), "生存时间  %s" % _format_time(main_ref.elapsed_seconds), 16, TEXT_COLOR)
+	_text(Vector2(time_rect.position.x + 12.0 * scale, time_rect.position.y + 21.0 * scale), "生存时间  %s" % _format_time(main_ref.elapsed_seconds), maxi(10, roundi(16.0 * scale)), TEXT_COLOR)
 	if _is_mobile():
-		_text(Vector2(time_rect.end.x - 28.0, 39.0), "Ⅱ", 18, Color("#e8c86c"))
-	_text(Vector2(time_rect.position.x + 14.0, 57.0), "灵气 %d / %d" % [player.xp, player.xp_to_next], 12, MUTED_COLOR)
-	_bar(Rect2(time_rect.position.x + 150.0, 47.0, 152.0, 7.0), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#6ebba0"))
+		_text(Vector2(time_rect.end.x - 20.0 * scale, time_rect.position.y + 21.0 * scale), "Ⅱ", maxi(12, roundi(18.0 * scale)), Color("#e8c86c"))
+	_text(Vector2(time_rect.position.x + 12.0 * scale, time_rect.position.y + 41.0 * scale), "灵气 %d / %d" % [player.xp, player.xp_to_next], maxi(9, roundi(12.0 * scale)), MUTED_COLOR)
+	var xp_bar_x := time_rect.position.x + time_rect.size.x * 0.48
+	_bar(Rect2(xp_bar_x, time_rect.position.y + 31.0 * scale, maxf(28.0, time_rect.end.x - xp_bar_x - 12.0 * scale), 6.0 * scale), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#6ebba0"))
 
-	var skill_panel := Rect2(view.x - 258.0, 18.0, 240.0, 150.0)
+	var skill_panel: Rect2 = layout["skill"]
 	_draw_ornate_panel(skill_panel, Color("#c6a566"))
-	_text(Vector2(skill_panel.position.x + 14.0, 39.0), "基础符箓", 15, TEXT_COLOR)
-	_text(Vector2(skill_panel.position.x + 14.0, 60.0), "伤害  %d" % roundi(player.damage), 13, MUTED_COLOR)
-	_text(Vector2(skill_panel.position.x + 14.0, 80.0), "攻击间隔  %.2fs" % player.attack_interval, 13, MUTED_COLOR)
-
+	_text(skill_panel.position + Vector2(12.0 * scale, 19.0 * scale), "基础符箓", maxi(10, roundi(15.0 * scale)), TEXT_COLOR)
+	_text(skill_panel.position + Vector2(12.0 * scale, 39.0 * scale), "伤害  %d" % roundi(player.damage), maxi(9, roundi(12.5 * scale)), MUTED_COLOR)
+	_text(skill_panel.position + Vector2(12.0 * scale, 57.0 * scale), "攻击间隔  %.2fs" % player.attack_interval, maxi(9, roundi(12.5 * scale)), MUTED_COLOR)
 	var skill_ready: bool = main_ref.active_skill_cooldown <= 0.0
 	var skill_color := Color("#e8c86c") if skill_ready else Color("#9e8b6a")
-	_draw_skill_emblem(Vector2(skill_panel.end.x - 24.0, skill_panel.position.y + 86.0), skill_ready, skill_color)
-	_text(Vector2(skill_panel.position.x + 14.0, 103.0), "主动道术 · 镇尸诀 Lv%d" % main_ref.active_skill_level, 13, skill_color)
-	_text(Vector2(skill_panel.position.x + 14.0, 122.0), "就绪" if skill_ready else "冷却 %ds" % ceili(main_ref.active_skill_cooldown), 12, TEXT_COLOR)
+	_draw_skill_emblem(Vector2(skill_panel.end.x - 21.0 * scale, skill_panel.position.y + 80.0 * scale), skill_ready, skill_color)
+	_text(skill_panel.position + Vector2(12.0 * scale, 78.0 * scale), "主动道术 · 镇尸诀 Lv%d" % main_ref.active_skill_level, maxi(9, roundi(12.0 * scale)), skill_color)
+	_text(skill_panel.position + Vector2(12.0 * scale, 96.0 * scale), "就绪" if skill_ready else "冷却 %ds" % ceili(main_ref.active_skill_cooldown), maxi(9, roundi(11.0 * scale)), TEXT_COLOR)
 	var skill_ratio := 1.0 if skill_ready else 1.0 - clampf(main_ref.active_skill_cooldown / maxf(0.1, main_ref.active_skill_base_cooldown), 0.0, 1.0)
-	_bar(Rect2(skill_panel.position.x + 14.0, 130.0, 132.0, 6.0), skill_ratio, Color("#d1a84e"))
-	_text(Vector2(skill_panel.position.x + 154.0, 140.0), "触发" if _is_mobile() else "SPACE", 10, MUTED_COLOR)
-	_text(Vector2(skill_panel.position.x + 14.0, 156.0), "治疗次数  %d/2" % main_ref.heal_charges, 12, MUTED_COLOR)
+	_bar(Rect2(skill_panel.position.x + 12.0 * scale, skill_panel.position.y + 103.0 * scale, skill_panel.size.x * 0.58, 5.0 * scale), skill_ratio, Color("#d1a84e"))
+	_text(skill_panel.position + Vector2(12.0 * scale, 121.0 * scale), "治疗次数  %d/2" % main_ref.heal_charges, maxi(9, roundi(11.0 * scale)), MUTED_COLOR)
 
 	if main_ref.state != "game_over" and main_ref.state != "victory":
 		_draw_objective_panel(view)
@@ -72,159 +83,187 @@ func _draw_hud(view: Vector2) -> void:
 
 	var boss = main_ref.get_boss()
 	if boss != null:
-		var boss_width := minf(500.0, view.x * 0.48)
-		var boss_rect := Rect2((view.x - boss_width) * 0.5, 84.0, boss_width, 39.0)
+		var boss_rect: Rect2 = layout["boss"]
 		_draw_ornate_panel(boss_rect, Color("#a84b3c"))
-		_text(boss_rect.position + Vector2(14.0, 16.0), "尸王" + (" · 暴走" if boss.hp / boss.max_hp <= 0.5 else ""), 13, Color("#e7c88a"))
-		_bar(Rect2(boss_rect.position.x + 14.0, boss_rect.position.y + 23.0, boss_rect.size.x - 28.0, 7.0), boss.hp / maxf(1.0, boss.max_hp), Color("#a44439"), true)
+		_text(boss_rect.position + Vector2(12.0 * scale, 16.0 * scale), "尸王" + (" · 暴走" if boss.hp / boss.max_hp <= 0.5 else ""), maxi(10, roundi(13.0 * scale)), Color("#e7c88a"))
+		_bar(Rect2(boss_rect.position.x + 12.0 * scale, boss_rect.position.y + 23.0 * scale, boss_rect.size.x - 24.0 * scale, 6.0 * scale), boss.hp / maxf(1.0, boss.max_hp), Color("#a44439"), true)
 
-	var controls_rect := Rect2(view.x * 0.5 - (270.0 if not _is_mobile() else 155.0), view.y - 43.0, 540.0 if not _is_mobile() else 310.0, 28.0)
+	var controls_rect: Rect2 = layout["controls"]
 	_draw_ornate_panel(controls_rect, Color("#8f805d"))
 	if not _is_mobile():
-		_text(Vector2(controls_rect.position.x + 17.0, controls_rect.position.y + 19.0), "WASD / 方向键  移动     ·     SPACE  镇尸诀     ·     E  治疗     ·     ESC  暂停", 12, MUTED_COLOR)
+		_center_text(controls_rect, "WASD / 方向键 移动   ·   SPACE 镇尸诀   ·   E 治疗   ·   ESC 暂停", maxi(8, roundi(11.0 * scale)), MUTED_COLOR)
 	else:
-		_text(Vector2(controls_rect.position.x + 16.0, controls_rect.position.y + 19.0), "左侧移动   ·   右侧道术 / 治疗", 12, MUTED_COLOR)
-
+		_center_text(controls_rect, "左侧移动   ·   右侧道术 / 治疗", maxi(8, roundi(11.0 * scale)), MUTED_COLOR)
 
 func _draw_level_up(view: Vector2) -> void:
-	# Keep the arena visible, but give the upgrade cards the visual weight of
-	# collectible talismans rather than plain stat boxes.
-	draw_rect(Rect2(Vector2.ZERO, view), Color(0.008, 0.009, 0.008, 0.72))
-	var panel_width := minf(1080.0, view.x - 28.0)
-	var panel_height := minf(440.0, view.y - 24.0)
-	var panel_rect := Rect2((view.x - panel_width) * 0.5, (view.y - panel_height) * 0.5, panel_width, panel_height)
-	draw_rect(panel_rect, Color(0.035, 0.032, 0.027, 0.92))
-	draw_rect(panel_rect, Color(0.55, 0.44, 0.28, 0.72), false, 1.2)
-	draw_rect(panel_rect.grow(-7.0), Color(0.72, 0.59, 0.36, 0.12), false, 1.0)
+	var layout := _level_up_layout(view)
+	var panel_rect: Rect2 = layout["panel"]
+	var card_rects: Array = layout["cards"]
+	var scale: float = layout["scale"]
+	var header_title_size := maxi(16, roundi(28.0 * scale))
+	var subtitle_size := maxi(9, roundi(14.0 * scale))
+
+	# Dim the live battle without hiding the cemetery scene and player silhouette.
+	draw_rect(Rect2(Vector2.ZERO, view), Color(0.006, 0.009, 0.014, 0.61))
+	draw_rect(panel_rect, Color("#0b0a09", 0.96))
+	draw_rect(panel_rect, Color("#c6a15b", 0.92), false, 1.6 * scale)
+	draw_rect(panel_rect.grow(-7.0 * scale), Color("#8d7145", 0.24), false, 1.0 * scale)
+	draw_rect(Rect2(panel_rect.position + Vector2(12.0 * scale, 12.0 * scale), panel_rect.size - Vector2(24.0 * scale, 24.0 * scale)), Color("#2a2015", 0.18), false, 1.0 * scale)
+
+	# Ornate corner brackets and cloud curls reproduce the approved Chinese-fantasy frame.
 	for corner in [panel_rect.position, Vector2(panel_rect.end.x, panel_rect.position.y), Vector2(panel_rect.position.x, panel_rect.end.y), panel_rect.end]:
 		var sx := 1.0 if corner.x < view.x * 0.5 else -1.0
 		var sy := 1.0 if corner.y < view.y * 0.5 else -1.0
-		draw_line(corner + Vector2(sx * 10.0, 0.0), corner + Vector2(sx * 28.0, 0.0), Color("#b69a62"), 1.0)
-		draw_line(corner + Vector2(0.0, sy * 10.0), corner + Vector2(0.0, sy * 25.0), Color("#b69a62"), 1.0)
-	_text(Vector2(view.x * 0.5 - 150.0, panel_rect.position.y + 49.0), "修为精进 · 选择一项", 28, Color("#f0d79b"))
-	_text(Vector2(view.x * 0.5 - 210.0, panel_rect.position.y + 78.0), "择一术法，改变本局构筑方向  ·  选择期间战斗与计时暂停", 14, Color("#c7b99d"))
-	draw_line(panel_rect.position + Vector2(28.0, 96.0), panel_rect.position + Vector2(panel_rect.size.x - 28.0, 96.0), Color(0.66, 0.53, 0.33, 0.58), 1.0)
+		draw_line(corner + Vector2(sx * 8.0 * scale, 0.0), corner + Vector2(sx * 29.0 * scale, 0.0), Color("#e4bd70"), 1.4 * scale)
+		draw_line(corner + Vector2(0.0, sy * 8.0 * scale), corner + Vector2(0.0, sy * 27.0 * scale), Color("#e4bd70"), 1.4 * scale)
+		draw_arc(corner + Vector2(sx * 13.0 * scale, sy * 13.0 * scale), 7.0 * scale, 0.0, TAU, 20, Color("#a9834c", 0.8), 1.0 * scale)
 
-	var card_width := minf(320.0, (view.x - 90.0) / 3.0 - 18.0)
-	var card_height := minf(220.0, panel_height - 132.0)
-	var gap := 18.0
-	var total_width := card_width * 3.0 + gap * 2.0
-	var start_x := (view.x - total_width) * 0.5
-	var y := panel_rect.position.y + 114.0
+	_draw_cloud_motif(panel_rect.position + Vector2(74.0 * scale, 49.0 * scale), scale, Color("#b39a6b", 0.45))
+	_draw_cloud_motif(Vector2(panel_rect.end.x - 74.0 * scale, panel_rect.position.y + 49.0 * scale), scale, Color("#b39a6b", 0.45))
+	_center_text(Rect2(panel_rect.position.x + 24.0 * scale, panel_rect.position.y + 17.0 * scale, panel_rect.size.x - 48.0 * scale, 42.0 * scale), "修为精进 · 选择一项", header_title_size, Color("#f3d99a"))
+	_center_text(Rect2(panel_rect.position.x + 20.0 * scale, panel_rect.position.y + 59.0 * scale, panel_rect.size.x - 40.0 * scale, 25.0 * scale), "择一道法，改变本局构筑方向  ·  选择期间战斗与计时暂停", subtitle_size, Color("#cbbd9e"))
+	var divider_y := panel_rect.position.y + float(layout["header_height"]) - 8.0 * scale
+	draw_line(Vector2(panel_rect.position.x + 28.0 * scale, divider_y), Vector2(panel_rect.end.x - 28.0 * scale, divider_y), Color("#b08d50", 0.78), 1.1 * scale)
+	draw_circle(Vector2(panel_rect.get_center().x, divider_y), 3.0 * scale, Color("#e6c779"))
+
 	for i in range(mini(3, main_ref.level_cards.size())):
 		var card: Dictionary = main_ref.level_cards[i]
-		var rect := Rect2(start_x + i * (card_width + gap), y, card_width, card_height)
+		var rect: Rect2 = card_rects[i]
 		var card_id := str(card.get("id", ""))
-		var accent := _upgrade_color(card_id)
-		var hovered := rect.has_point(get_viewport().get_mouse_position())
-		draw_rect(rect, Color(0.055, 0.05, 0.043, 0.99))
-		draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.95 if hovered else 0.72), false, 1.5 if hovered else 1.0)
-		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 5.0)), accent)
-		draw_rect(Rect2(rect.position + Vector2(8.0, 10.0), rect.size - Vector2(16.0, 20.0)), Color(accent.r, accent.g, accent.b, 0.07 if not hovered else 0.13), false, 1.0)
-		# Four short corner strokes echo the borders of a paper talisman.
-		for corner in [rect.position + Vector2(8.0, 10.0), rect.position + Vector2(rect.size.x - 8.0, 10.0), rect.position + Vector2(8.0, rect.size.y - 10.0), rect.position + rect.size - Vector2(8.0, 10.0)]:
-			var sx := 1.0 if corner.x < rect.position.x + rect.size.x * 0.5 else -1.0
-			var sy := 1.0 if corner.y < rect.position.y + rect.size.y * 0.5 else -1.0
-			draw_line(corner, corner + Vector2(sx * 9.0, 0.0), Color(accent.r, accent.g, accent.b, 0.65), 1.0)
-			draw_line(corner, corner + Vector2(0.0, sy * 9.0), Color(accent.r, accent.g, accent.b, 0.65), 1.0)
 		var card_kind := str(card.get("kind", ""))
 		var icon_id := str(card.get("icon", card_id))
-		var has_skill_illustration := card_kind in ["skill_acquire", "skill_level", "skill_branch", "skill_evolution", "element_cultivation"]
-		if has_skill_illustration:
-			_draw_skill_card_illustration(rect, icon_id, accent)
-			_center_text(Rect2(rect.position.x + 10.0, rect.position.y + 88.0, rect.size.x - 20.0, 24.0), str(card.get("name", "未知术法")), 18, Color("#f1dba4"))
-			_center_text(Rect2(rect.position.x + 10.0, rect.position.y + 109.0, rect.size.x - 20.0, 18.0), str(card.get("category", _upgrade_category(card_id))), 11, accent)
-			var tag := ""
-			if card_kind == "skill_evolution":
-				tag = "进化"
-			elif card_kind == "skill_branch":
-				tag = "分支"
-			elif card_kind == "element_cultivation":
-				tag = "修炼"
-			elif card_kind == "skill_level" and str(card.get("name", "")).begins_with("立道突破"):
-				tag = "立道"
-			if not tag.is_empty():
-				var tag_rect := Rect2(rect.end.x - 52.0, rect.position.y + 14.0, 38.0, 16.0)
-				draw_rect(tag_rect, Color(accent.r, accent.g, accent.b, 0.18))
-				draw_rect(tag_rect, Color(accent.r, accent.g, accent.b, 0.75), false, 1.0)
-				_center_text(tag_rect, tag, 10, accent)
-			var divider_y := rect.size.y - 39.0
-			var desc_rect := Rect2(rect.position.x + 17.0, rect.position.y + 132.0, rect.size.x - 34.0, divider_y - 139.0)
-			_draw_wrapped_text(desc_rect, str(card.get("desc", "")), 12, TEXT_COLOR, 2)
-			draw_line(rect.position + Vector2(16.0, divider_y), rect.position + Vector2(rect.size.x - 16.0, divider_y), Color("#756344", 0.8), 1.0)
-			_text(Vector2(rect.position.x + 18.0, rect.end.y - 16.0), "按 %d 选择  ·  点击卡片" % (i + 1), 11, Color("#d0c1a4") if hovered else MUTED_COLOR)
-		else:
-			_draw_card_art(rect.position + Vector2(47.0, 62.0), icon_id, accent, 31.0)
-			_text(rect.position + Vector2(88.0, 37.0), str(card.get("name", "未知强化")), 17, Color("#f1dba4"))
-			_text(rect.position + Vector2(88.0, 61.0), str(card.get("category", _upgrade_category(card_id))), 12, accent)
-			_draw_wrapped_text(Rect2(rect.position.x + 18.0, rect.position.y + 113.0, rect.size.x - 36.0, 45.0), str(card.get("desc", "")), 12, TEXT_COLOR, 2)
-			draw_line(rect.position + Vector2(16.0, 169.0), rect.position + Vector2(rect.size.x - 16.0, 169.0), Color("#5b5140"), 1.0)
-			_text(rect.position + Vector2(18.0, 198.0), "按 %d 选择  ·  点击卡片" % (i + 1), 12, Color("#d0c1a4") if hovered else MUTED_COLOR)
-		if hovered:
-			draw_rect(rect.grow(2.0), Color(accent.r, accent.g, accent.b, 0.42), false, 2.0)
+		var accent := _upgrade_color(card_id)
+		var hovered := rect.has_point(get_viewport().get_mouse_position())
+		var border_alpha := 1.0 if hovered else 0.88
+		draw_rect(rect, Color("#100d0b", 0.99))
+		draw_rect(rect, Color(accent.r, accent.g, accent.b, border_alpha), false, 1.6 * scale if hovered else 1.1 * scale)
+		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 5.0 * scale)), accent)
+		draw_rect(rect.grow(-6.0 * scale), Color(accent.r, accent.g, accent.b, 0.07), false, 1.0 * scale)
+		for corner in [rect.position + Vector2(8.0, 10.0) * scale, Vector2(rect.end.x - 8.0 * scale, rect.position.y + 10.0 * scale), Vector2(rect.position.x + 8.0 * scale, rect.end.y - 10.0 * scale), rect.end - Vector2(8.0, 10.0) * scale]:
+			var sx := 1.0 if corner.x < rect.get_center().x else -1.0
+			var sy := 1.0 if corner.y < rect.get_center().y else -1.0
+			draw_line(corner, corner + Vector2(sx * 10.0 * scale, 0.0), Color(accent.r, accent.g, accent.b, 0.85), 1.1 * scale)
+			draw_line(corner, corner + Vector2(0.0, sy * 10.0 * scale), Color(accent.r, accent.g, accent.b, 0.85), 1.1 * scale)
 
-func _draw_objective_panel(_view: Vector2) -> void:
+		var art_height := minf(176.0 * scale, rect.size.y * 0.45)
+		var art_rect := Rect2(rect.position + Vector2(8.0, 8.0) * scale, Vector2(rect.size.x - 16.0 * scale, art_height))
+		_draw_skill_card_illustration(art_rect, icon_id, accent)
+
+		var tag := "攻击"
+		if card_kind == "skill_evolution":
+			tag = "进化"
+		elif card_kind == "skill_branch":
+			tag = "分支"
+		elif card_kind == "element_cultivation":
+			tag = "修炼"
+		elif card_kind in ["artifact_acquire", "artifact_level"]:
+			tag = "法宝"
+		elif card_kind in ["general_upgrade", "active_skill_upgrade"]:
+			tag = "强化"
+		var tag_rect := Rect2(art_rect.end.x - 23.0 * scale, art_rect.position.y + 12.0 * scale, 17.0 * scale, 62.0 * scale)
+		draw_rect(tag_rect, Color("#1b120c", 0.86))
+		draw_rect(tag_rect, Color(accent.r, accent.g, accent.b, 0.92), false, 1.0 * scale)
+		for char_index in range(tag.length()):
+			_center_text(Rect2(tag_rect.position.x, tag_rect.position.y + (5.0 + char_index * 14.0) * scale, tag_rect.size.x, 13.0 * scale), tag.substr(char_index, 1), maxi(8, roundi(10.0 * scale)), accent)
+
+		var title_text := str(card.get("name", "未知术法"))
+		var title_size := maxi(11, roundi(18.0 * scale))
+		while title_size > 10 and ThemeDB.fallback_font.get_string_size(title_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, title_size).x > rect.size.x - 26.0 * scale:
+			title_size -= 1
+		var title_y := art_rect.end.y + 6.0 * scale
+		_center_text(Rect2(rect.position.x + 12.0 * scale, title_y, rect.size.x - 24.0 * scale, 23.0 * scale), title_text, title_size, Color("#f0d79b"))
+		_center_text(Rect2(rect.position.x + 12.0 * scale, title_y + 22.0 * scale, rect.size.x - 24.0 * scale, 17.0 * scale), str(card.get("category", _upgrade_category(card_id))), maxi(8, roundi(11.0 * scale)), accent)
+
+		var footer_y := rect.end.y - 14.0 * scale
+		var divider_y_card := rect.end.y - 58.0 * scale
+		var desc_y := title_y + 42.0 * scale
+		var desc_height := maxf(20.0 * scale, divider_y_card - desc_y - 8.0 * scale)
+		_draw_wrapped_text(Rect2(rect.position.x + 15.0 * scale, desc_y, rect.size.x - 30.0 * scale, desc_height), str(card.get("desc", "")), maxi(9, roundi(12.0 * scale)), TEXT_COLOR, 2)
+		draw_line(Vector2(rect.position.x + 14.0 * scale, divider_y_card), Vector2(rect.end.x - 14.0 * scale, divider_y_card), Color("#8e7449", 0.75), 1.0 * scale)
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(rect.position.x + 18.0 * scale, divider_y_card + 17.0 * scale),
+			Vector2(rect.position.x + 23.0 * scale, divider_y_card + 12.0 * scale),
+			Vector2(rect.position.x + 28.0 * scale, divider_y_card + 17.0 * scale),
+			Vector2(rect.position.x + 23.0 * scale, divider_y_card + 22.0 * scale)
+		]), Color("#e5bd70"))
+		_text(Vector2(rect.position.x + 34.0 * scale, divider_y_card + 21.0 * scale), _card_effect_line(card), maxi(8, roundi(11.0 * scale)), Color("#d9c59d"))
+		_center_text(Rect2(rect.position.x + 8.0 * scale, footer_y - 2.0 * scale, rect.size.x - 16.0 * scale, 13.0 * scale), "按 %d 选择  ·  点击卡片" % (i + 1), maxi(8, roundi(10.5 * scale)), Color("#c8b99a") if hovered else MUTED_COLOR)
+		if hovered:
+			draw_rect(rect.grow(2.0 * scale), Color(accent.r, accent.g, accent.b, 0.45), false, 2.0 * scale)
+
+func _draw_objective_panel(view: Vector2) -> void:
 	var objective := objective_data()
 	if objective.is_empty():
 		return
-	var rect := Rect2(18.0, 116.0, 286.0, 70.0)
+	var layout := _hud_layout(view)
+	var scale: float = layout["scale"]
+	var rect: Rect2 = layout["objective"]
 	var accent: Color = Color("#c9a65b") if objective["kind"] == "boss" else Color("#8fba9b")
 	if objective["kind"] == "failed":
 		accent = Color("#b45b4a")
 	_draw_ornate_panel(rect, accent)
-	_draw_seal(rect.position + Vector2(23.0, 25.0), "战" if objective["kind"] == "boss" else "令", accent)
-	_text(rect.position + Vector2(43.0, 22.0), str(objective["title"]), 14, accent)
-	_text(rect.position + Vector2(43.0, 42.0), str(objective["detail"]), 12, TEXT_COLOR)
-	_bar(Rect2(rect.position.x + 14.0, rect.position.y + 56.0, rect.size.x - 28.0, 5.0), float(objective["progress"]), accent)
-
+	_draw_seal(rect.position + Vector2(22.0 * scale, 23.0 * scale), "战" if objective["kind"] == "boss" else "令", accent)
+	var text_x := rect.position.x + 42.0 * scale
+	_text(Vector2(text_x, rect.position.y + 21.0 * scale), str(objective["title"]), maxi(9, roundi(13.0 * scale)), accent)
+	_text(Vector2(text_x, rect.position.y + 40.0 * scale), str(objective["detail"]), maxi(8, roundi(11.0 * scale)), TEXT_COLOR)
+	_bar(Rect2(rect.position.x + 13.0 * scale, rect.end.y - 13.0 * scale, rect.size.x - 26.0 * scale, 5.0 * scale), float(objective["progress"]), accent)
 
 func _draw_build_strip(view: Vector2) -> void:
-	var rect := Rect2(view.x - 258.0, 178.0, 240.0, 166.0)
+	var layout := _hud_layout(view)
+	var scale: float = layout["scale"]
+	var rect: Rect2 = layout["build"]
 	_draw_ornate_panel(rect, Color("#8b7758"))
 	var build_title := "当前构筑 · 待立道"
 	if not main_ref.primary_element.is_empty():
 		build_title = "当前构筑 · 主修%s" % main_ref._element_name(main_ref.primary_element)
-	_text(rect.position + Vector2(12.0, 17.0), build_title, 12, Color("#e7cf98"))
+	_text(rect.position + Vector2(11.0 * scale, 17.0 * scale), build_title, maxi(9, roundi(12.0 * scale)), Color("#e7cf98"))
 
-	var owned_skill_ids: Array = main_ref.skills.keys()
-	owned_skill_ids.sort()
-	for i in range(4):
-		var center := rect.position + Vector2(31.0 + float(i) * 59.0, 43.0)
+	var owned_skill_ids: Array = []
+	for skill_variant in main_ref.AUTO_SKILL_DEFS.keys():
+		var skill_id := str(skill_variant)
+		if main_ref.skills.has(skill_id):
+			owned_skill_ids.append(skill_id)
+	var skill_slot_count := 4
+	var usable_width := rect.size.x - 44.0 * scale
+	for i in range(skill_slot_count):
+		var center := rect.position + Vector2(22.0 * scale + float(i) * usable_width / 3.0, 43.0 * scale)
 		if i < owned_skill_ids.size():
 			var skill_id := str(owned_skill_ids[i])
 			var skill_data: Dictionary = main_ref.skills[skill_id]
 			var shown_id := str(skill_data.get("evolved", "")) if not str(skill_data.get("evolved", "")).is_empty() else skill_id
-			_draw_card_art(center, shown_id, _upgrade_color(shown_id), 15.0)
-			_text(center + Vector2(11.0, 5.0), str(skill_data.get("level", 1)), 9, TEXT_COLOR)
-			_text(center + Vector2(-18.0, 25.0), _short_skill_label(skill_id, shown_id), 8, MUTED_COLOR)
+			_draw_card_art(center, shown_id, _upgrade_color(shown_id), 14.0 * scale)
+			_text(center + Vector2(10.0 * scale, 4.0 * scale), str(skill_data.get("level", 1)), maxi(7, roundi(9.0 * scale)), TEXT_COLOR)
+			_center_text(Rect2(center.x - 26.0 * scale, center.y + 17.0 * scale, 52.0 * scale, 13.0 * scale), _short_skill_label(skill_id, shown_id), maxi(7, roundi(8.5 * scale)), MUTED_COLOR)
 		else:
-			draw_circle(center, 14.0, Color(0.08, 0.075, 0.065, 0.85))
-			draw_arc(center, 14.0, 0.0, TAU, 24, Color(0.55, 0.49, 0.38, 0.35), 1.0)
-			draw_line(center + Vector2(-4.0, 0.0), center + Vector2(4.0, 0.0), Color(0.55, 0.49, 0.38, 0.3), 1.0)
+			draw_circle(center, 13.0 * scale, Color(0.08, 0.075, 0.065, 0.85))
+			draw_arc(center, 13.0 * scale, 0.0, TAU, 24, Color(0.55, 0.49, 0.38, 0.35), 1.0 * scale)
 
-	var artifact_ids: Array = main_ref.artifacts.keys()
-	artifact_ids.sort()
+	var artifact_ids: Array = []
+	for artifact_variant in main_ref.ARTIFACT_DEFS.keys():
+		var artifact_id := str(artifact_variant)
+		if main_ref.artifacts.has(artifact_id):
+			artifact_ids.append(artifact_id)
 	for i in range(3):
-		var center := rect.position + Vector2(48.0 + float(i) * 72.0, 88.0)
+		var center := rect.position + Vector2(32.0 * scale + float(i) * (rect.size.x - 64.0 * scale) / 2.0, 82.0 * scale)
 		if i < artifact_ids.size():
 			var artifact_id := str(artifact_ids[i])
 			var artifact_data: Dictionary = main_ref.artifacts[artifact_id]
-			_draw_card_art(center, artifact_id, _upgrade_color(artifact_id), 13.0)
-			_text(center + Vector2(10.0, 4.0), str(artifact_data.get("level", 1)), 8, TEXT_COLOR)
+			_draw_card_art(center, artifact_id, _upgrade_color(artifact_id), 12.0 * scale)
+			_text(center + Vector2(8.0 * scale, 4.0 * scale), str(artifact_data.get("level", 1)), maxi(7, roundi(8.0 * scale)), TEXT_COLOR)
 		else:
-			draw_circle(center, 12.0, Color(0.08, 0.075, 0.065, 0.65))
-			draw_arc(center, 12.0, 0.0, TAU, 24, Color(0.55, 0.49, 0.38, 0.3), 1.0)
+			draw_circle(center, 11.0 * scale, Color(0.08, 0.075, 0.065, 0.65))
+			draw_arc(center, 11.0 * scale, 0.0, TAU, 24, Color(0.55, 0.49, 0.38, 0.3), 1.0 * scale)
 
-	var cultivation_text := "立道后主修可深修至 Lv3" if main_ref.primary_element.is_empty() else "元素修炼 Lv%d / 3" % int(main_ref.element_cultivation_levels.get(main_ref.primary_element, 0))
-	_text(rect.position + Vector2(12.0, 130.0), cultivation_text, 9, _upgrade_color("cultivation_" + main_ref.primary_element) if not main_ref.primary_element.is_empty() else MUTED_COLOR)
+	var cultivation_text := "未立道" if main_ref.primary_element.is_empty() else "修炼 %d/3" % int(main_ref.element_cultivation_levels.get(main_ref.primary_element, 0))
+	var artifact_text := "法器 %d/%d" % [main_ref.artifacts.size(), main_ref._artifact_slot_cap()]
+	_text(rect.position + Vector2(11.0 * scale, 108.0 * scale), "%s  ·  %s" % [cultivation_text, artifact_text], maxi(7, roundi(8.5 * scale)), _upgrade_color("cultivation_" + main_ref.primary_element) if not main_ref.primary_element.is_empty() else MUTED_COLOR)
 	var general_text := "身法 %d  纳气 %d  广纳 %d  强身 %d" % [
 		int(main_ref.general_upgrade_levels.get("swift_step", 0)),
 		int(main_ref.general_upgrade_levels.get("spirit_gain", 0)),
 		int(main_ref.general_upgrade_levels.get("spirit_sense", 0)),
 		int(main_ref.general_upgrade_levels.get("vitality", 0))
 	]
-	_text(rect.position + Vector2(12.0, 148.0), general_text, 8, MUTED_COLOR)
-
+	_text(rect.position + Vector2(11.0 * scale, 127.0 * scale), general_text, maxi(7, roundi(8.0 * scale)), MUTED_COLOR)
 
 func _short_skill_label(skill_id: String, shown_id: String) -> String:
 	if shown_id == "ice_array":
@@ -246,6 +285,77 @@ func _short_skill_label(skill_id: String, shown_id: String) -> String:
 			return "地脉"
 	return "术法"
 
+
+func _hud_layout(view: Vector2) -> Dictionary:
+	var scale := clampf(minf(view.x / 1280.0, view.y / 720.0), 0.72, 1.0)
+	var margin := maxf(10.0, 18.0 * scale)
+	var left_width := minf(330.0 * scale, view.x * 0.285)
+	var right_width := minf(250.0 * scale, view.x * 0.225)
+	var time_width := minf(320.0 * scale, maxf(140.0, view.x - left_width - right_width - margin * 4.0 - 24.0 * scale))
+	var status_rect := Rect2(margin, margin, left_width, 96.0 * scale)
+	var objective_rect := Rect2(margin, status_rect.end.y + 8.0 * scale, left_width, 70.0 * scale)
+	var skill_rect := Rect2(view.x - margin - right_width, margin, right_width, 142.0 * scale)
+	var build_rect := Rect2(skill_rect.position.x, skill_rect.end.y + 8.0 * scale, right_width, 150.0 * scale)
+	var left_limit := status_rect.end.x + 12.0 * scale
+	var right_limit := skill_rect.position.x - 12.0 * scale
+	time_width = minf(time_width, maxf(120.0 * scale, right_limit - left_limit))
+	var time_x := clampf((view.x - time_width) * 0.5, left_limit, maxf(left_limit, right_limit - time_width))
+	var time_rect := Rect2(time_x, margin, time_width, 56.0 * scale)
+	var controls_width := minf(540.0 * scale, view.x - margin * 2.0)
+	var controls_height := 28.0 * scale
+	var controls_rect := Rect2((view.x - controls_width) * 0.5, view.y - margin - controls_height, controls_width, controls_height)
+	var boss_width := minf(500.0 * scale, view.x * 0.48)
+	var boss_rect := Rect2((view.x - boss_width) * 0.5, margin + 62.0 * scale, boss_width, 39.0 * scale)
+	return {"scale": scale, "status": status_rect, "objective": objective_rect, "time": time_rect, "skill": skill_rect, "build": build_rect, "controls": controls_rect, "boss": boss_rect}
+
+
+func _level_up_layout(view: Vector2) -> Dictionary:
+	var margin := maxf(8.0, minf(18.0, view.x * 0.018))
+	var panel_width := maxf(120.0, minf(980.0, view.x - margin * 2.0))
+	var panel_height := maxf(160.0, minf(520.0, view.y - margin * 2.0))
+	var scale := clampf(minf(view.x / 1280.0, view.y / 720.0), 0.62, 1.0)
+	var panel_rect := Rect2((view.x - panel_width) * 0.5, (view.y - panel_height) * 0.5, panel_width, panel_height)
+	var header_height := minf(122.0 * scale, panel_height * 0.25)
+	var inner_margin := clampf(panel_width * 0.032, 12.0, 30.0)
+	var gap := clampf(panel_width * 0.018, 8.0, 18.0)
+	var card_width := maxf(40.0, (panel_width - inner_margin * 2.0 - gap * 2.0) / 3.0)
+	var card_y := panel_rect.position.y + header_height
+	var card_height := maxf(90.0, panel_rect.end.y - card_y - 18.0 * scale)
+	var cards: Array = []
+	for i in range(3):
+		cards.append(Rect2(panel_rect.position.x + inner_margin + float(i) * (card_width + gap), card_y, card_width, card_height))
+	return {"panel": panel_rect, "cards": cards, "header_height": header_height, "scale": scale}
+
+
+func _draw_cloud_motif(origin: Vector2, scale: float, color: Color) -> void:
+	draw_arc(origin, 11.0 * scale, PI * 0.08, PI * 1.72, 24, color, 1.4 * scale)
+	draw_arc(origin + Vector2(14.0 * scale, -5.0 * scale), 8.0 * scale, PI * 0.9, PI * 2.1, 20, color, 1.2 * scale)
+	draw_arc(origin + Vector2(27.0 * scale, 1.0 * scale), 10.0 * scale, PI * 1.1, PI * 2.2, 20, color, 1.2 * scale)
+	draw_line(origin + Vector2(-13.0 * scale, 8.0 * scale), origin + Vector2(34.0 * scale, 8.0 * scale), color, 1.0 * scale)
+
+
+func _card_effect_line(card: Dictionary) -> String:
+	match str(card.get("kind", "")):
+		"skill_acquire":
+			return "纳入构筑 · 后续可继续精进"
+		"skill_level":
+			return "术法威能提升"
+		"skill_branch":
+			return "关键分支 · 改变战斗方式"
+		"skill_evolution":
+			return "终极进化 · 战斗表现质变"
+		"element_cultivation":
+			return "元素修炼 · 强化专属效果"
+		"artifact_acquire":
+			return "核心法宝 · 解锁进化条件"
+		"artifact_level":
+			return "法器效果进一步强化"
+		"active_skill_upgrade":
+			return "主动道术 · 威力与冷却强化"
+		"general_upgrade":
+			return "修为强化 · 即时生效"
+		_:
+			return "选择后立即生效"
 
 func _draw_ornate_panel(rect: Rect2, accent: Color) -> void:
 	draw_rect(rect, Color(0.055, 0.052, 0.045, 0.94))
@@ -308,38 +418,68 @@ func _draw_skill_emblem(center: Vector2, ready: bool, color: Color) -> void:
 	draw_line(center + Vector2(-3.0, 1.0), center + Vector2(3.0, 4.0), Color("#6b352b"), 1.0)
 
 
-func _draw_skill_card_illustration(card_rect: Rect2, icon_id: String, accent: Color) -> void:
-	# A skill card is an illustrated talisman / weapon vignette, never a character portrait.
-	var art_height := minf(80.0, card_rect.size.y * 0.37)
-	var art_rect := Rect2(card_rect.position + Vector2(12.0, 9.0), Vector2(card_rect.size.x - 24.0, art_height))
+func _draw_skill_card_illustration(art_rect: Rect2, icon_id: String, accent: Color) -> void:
+	# Rich, elemental artwork sits in a dedicated vignette area; no character portraits
+	# are repeated across cards. Everything is drawn from original vector assets.
 	var center := art_rect.get_center()
-	draw_rect(art_rect, Color(0.018, 0.016, 0.014, 0.96))
-	draw_rect(art_rect, Color(accent.r, accent.g, accent.b, 0.32), false, 1.0)
-	draw_rect(art_rect.grow(-4.0), Color(accent.r, accent.g, accent.b, 0.08), false, 1.0)
-	# Layered rings and fine strokes create the restrained glow seen in the approved concept.
-	draw_circle(center, art_height * 0.39, Color(accent.r, accent.g, accent.b, 0.08))
-	draw_arc(center, art_height * 0.43, PI * 0.08, PI * 0.92, 40, Color(accent.r, accent.g, accent.b, 0.7), 1.0)
-	draw_arc(center, art_height * 0.43, PI * 1.08, PI * 1.92, 40, Color("#d6b56c", 0.48), 1.0)
-	for i in range(5):
-		var px := art_rect.position.x + 12.0 + float(i) * (art_rect.size.x - 24.0) / 4.0
-		draw_circle(Vector2(px, art_rect.position.y + 7.0), 1.0, Color(accent.r, accent.g, accent.b, 0.62))
+	var unit := clampf(minf(art_rect.size.x / 270.0, art_rect.size.y / 170.0), 0.42, 1.0)
+	draw_rect(art_rect, Color("#090d12"))
+	draw_rect(art_rect, Color(accent.r, accent.g, accent.b, 0.18), false, 1.2 * unit)
+	draw_rect(art_rect.grow(-4.0 * unit), Color(accent.r, accent.g, accent.b, 0.08), false, 1.0 * unit)
+	draw_circle(center, minf(art_rect.size.y * 0.43, art_rect.size.x * 0.25), Color(accent.r, accent.g, accent.b, 0.12))
+	for i in range(10):
+		var angle := TAU * float(i) / 10.0
+		var inner := center + Vector2(cos(angle), sin(angle)) * art_rect.size.y * 0.28
+		var outer := center + Vector2(cos(angle), sin(angle)) * art_rect.size.y * 0.43
+		draw_line(inner, outer, Color(accent.r, accent.g, accent.b, 0.28), 1.0 * unit)
+
+	if icon_id.contains("fire"):
+		for i in range(7):
+			var fx := art_rect.position.x + art_rect.size.x * (0.16 + float(i) * 0.105)
+			var base_y := art_rect.end.y - 7.0 * unit
+			var flame_h := art_rect.size.y * (0.18 + float((i * 3) % 4) * 0.045)
+			var flame := PackedVector2Array([Vector2(fx - 7.0 * unit, base_y), Vector2(fx - 2.0 * unit, base_y - flame_h * 0.55), Vector2(fx, base_y - flame_h), Vector2(fx + 3.0 * unit, base_y - flame_h * 0.45), Vector2(fx + 7.0 * unit, base_y)])
+			draw_colored_polygon(flame, Color("#e85c26", 0.56))
+	elif icon_id.contains("thunder") or icon_id.contains("five_thunder"):
+		var bolt := PackedVector2Array([
+			Vector2(art_rect.position.x + art_rect.size.x * 0.12, center.y - 20.0 * unit),
+			Vector2(art_rect.position.x + art_rect.size.x * 0.27, center.y - 4.0 * unit),
+			Vector2(art_rect.position.x + art_rect.size.x * 0.22, center.y + 7.0 * unit),
+			Vector2(art_rect.position.x + art_rect.size.x * 0.40, center.y + 18.0 * unit),
+			Vector2(art_rect.position.x + art_rect.size.x * 0.36, center.y + 31.0 * unit)
+		])
+		draw_polyline(bolt, Color("#3e72ff", 0.72), 4.0 * unit, true)
+		draw_polyline(bolt, Color("#c6e8ff", 0.92), 1.4 * unit, true)
+		draw_polyline(PackedVector2Array([Vector2(center.x + 48.0 * unit, center.y - 32.0 * unit), Vector2(center.x + 31.0 * unit, center.y - 11.0 * unit), Vector2(center.x + 40.0 * unit, center.y + 2.0 * unit), Vector2(center.x + 25.0 * unit, center.y + 24.0 * unit)]), Color("#7d89ff", 0.82), 2.0 * unit, true)
+	elif icon_id.contains("sword") or icon_id.contains("peachwood") or icon_id.contains("coin"):
+		draw_arc(center, art_rect.size.y * 0.38, PI * 1.05, PI * 1.86, 40, Color("#f0c875", 0.82), 2.0 * unit)
+		draw_arc(center, art_rect.size.y * 0.31, PI * 0.1, PI * 0.9, 40, Color("#f4e0a0", 0.55), 1.3 * unit)
+		draw_line(center + Vector2(-art_rect.size.y * 0.25, art_rect.size.y * 0.2), center + Vector2(art_rect.size.y * 0.22, -art_rect.size.y * 0.25), Color("#fff0c3", 0.46), 2.0 * unit)
+	elif icon_id.contains("water") or icon_id.contains("ice") or icon_id.contains("cold"):
+		for ring in range(3):
+			draw_arc(center, art_rect.size.y * (0.20 + float(ring) * 0.105), 0.0, TAU, 44, Color("#6ad5f0", 0.66 - float(ring) * 0.13), 1.5 * unit)
+		draw_line(center + Vector2(-art_rect.size.x * 0.32, art_rect.size.y * 0.26), center + Vector2(art_rect.size.x * 0.32, art_rect.size.y * 0.26), Color("#a7efff", 0.7), 1.5 * unit)
+	elif icon_id.contains("earth") or icon_id.contains("formation"):
+		draw_colored_polygon(PackedVector2Array([Vector2(center.x - 48.0 * unit, art_rect.end.y - 8.0 * unit), Vector2(center.x - 25.0 * unit, center.y + 8.0 * unit), Vector2(center.x - 6.0 * unit, art_rect.end.y - 8.0 * unit)]), Color("#756344", 0.68))
+		draw_colored_polygon(PackedVector2Array([Vector2(center.x + 2.0 * unit, art_rect.end.y - 8.0 * unit), Vector2(center.x + 24.0 * unit, center.y - 2.0 * unit), Vector2(center.x + 47.0 * unit, art_rect.end.y - 8.0 * unit)]), Color("#9e8150", 0.7))
+
 	var art_region := _skill_art_region(icon_id)
 	var art_texture: Texture2D = SKILL_ART_ATLAS
 	if icon_id.begins_with("cultivation_"):
 		art_region = _cultivation_art_region(icon_id)
 		art_texture = ELEMENT_CULTIVATION_ATLAS
-	var icon_size := minf(78.0, art_height + 5.0)
+	var icon_size := minf(art_rect.size.y * 0.9, art_rect.size.x * 0.60)
+	var icon_center := center
 	if art_region.size.x > 0.0:
-		draw_texture_rect_region(art_texture, Rect2(center - Vector2(icon_size, icon_size) * 0.5, Vector2(icon_size, icon_size)), art_region, Color.WHITE, false)
+		draw_texture_rect_region(art_texture, Rect2(icon_center - Vector2(icon_size, icon_size) * 0.5, Vector2(icon_size, icon_size)), art_region, Color.WHITE, false)
 	else:
-		_draw_card_art(center, icon_id, accent, 28.0)
-	# Thin gold rules and seal-like corner marks make each art panel feel collectible.
-	for corner in [art_rect.position + Vector2(5.0, 5.0), Vector2(art_rect.end.x - 5.0, art_rect.position.y + 5.0), Vector2(art_rect.position.x + 5.0, art_rect.end.y - 5.0), art_rect.end - Vector2(5.0, 5.0)]:
-		var sx := 1.0 if corner.x < center.x else -1.0
-		var sy := 1.0 if corner.y < center.y else -1.0
-		draw_line(corner, corner + Vector2(7.0 * sx, 0.0), Color("#d7b76f", 0.72), 1.0)
-		draw_line(corner, corner + Vector2(0.0, 7.0 * sy), Color("#d7b76f", 0.72), 1.0)
+		_draw_card_art(icon_center, icon_id, accent, minf(33.0 * unit, art_rect.size.y * 0.24))
 
+	# Fine gold corner marks and a low horizon line make the image read as a framed illustration.
+	draw_line(art_rect.position + Vector2(7.0 * unit, 7.0 * unit), art_rect.position + Vector2(24.0 * unit, 7.0 * unit), Color("#e5c579", 0.88), 1.2 * unit)
+	draw_line(art_rect.position + Vector2(7.0 * unit, 7.0 * unit), art_rect.position + Vector2(7.0 * unit, 24.0 * unit), Color("#e5c579", 0.88), 1.2 * unit)
+	draw_line(Vector2(art_rect.end.x - 7.0 * unit, art_rect.end.y - 7.0 * unit), Vector2(art_rect.end.x - 24.0 * unit, art_rect.end.y - 7.0 * unit), Color("#e5c579", 0.88), 1.2 * unit)
+	draw_line(Vector2(art_rect.end.x - 7.0 * unit, art_rect.end.y - 7.0 * unit), Vector2(art_rect.end.x - 7.0 * unit, art_rect.end.y - 24.0 * unit), Color("#e5c579", 0.88), 1.2 * unit)
 
 func _center_text(rect: Rect2, value: String, size: int, color: Color) -> void:
 	draw_string(ThemeDB.fallback_font, Vector2(rect.position.x, rect.position.y + size), value, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, color)
@@ -565,32 +705,25 @@ func end_panel_rect(view: Vector2) -> Rect2:
 
 
 func _draw_touch_controls(view: Vector2) -> void:
-	var joystick_center := Vector2(94.0, view.y - 105.0)
-	draw_circle(joystick_center, 58.0, Color(0.06, 0.06, 0.05, 0.3))
-	draw_arc(joystick_center, 58.0, 0.0, TAU, 40, Color(0.85, 0.78, 0.62, 0.65), 2.0)
-	var knob_offset: Vector2 = main_ref.player.mobile_move * 28.0
-	draw_circle(joystick_center + knob_offset, 24.0, Color(0.78, 0.68, 0.48, 0.35))
-	draw_arc(Vector2(view.x - 82.0, view.y - 122.0), 44.0, 0.0, TAU, 40, Color("#d9b65f"), 3.0)
-	_text(Vector2(view.x - 115.0, view.y - 115.0), "镇尸", 16, Color("#f0d79b"))
-	draw_arc(Vector2(view.x - 51.0, view.y - 61.0), 27.0, 0.0, TAU, 32, Color("#c16b55"), 2.0)
-	_text(Vector2(view.x - 72.0, view.y - 55.0), "疗", 15, TEXT_COLOR)
-
+	var scale := clampf(minf(view.x / 1280.0, view.y / 720.0), 0.72, 1.0)
+	var joystick_center := Vector2(94.0 * scale, view.y - 105.0 * scale)
+	draw_circle(joystick_center, 58.0 * scale, Color(0.06, 0.06, 0.05, 0.3))
+	draw_arc(joystick_center, 58.0 * scale, 0.0, TAU, 40, Color(0.85, 0.78, 0.62, 0.65), 2.0 * scale)
+	var knob_offset: Vector2 = main_ref.player.mobile_move * 28.0 * scale
+	draw_circle(joystick_center + knob_offset, 24.0 * scale, Color(0.78, 0.68, 0.48, 0.35))
+	draw_arc(Vector2(view.x - 82.0 * scale, view.y - 122.0 * scale), 44.0 * scale, 0.0, TAU, 40, Color("#d9b65f"), 3.0 * scale)
+	_center_text(Rect2(view.x - 115.0 * scale, view.y - 128.0 * scale, 66.0 * scale, 26.0 * scale), "镇尸", maxi(10, roundi(16.0 * scale)), Color("#f0d79b"))
+	draw_arc(Vector2(view.x - 51.0 * scale, view.y - 61.0 * scale), 27.0 * scale, 0.0, TAU, 32, Color("#c16b55"), 2.0 * scale)
+	_center_text(Rect2(view.x - 72.0 * scale, view.y - 68.0 * scale, 42.0 * scale, 25.0 * scale), "疗", maxi(10, roundi(15.0 * scale)), TEXT_COLOR)
 
 func card_index_at(screen_position: Vector2) -> int:
 	var view := get_viewport_rect().size
-	var panel_height := minf(440.0, view.y - 24.0)
-	var card_width := minf(320.0, (view.x - 90.0) / 3.0 - 18.0)
-	var card_height := minf(220.0, panel_height - 132.0)
-	var gap := 18.0
-	var total_width := card_width * 3.0 + gap * 2.0
-	var start_x := (view.x - total_width) * 0.5
-	var y := (view.y - panel_height) * 0.5 + 114.0
+	var layout := _level_up_layout(view)
+	var card_rects: Array = layout["cards"]
 	for i in range(mini(3, main_ref.level_cards.size())):
-		var rect := Rect2(start_x + i * (card_width + gap), y, card_width, card_height)
-		if rect.has_point(screen_position):
+		if card_rects[i].has_point(screen_position):
 			return i
 	return -1
-
 
 func _bar(rect: Rect2, ratio: float, color: Color, outline: bool = false) -> void:
 	draw_rect(rect, Color("#211f1a"))

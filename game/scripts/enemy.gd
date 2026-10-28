@@ -237,25 +237,25 @@ func apply_burn(duration: float, damage_per_second: float) -> void:
 
 func _draw() -> void:
 	var sprite_texture: Texture2D = WALKER_TEXTURE
-	var sprite_rect := Rect2(-26.0, -36.0, 52.0, 72.0)
-	var bar_width := 48.0
+	var sprite_rect := Rect2(-32.0, -44.0, 64.0, 88.0)
+	var bar_width := 58.0
 	match kind:
 		"walker":
 			if is_moving and floori(gait_phase / PI) % 2 == 0:
 				sprite_texture = WALKER_WALK_TEXTURE
 		"jumper":
 			sprite_texture = JUMPER_TEXTURE
-			sprite_rect = Rect2(-30.0, -34.0, 60.0, 68.0)
-			bar_width = 46.0
+			sprite_rect = Rect2(-34.0, -40.0, 68.0, 80.0)
+			bar_width = 54.0
 		"armored":
 			sprite_texture = ARMORED_TEXTURE
 			if is_moving and floori(gait_phase / PI) % 2 == 0:
 				sprite_texture = ARMORED_WALK_TEXTURE
-			sprite_rect = Rect2(-34.0, -43.0, 68.0, 86.0)
-			bar_width = 54.0
+			sprite_rect = Rect2(-40.0, -50.0, 80.0, 100.0)
+			bar_width = 66.0
 		"boss":
 			sprite_texture = BOSS_PHASE2_TEXTURE if boss_phase == 2 else (BOSS_WALK_TEXTURE if is_moving and floori(gait_phase / PI) % 2 == 0 else BOSS_TEXTURE)
-			sprite_rect = Rect2(-68.0, -78.0, 136.0, 156.0)
+			sprite_rect = Rect2(-78.0, -90.0, 156.0, 180.0)
 
 	var stride := sin(gait_phase) if is_moving else 0.0
 	var bob := -hop_height
@@ -273,7 +273,7 @@ func _draw() -> void:
 	# Jumper shadows contract during a hop; the body uses a different gait per enemy type.
 	var shadow_x := 1.45 - hop_height * 0.018
 	var shadow_y := 0.46 - hop_height * 0.012
-	draw_set_transform(Vector2(0.0, 13.0 if not is_boss else 23.0), 0.0, Vector2(maxf(0.9, shadow_x), maxf(0.18, shadow_y)))
+	draw_set_transform(Vector2(0.0, 21.0 if not is_boss else 34.0), 0.0, Vector2(maxf(0.9, shadow_x), maxf(0.18, shadow_y)))
 	draw_circle(Vector2.ZERO, 18.0 if not is_boss else 42.0, Color(0.01, 0.012, 0.01, 0.46))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -315,7 +315,7 @@ func _draw() -> void:
 	draw_texture_rect(sprite_texture, sprite_rect, false, tint)
 	# Tiny alternating footfalls and dust give the single-pose creature sprites a readable stride.
 	if is_moving:
-		var foot_y := 68.0 if is_boss else (48.0 if kind == "armored" else (39.0 if kind == "walker" else 37.0))
+		var foot_y := 82.0 if is_boss else (58.0 if kind == "armored" else (50.0 if kind == "walker" else 47.0))
 		var stride_offset := sin(gait_phase) * 4.0
 		var foot_color := Color("#30271f") if kind != "armored" else Color("#25221d")
 		draw_line(Vector2(-6.0, foot_y - 4.0), Vector2(-6.0 + stride_offset, foot_y), foot_color, 3.2)
@@ -325,8 +325,8 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if footstep_flash > 0.0 and is_moving:
 		var dust_alpha := footstep_flash / 0.16 * 0.18
-		draw_circle(Vector2(-8.0 * footstep_side, 31.0), 3.0, Color(0.70, 0.62, 0.43, dust_alpha))
-		draw_circle(Vector2(-11.0 * footstep_side, 32.0), 2.0, Color(0.70, 0.62, 0.43, dust_alpha * 0.7))
+		draw_circle(Vector2(-9.0 * footstep_side, 42.0), 3.0, Color(0.70, 0.62, 0.43, dust_alpha))
+		draw_circle(Vector2(-12.0 * footstep_side, 44.0), 2.0, Color(0.70, 0.62, 0.43, dust_alpha * 0.7))
 
 	# Ordinary enemies keep compact health bars above the animated sprite.
 	if not is_boss:

@@ -20,6 +20,7 @@ func _run_tests() -> void:
 	_test_enemy_variants()
 	_test_xp_orb()
 	_test_end_screen_layout()
+	_test_responsive_layout()
 	_test_skill_art_assets()
 
 	var main: Variant = MAIN_SCENE.instantiate()
@@ -84,6 +85,8 @@ func _test_hud_presentation(main: Variant) -> void:
 
 
 func _test_sprite_assets(main: Variant) -> void:
+	var background := load("res://assets/sprites/graveyard_background.svg") as Texture2D
+	var portrait := load("res://assets/sprites/player_portrait.svg") as Texture2D
 	var player_idle := load("res://assets/sprites/player_taoist.svg") as Texture2D
 	var player_walk := load("res://assets/sprites/player_taoist_walk.svg") as Texture2D
 	var walker := load("res://assets/sprites/enemy_walker.svg") as Texture2D
@@ -92,6 +95,9 @@ func _test_sprite_assets(main: Variant) -> void:
 	var armored := load("res://assets/sprites/enemy_armored.svg") as Texture2D
 	var boss := load("res://assets/sprites/enemy_boss.svg") as Texture2D
 	var boss_phase2 := load("res://assets/sprites/enemy_boss_phase2.svg") as Texture2D
+	_check(background != null and background.get_size().x >= 1000.0 and background.get_size().y >= 700.0, "义庄高细节背景贴图可加载且尺寸足够")
+	_check(portrait != null and portrait.get_size().x >= 96.0, "道士专属头像可加载")
+	_check(main.player.PLAYER_DRAW_SIZE.x >= 84.0 and main.player.PLAYER_DRAW_SIZE.y >= 108.0, "主角在实际战斗中使用放大后的修长精细贴图")
 	_check(player_idle != null and player_walk != null, "道士待机与行走高清透明 SVG 可加载")
 	_check(walker != null and walker_walk != null and jumper != null and armored != null, "三类僵尸独立美术资源可加载")
 	_check(boss != null and boss_phase2 != null, "尸王一阶段与二阶段独立美术资源可加载")
@@ -256,6 +262,31 @@ func _test_skill_build_system(main: Variant) -> void:
 
 
 
+
+
+func _test_responsive_layout() -> void:
+	var hud: Variant = HUD_SCRIPT.new()
+	root.add_child(hud)
+	var view_sizes: Array[Vector2] = [Vector2(1280.0, 720.0), Vector2(1067.0, 744.0), Vector2(800.0, 600.0), Vector2(640.0, 360.0)]
+	for view in view_sizes:
+		var layout: Dictionary = hud._level_up_layout(view)
+		var panel: Rect2 = layout["panel"]
+		var cards: Array = layout["cards"]
+		_check(panel.position.x >= 0.0 and panel.position.y >= 0.0 and panel.end.x <= view.x + 0.1 and panel.end.y <= view.y + 0.1, "升级面板适配视口 %dx%d" % [roundi(view.x), roundi(view.y)])
+		_check(cards.size() == 3, "升级面板始终保留三张可选卡片")
+		var all_inside := true
+		var no_overlap := true
+		for i in range(cards.size()):
+			var card_rect: Rect2 = cards[i]
+			if not panel.has_point(card_rect.position) or not panel.has_point(card_rect.end - Vector2(1.0, 1.0)):
+				all_inside = false
+			if i > 0:
+				var previous: Rect2 = cards[i - 1]
+				if previous.end.x > card_rect.position.x:
+					no_overlap = false
+		_check(all_inside, "三张升级卡均位于面板内")
+		_check(no_overlap, "三张升级卡之间不重叠")
+	hud.queue_free()
 
 func _test_skill_art_assets() -> void:
 	var atlas := load("res://assets/sprites/skill_art_atlas.svg") as Texture2D
