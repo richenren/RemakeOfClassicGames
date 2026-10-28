@@ -117,6 +117,16 @@ func _test_skill_build_system(main: Variant) -> void:
 	_check(has_ice_evolution, "水阵 Lv5 持有寒魄法器时解锁冰魄阵进化")
 	main.skills.clear()
 	main.artifacts.clear()
+	main.skills["thunder_talisman"] = {"level": 5, "branch": "chain", "evolved": ""}
+	main.artifacts["thunder_seal"] = {"level": 1}
+	var thunder_evolutions: Array[Dictionary] = main._collect_evolution_candidates()
+	var has_five_thunder := false
+	for card in thunder_evolutions:
+		if str(card.get("evolution_id", "")) == "five_thunder":
+			has_five_thunder = true
+	_check(has_five_thunder, "雷符 Lv5 持有天雷法印时解锁五雷敕令进化")
+	main.skills.clear()
+	main.artifacts.clear()
 	main.level_cards.clear()
 	main.state = "playing"
 
