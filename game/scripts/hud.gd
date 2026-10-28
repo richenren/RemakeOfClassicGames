@@ -1,6 +1,7 @@
 extends Node2D
 
 const SKILL_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_art_atlas.svg")
+const ELEMENT_CULTIVATION_ATLAS: Texture2D = preload("res://assets/sprites/element_cultivation_atlas.svg")
 
 var main_ref
 const TEXT_COLOR := Color("#efe6d2")
@@ -128,13 +129,21 @@ func _draw_level_up(view: Vector2) -> void:
 			draw_line(corner, corner + Vector2(0.0, sy * 9.0), Color(accent.r, accent.g, accent.b, 0.65), 1.0)
 		var card_kind := str(card.get("kind", ""))
 		var icon_id := str(card.get("icon", card_id))
-		var has_skill_illustration := card_kind in ["skill_acquire", "skill_level", "skill_branch", "skill_evolution"]
+		var has_skill_illustration := card_kind in ["skill_acquire", "skill_level", "skill_branch", "skill_evolution", "element_cultivation"]
 		if has_skill_illustration:
 			_draw_skill_card_illustration(rect, icon_id, accent)
 			_center_text(Rect2(rect.position.x + 10.0, rect.position.y + 88.0, rect.size.x - 20.0, 24.0), str(card.get("name", "未知术法")), 18, Color("#f1dba4"))
 			_center_text(Rect2(rect.position.x + 10.0, rect.position.y + 109.0, rect.size.x - 20.0, 18.0), str(card.get("category", _upgrade_category(card_id))), 11, accent)
-			if card_kind == "skill_evolution" or card_kind == "skill_branch":
-				var tag := "进化" if card_kind == "skill_evolution" else "分支"
+			var tag := ""
+			if card_kind == "skill_evolution":
+				tag = "进化"
+			elif card_kind == "skill_branch":
+				tag = "分支"
+			elif card_kind == "element_cultivation":
+				tag = "修炼"
+			elif card_kind == "skill_level" and str(card.get("name", "")).begins_with("立道突破"):
+				tag = "立道"
+			if not tag.is_empty():
 				var tag_rect := Rect2(rect.end.x - 52.0, rect.position.y + 14.0, 38.0, 16.0)
 				draw_rect(tag_rect, Color(accent.r, accent.g, accent.b, 0.18))
 				draw_rect(tag_rect, Color(accent.r, accent.g, accent.b, 0.75), false, 1.0)
@@ -170,9 +179,12 @@ func _draw_objective_panel(_view: Vector2) -> void:
 
 
 func _draw_build_strip(view: Vector2) -> void:
-	var rect := Rect2(view.x - 258.0, 178.0, 240.0, 140.0)
+	var rect := Rect2(view.x - 258.0, 178.0, 240.0, 166.0)
 	_draw_ornate_panel(rect, Color("#8b7758"))
-	_text(rect.position + Vector2(12.0, 17.0), "当前构筑", 12, Color("#e7cf98"))
+	var build_title := "当前构筑 · 待立道"
+	if not main_ref.primary_element.is_empty():
+		build_title = "当前构筑 · 主修%s" % main_ref._element_name(main_ref.primary_element)
+	_text(rect.position + Vector2(12.0, 17.0), build_title, 12, Color("#e7cf98"))
 
 	var owned_skill_ids: Array = main_ref.skills.keys()
 	owned_skill_ids.sort()
@@ -203,13 +215,15 @@ func _draw_build_strip(view: Vector2) -> void:
 			draw_circle(center, 12.0, Color(0.08, 0.075, 0.065, 0.65))
 			draw_arc(center, 12.0, 0.0, TAU, 24, Color(0.55, 0.49, 0.38, 0.3), 1.0)
 
+	var cultivation_text := "立道后主修可深修至 Lv3" if main_ref.primary_element.is_empty() else "元素修炼 Lv%d / 3" % int(main_ref.element_cultivation_levels.get(main_ref.primary_element, 0))
+	_text(rect.position + Vector2(12.0, 130.0), cultivation_text, 9, _upgrade_color("cultivation_" + main_ref.primary_element) if not main_ref.primary_element.is_empty() else MUTED_COLOR)
 	var general_text := "身法 %d  纳气 %d  广纳 %d  强身 %d" % [
 		int(main_ref.general_upgrade_levels.get("swift_step", 0)),
 		int(main_ref.general_upgrade_levels.get("spirit_gain", 0)),
 		int(main_ref.general_upgrade_levels.get("spirit_sense", 0)),
 		int(main_ref.general_upgrade_levels.get("vitality", 0))
 	]
-	_text(rect.position + Vector2(12.0, 130.0), general_text, 9, MUTED_COLOR)
+	_text(rect.position + Vector2(12.0, 148.0), general_text, 8, MUTED_COLOR)
 
 
 func _short_skill_label(skill_id: String, shown_id: String) -> String:
@@ -310,9 +324,13 @@ func _draw_skill_card_illustration(card_rect: Rect2, icon_id: String, accent: Co
 		var px := art_rect.position.x + 12.0 + float(i) * (art_rect.size.x - 24.0) / 4.0
 		draw_circle(Vector2(px, art_rect.position.y + 7.0), 1.0, Color(accent.r, accent.g, accent.b, 0.62))
 	var art_region := _skill_art_region(icon_id)
+	var art_texture: Texture2D = SKILL_ART_ATLAS
+	if icon_id.begins_with("cultivation_"):
+		art_region = _cultivation_art_region(icon_id)
+		art_texture = ELEMENT_CULTIVATION_ATLAS
 	var icon_size := minf(78.0, art_height + 5.0)
 	if art_region.size.x > 0.0:
-		draw_texture_rect_region(SKILL_ART_ATLAS, Rect2(center - Vector2(icon_size, icon_size) * 0.5, Vector2(icon_size, icon_size)), art_region, Color.WHITE, false)
+		draw_texture_rect_region(art_texture, Rect2(center - Vector2(icon_size, icon_size) * 0.5, Vector2(icon_size, icon_size)), art_region, Color.WHITE, false)
 	else:
 		_draw_card_art(center, icon_id, accent, 28.0)
 	# Thin gold rules and seal-like corner marks make each art panel feel collectible.
@@ -430,6 +448,22 @@ func _skill_art_region(icon_id: String) -> Rect2:
 	return Rect2()
 
 
+func _cultivation_art_region(icon_id: String) -> Rect2:
+	if icon_id.contains("metal"):
+		return Rect2(0.0, 0.0, 128.0, 128.0)
+	if icon_id.contains("wood"):
+		return Rect2(128.0, 0.0, 128.0, 128.0)
+	if icon_id.contains("water"):
+		return Rect2(256.0, 0.0, 128.0, 128.0)
+	if icon_id.contains("fire"):
+		return Rect2(384.0, 0.0, 128.0, 128.0)
+	if icon_id.contains("earth"):
+		return Rect2(512.0, 0.0, 128.0, 128.0)
+	if icon_id.contains("thunder"):
+		return Rect2(640.0, 0.0, 128.0, 128.0)
+	return Rect2()
+
+
 func _draw_upgrade_emblem(center: Vector2, upgrade_id: String, color: Color) -> void:
 	draw_circle(center, 17.0, Color(0.08, 0.07, 0.05, 0.95))
 	draw_arc(center, 17.0, 0.0, TAU, 32, color, 2.0)
@@ -456,6 +490,10 @@ func _upgrade_color(upgrade_id: String) -> Color:
 	normalized = normalized.trim_prefix("branch_")
 	if normalized.contains("fire"):
 		return Color("#d9784d")
+	if normalized.contains("metal"):
+		return Color("#d7b76f")
+	if normalized.contains("wood"):
+		return Color("#80b98a")
 	if normalized.contains("thunder") or normalized.contains("five_thunder"):
 		return Color("#7988ff")
 	if normalized.contains("copper_coin") or normalized.contains("peachwood") or normalized.contains("sword_manual"):
@@ -478,6 +516,8 @@ func _upgrade_color(upgrade_id: String) -> Color:
 
 
 func _upgrade_category(upgrade_id: String) -> String:
+	if upgrade_id.begins_with("cultivation_"):
+		return "元素修炼"
 	if upgrade_id.begins_with("branch_"):
 		return "Lv3 关键分支"
 	if upgrade_id.begins_with("evolve_"):

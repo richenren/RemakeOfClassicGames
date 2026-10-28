@@ -80,6 +80,7 @@ func _test_hud_presentation(main: Variant) -> void:
 	_check(hud._upgrade_category("fire_talisman") == "攻击技能", "攻击技能卡显示正确类别")
 	_check(hud._upgrade_category("general_swift_step") == "通用强化", "通用强化卡显示正确类别")
 	_check(hud._upgrade_category("active_skill_upgrade") == "主动道术", "主动道术升级卡显示正确类别")
+	_check(hud._upgrade_category("cultivation_water") == "元素修炼", "元素修炼卡显示独立类别")
 
 
 func _test_sprite_assets(main: Variant) -> void:
@@ -104,11 +105,16 @@ func _test_sprite_assets(main: Variant) -> void:
 func _test_skill_build_system(main: Variant) -> void:
 	_check(main.AUTO_SKILL_DEFS.size() == 6, "首版配置六种自动攻击技能")
 	_check(main.ARTIFACT_DEFS.size() == 6, "首版配置六种被动法器")
+	_check(main.ELEMENT_DEFS.size() == 6, "六大元素各自拥有攻击、修炼与法宝进化配置")
 	_check(main.GENERAL_UPGRADE_DEFS.size() == 4, "通用强化池只包含四项设计内容")
 	_check(main._ordinary_enemy_cap() == 24, "前期尸潮存在明确存活上限")
 	main.elapsed_seconds = 400.0
 	_check(main._ordinary_enemy_cap() == 46, "中后期尸潮压力按阶段提升")
 	main.elapsed_seconds = 0.0
+	main.primary_element = ""
+	main.artifacts.clear()
+	main.skills.clear()
+	main.skill_cooldowns.clear()
 
 	main._open_upgrade_choices()
 	var skill_card_index := -1
@@ -140,26 +146,88 @@ func _test_skill_build_system(main: Variant) -> void:
 	main.level_cards.clear()
 	main.state = "playing"
 
+	main.skills["water_array"] = {"level": 3, "branch": "cold", "evolved": ""}
+	var breakthrough: Dictionary = main._skill_card("water_array", "skill_level")
+	_check(str(breakthrough.get("name", "")).begins_with("立道突破"), "技能 Lv3 突破 Lv4 时明确提示立道")
+	main._apply_upgrade(breakthrough)
+	_check(main.primary_element == "water" and int(main.skills["water_array"]["level"]) == 4, "首次突破 Lv4 锁定主修元素")
+	_check(main._skill_level_cap("water_array") == 5 and main._skill_level_cap("fire_talisman") == 3, "主修可升 Lv5，兼修最高 Lv3")
+	main.skills["fire_talisman"] = {"level": 3, "branch": "flame", "evolved": ""}
+	var core_candidates: Array[Dictionary] = main._collect_core_candidates()
+	var secondary_can_breakthrough := false
+	for card in core_candidates:
+		if str(card.get("kind", "")) == "skill_level" and str(card.get("skill_id", "")) == "fire_talisman":
+			secondary_can_breakthrough = true
+	_check(not secondary_can_breakthrough, "主修锁定后兼修元素不会再出现 Lv4 突破卡")
+
+	main.element_cultivation_levels = {"metal": 0, "wood": 0, "water": 0, "fire": 0, "earth": 0, "thunder": 0}
+	_check(main._element_cultivation_cap("water") == 3 and main._element_cultivation_cap("fire") == 1, "主修修炼可到 Lv3，兼修修炼仅 Lv1")
+	var cultivation_candidates: Array[Dictionary] = main._collect_element_cultivation_candidates()
+	var has_water_cultivation := false
+	var has_fire_cultivation := false
+	for card in cultivation_candidates:
+		if str(card.get("element_id", "")) == "water":
+			has_water_cultivation = true
+		if str(card.get("element_id", "")) == "fire":
+			has_fire_cultivation = true
+	_check(has_water_cultivation and has_fire_cultivation, "已获取攻击技能后可选择对应元素修炼")
+	main._apply_upgrade(main._element_cultivation_card("fire"))
+	_check(main._cultivation_level("fire") == 1, "兼修元素修炼可获得一次辅助效果")
+	var secondary_cultivation_available := false
+	for card in main._collect_element_cultivation_candidates():
+		if str(card.get("element_id", "")) == "fire":
+			secondary_cultivation_available = true
+	_check(not secondary_cultivation_available, "兼修元素修炼达到 Lv1 后退出候选池")
+	main._apply_upgrade(main._element_cultivation_card("water"))
+	main._apply_upgrade(main._element_cultivation_card("water"))
+	_check(main._cultivation_level("water") == 2, "主修元素修炼可持续强化")
+	main.player.hp = 50.0
+	main.water_recovery_accumulator = 0.0
+	main._tick_element_cultivation(1.0)
+	_check(is_equal_approx(main.player.hp, 50.7), "水系清泉回元按修炼等级持续恢复生命")
+	main.player.hp = main.player.max_hp
+	main.water_recovery_accumulator = 0.0
+
+	main.primary_element = ""
+	_check(main._artifact_slot_cap() == 2, "立道前保留一个法器槽给未来主修核心法宝")
+	main.primary_element = "water"
+	main.skills.clear()
+	main.skills["water_array"] = {"level": 4, "branch": "cold", "evolved": ""}
+	main.artifacts.clear()
+	main._open_upgrade_choices()
+	var core_artifact_guaranteed := false
+	for card in main.level_cards:
+		if str(card.get("kind", "")) == "artifact_acquire" and str(card.get("artifact_id", "")) == "cold_relic":
+			core_artifact_guaranteed = true
+	_check(core_artifact_guaranteed, "立道后优先提供主修元素对应的核心法宝")
+	main.level_cards.clear()
+
+	for element_variant in main.ELEMENT_DEFS.keys():
+		var element_id := str(element_variant)
+		var element_def: Dictionary = main.ELEMENT_DEFS[element_id]
+		var skill_id := str(element_def["skill_id"])
+		var artifact_id := str(element_def["artifact_id"])
+		main.primary_element = element_id
+		main.skills.clear()
+		main.artifacts.clear()
+		main.skills[skill_id] = {"level": 5, "branch": "", "evolved": ""}
+		main.artifacts[artifact_id] = {"level": 1}
+		var element_evolutions: Array[Dictionary] = main._collect_evolution_candidates()
+		var found_evolution := false
+		for card in element_evolutions:
+			if str(card.get("evolution_id", "")) == str(element_def["evolution_id"]):
+				found_evolution = true
+		_check(found_evolution, "%s系主修 Lv5 配合专属法宝可解锁最终进化" % str(element_def["name"]))
+	main.primary_element = "fire"
+	main.skills.clear()
+	main.artifacts.clear()
 	main.skills["water_array"] = {"level": 5, "branch": "cold", "evolved": ""}
 	main.artifacts["cold_relic"] = {"level": 1}
-	var evolutions: Array[Dictionary] = main._collect_evolution_candidates()
-	var has_ice_evolution := false
-	for card in evolutions:
-		if str(card.get("evolution_id", "")) == "ice_array":
-			has_ice_evolution = true
-	_check(has_ice_evolution, "水阵 Lv5 持有寒魄法器时解锁冰魄阵进化")
+	_check(main._collect_evolution_candidates().is_empty(), "非主修元素即使 Lv5 持有法宝也不能进化")
 	main.skills.clear()
 	main.artifacts.clear()
-	main.skills["thunder_talisman"] = {"level": 5, "branch": "chain", "evolved": ""}
-	main.artifacts["thunder_seal"] = {"level": 1}
-	var thunder_evolutions: Array[Dictionary] = main._collect_evolution_candidates()
-	var has_five_thunder := false
-	for card in thunder_evolutions:
-		if str(card.get("evolution_id", "")) == "five_thunder":
-			has_five_thunder = true
-	_check(has_five_thunder, "雷符 Lv5 持有天雷法印时解锁五雷敕令进化")
-	main.skills.clear()
-	main.artifacts.clear()
+	main.primary_element = ""
+	main.element_cultivation_levels = {"metal": 0, "wood": 0, "water": 0, "fire": 0, "earth": 0, "thunder": 0}
 	main.level_cards.clear()
 	main.state = "playing"
 
@@ -187,11 +255,17 @@ func _test_skill_build_system(main: Variant) -> void:
 		main.skill_cooldowns.clear()
 
 
+
+
 func _test_skill_art_assets() -> void:
 	var atlas := load("res://assets/sprites/skill_art_atlas.svg") as Texture2D
+	var cultivation_atlas := load("res://assets/sprites/element_cultivation_atlas.svg") as Texture2D
 	_check(atlas != null, "国风技能插画图集可加载")
+	_check(cultivation_atlas != null, "六大元素修炼专属插画图集可加载")
 	if atlas != null:
 		_check(atlas.get_size() == Vector2(768.0, 128.0), "六种技能插画共享 768×128 图集")
+	if cultivation_atlas != null:
+		_check(cultivation_atlas.get_size() == Vector2(768.0, 128.0), "六种元素修炼插画共享 768×128 图集")
 	var hud: Variant = HUD_SCRIPT.new()
 	root.add_child(hud)
 	_check(hud._skill_art_region("fire_talisman").position.x == 0.0, "火符使用专属插画帧")
@@ -200,6 +274,12 @@ func _test_skill_art_assets() -> void:
 	_check(hud._skill_art_region("peachwood_sword").position.x == 384.0, "桃木剑使用独立武器插画帧")
 	_check(hud._skill_art_region("water_array").position.x == 512.0, "水阵使用专属插画帧")
 	_check(hud._skill_art_region("earth_formation").position.x == 640.0, "地脉阵使用专属插画帧")
+	_check(hud._cultivation_art_region("cultivation_metal").position.x == 0.0, "金系修炼使用专属剑意插画")
+	_check(hud._cultivation_art_region("cultivation_wood").position.x == 128.0, "木系修炼使用专属青木插画")
+	_check(hud._cultivation_art_region("cultivation_water").position.x == 256.0, "水系修炼使用专属清泉插画")
+	_check(hud._cultivation_art_region("cultivation_fire").position.x == 384.0, "火系修炼使用专属余烬插画")
+	_check(hud._cultivation_art_region("cultivation_earth").position.x == 512.0, "土系修炼使用专属地脉插画")
+	_check(hud._cultivation_art_region("cultivation_thunder").position.x == 640.0, "雷系修炼使用专属引雷插画")
 	_check(hud.has_method("_center_text") and hud.has_method("_draw_wrapped_text"), "升级卡支持居中标题与多行技能说明")
 	hud.queue_free()
 

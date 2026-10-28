@@ -40,12 +40,12 @@ const AUTO_SKILL_DEFS := {
 }
 
 const ARTIFACT_DEFS := {
-	"cold_relic": {"name": "寒魄法器", "desc": "强化水/冰控制，并解锁水阵进化", "icon": "cold_relic"},
-	"thunder_seal": {"name": "天雷法印", "desc": "强化雷系伤害，并解锁雷符进化", "icon": "thunder_seal"},
-	"talisman_scroll": {"name": "符箓秘卷", "desc": "火符与雷符伤害提高 12%", "icon": "talisman_scroll"},
-	"sword_manual": {"name": "御剑诀", "desc": "铜钱剑与桃木剑伤害提高 12%", "icon": "sword_manual"},
-	"formation_manual": {"name": "阵法真解", "desc": "水阵与地脉阵伤害提高 12%", "icon": "formation_manual"},
-	"body_jade": {"name": "护身玉", "desc": "每级受到的接触伤害降低 8%", "icon": "body_jade"}
+	"cold_relic": {"name": "寒魄法器", "desc": "强化水/冰控制；水阵主修 Lv5 时解锁冰魄阵", "icon": "cold_relic"},
+	"thunder_seal": {"name": "天雷法印", "desc": "强化雷系伤害；雷符主修 Lv5 时解锁五雷敕令", "icon": "thunder_seal"},
+	"talisman_scroll": {"name": "符箓秘卷", "desc": "强化火符；火符主修 Lv5 时解锁焚天符阵", "icon": "talisman_scroll"},
+	"sword_manual": {"name": "御剑诀", "desc": "强化金系剑意；铜钱剑主修 Lv5 时解锁金锋剑阵", "icon": "sword_manual"},
+	"formation_manual": {"name": "阵法真解", "desc": "强化地脉阵；地脉阵主修 Lv5 时解锁镇岳神印", "icon": "formation_manual"},
+	"body_jade": {"name": "护身玉", "desc": "受到的接触伤害降低 8%；桃木剑主修 Lv5 时解锁青木护身剑", "icon": "body_jade"}
 }
 
 const GENERAL_UPGRADE_DEFS := {
@@ -82,6 +82,18 @@ const SKILL_BRANCHES := {
 	]
 }
 
+const ELEMENT_DEFS := {
+	"metal": {"name": "金", "skill_id": "copper_coin_sword", "cultivation_name": "剑意凝锋", "cultivation_desc": "铜钱剑伤害提高 8%，强化贯穿与剑气", "icon": "cultivation_metal", "artifact_id": "sword_manual", "evolution_id": "golden_sword_array", "evolution_name": "金锋剑阵", "evolution_desc": "铜钱剑命中后追加两段金色剑气，斩击附近敌人", "effect": "slash"},
+	"wood": {"name": "木", "skill_id": "peachwood_sword", "cultivation_name": "青木回生", "cultivation_desc": "击杀敌人时恢复少量生命，每级提高恢复量", "icon": "cultivation_wood", "artifact_id": "body_jade", "evolution_id": "greenwood_guardian", "evolution_name": "青木护身剑", "evolution_desc": "桃木剑攻击时额外释放护身剑气，击退近身邪祟", "effect": "wood"},
+	"water": {"name": "水", "skill_id": "water_array", "cultivation_name": "清泉回元", "cultivation_desc": "每秒恢复少量生命；主修时可继续强化续航", "icon": "cultivation_water", "artifact_id": "cold_relic", "evolution_id": "ice_array", "evolution_name": "冰魄阵", "evolution_desc": "水阵进化为冰魄阵，强化范围减速与短暂冻结", "effect": "water"},
+	"fire": {"name": "火", "skill_id": "fire_talisman", "cultivation_name": "余烬续燃", "cultivation_desc": "延长火焰区域并提高灼烧伤害", "icon": "cultivation_fire", "artifact_id": "talisman_scroll", "evolution_id": "heavenfire_array", "evolution_name": "焚天符阵", "evolution_desc": "火符命中后留下持续燃烧的火场，强化范围压制", "effect": "fire"},
+	"earth": {"name": "土", "skill_id": "earth_formation", "cultivation_name": "地脉回响", "cultivation_desc": "扩大地脉阵范围并强化击退", "icon": "cultivation_earth", "artifact_id": "formation_manual", "evolution_id": "earth_seal", "evolution_name": "镇岳神印", "evolution_desc": "地脉阵召出更大范围的镇岳震波，强化压制与击退", "effect": "earth"},
+	"thunder": {"name": "雷", "skill_id": "thunder_talisman", "cultivation_name": "引雷蓄势", "cultivation_desc": "雷符连锁伤害提高，水系湿润目标更易传导", "icon": "cultivation_thunder", "artifact_id": "thunder_seal", "evolution_id": "five_thunder", "evolution_name": "五雷敕令", "evolution_desc": "雷击爆发与连锁清场强化，传导目标数仍有上限", "effect": "lightning"}
+}
+
+var primary_element: String = ""
+var element_cultivation_levels: Dictionary = {"metal": 0, "wood": 0, "water": 0, "fire": 0, "earth": 0, "thunder": 0}
+var water_recovery_accumulator: float = 0.0
 var heal_charges: int = 2
 var boss_spawned: bool = false
 var level_cards: Array[Dictionary] = []
@@ -174,6 +186,7 @@ func _process(delta: float) -> void:
 
 		_tick_combat_skills(delta)
 		_tick_fire_zones(delta)
+		_tick_element_cultivation(delta)
 		_tick_enemies(delta)
 		_tick_projectiles(delta)
 		_remove_dead_enemies()
@@ -439,6 +452,9 @@ func _remove_dead_enemies() -> void:
 			state = "victory"
 		else:
 			kills += 1
+			var wood_cultivation := _cultivation_level("wood")
+			if wood_cultivation > 0:
+				player.heal(0.45 * float(wood_cultivation))
 			var xp_value := 1
 			if enemy.kind == "jumper":
 				xp_value = 2
@@ -484,6 +500,13 @@ func _maybe_level_up() -> void:
 func _open_upgrade_choices() -> void:
 	level_cards.clear()
 
+	# Reserve one artifact slot until a primary element is chosen, then guarantee
+	# its matching core artifact as a meaningful route toward final evolution.
+	if not primary_element.is_empty():
+		var core_artifact_id := str(ELEMENT_DEFS[primary_element]["artifact_id"])
+		if not artifacts.has(core_artifact_id) and artifacts.size() < MAX_ARTIFACT_SLOTS:
+			level_cards.append(_artifact_card(core_artifact_id, "artifact_acquire"))
+
 	# A skill's Lv3 branch is a mandatory two-way decision, not a random generic buff.
 	var branchable: Array[String] = []
 	for skill_variant in skills.keys():
@@ -520,7 +543,7 @@ func _collect_core_candidates() -> Array[Dictionary]:
 			var skill_data: Dictionary = skills[skill_id]
 			var skill_level := int(skill_data.get("level", 1))
 			var branch_pending := skill_level == 2 and str(skill_data.get("branch", "")).is_empty()
-			if skill_level < 5 and not branch_pending:
+			if skill_level < _skill_level_cap(skill_id) and not branch_pending:
 				skill_upgrades.append(_skill_card(skill_id, "skill_level"))
 		elif skills.size() < MAX_AUTO_SKILL_SLOTS:
 			skill_acquisitions.append(_skill_card(skill_id, "skill_acquire"))
@@ -531,7 +554,7 @@ func _collect_core_candidates() -> Array[Dictionary]:
 			var artifact_data: Dictionary = artifacts[artifact_id]
 			if int(artifact_data.get("level", 1)) < 3:
 				artifact_candidates.append(_artifact_card(artifact_id, "artifact_level"))
-		elif artifacts.size() < MAX_ARTIFACT_SLOTS:
+		elif artifacts.size() < _artifact_slot_cap():
 			artifact_candidates.append(_artifact_card(artifact_id, "artifact_acquire"))
 
 	var result: Array[Dictionary] = []
@@ -553,6 +576,11 @@ func _collect_core_candidates() -> Array[Dictionary]:
 	for card in artifact_candidates:
 		result.append(card)
 
+	# Elemental cultivation cards use the same three-choice pool and compete for XP.
+	# A non-primary element can be cultivated once; the chosen primary can deepen to Lv3.
+	for cultivation_card in _collect_element_cultivation_candidates():
+		result.append(cultivation_card)
+
 	# Active-art upgrade is deliberately lower-weight than acquiring or improving a build skill.
 	if active_skill_level < 3 and (randf() < 0.28 or result.is_empty()):
 		result.append(_active_skill_card())
@@ -570,15 +598,101 @@ func _collect_general_candidates() -> Array[Dictionary]:
 
 func _collect_evolution_candidates() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	if skills.has("water_array") and artifacts.has("cold_relic"):
-		var water_data: Dictionary = skills["water_array"]
-		if int(water_data.get("level", 1)) >= 5 and str(water_data.get("evolved", "")).is_empty():
-			result.append({"id": "evolve_ice_array", "kind": "skill_evolution", "skill_id": "water_array", "evolution_id": "ice_array", "name": "冰魄阵", "desc": "水阵进化为冰魄阵，强化范围控制与冻结", "category": "技能进化", "icon": "ice_array"})
-	if skills.has("thunder_talisman") and artifacts.has("thunder_seal"):
-		var thunder_data: Dictionary = skills["thunder_talisman"]
-		if int(thunder_data.get("level", 1)) >= 5 and str(thunder_data.get("evolved", "")).is_empty():
-			result.append({"id": "evolve_five_thunder", "kind": "skill_evolution", "skill_id": "thunder_talisman", "evolution_id": "five_thunder", "name": "五雷敕令", "desc": "雷符进化为五雷敕令，强化爆发与连锁清场", "category": "技能进化", "icon": "five_thunder"})
+	if primary_element.is_empty():
+		return result
+	for element_variant in ELEMENT_DEFS.keys():
+		var element_id := str(element_variant)
+		if element_id != primary_element:
+			continue
+		var definition: Dictionary = ELEMENT_DEFS[element_id]
+		var skill_id := str(definition["skill_id"])
+		var artifact_id := str(definition["artifact_id"])
+		if not skills.has(skill_id) or not artifacts.has(artifact_id):
+			continue
+		var skill_data: Dictionary = skills[skill_id]
+		if int(skill_data.get("level", 1)) < 5 or not str(skill_data.get("evolved", "")).is_empty():
+			continue
+		var evolution_id := str(definition["evolution_id"])
+		result.append({
+			"id": "evolve_" + evolution_id,
+			"kind": "skill_evolution",
+			"skill_id": skill_id,
+			"element_id": element_id,
+			"artifact_id": artifact_id,
+			"evolution_id": evolution_id,
+			"name": str(definition["evolution_name"]),
+			"desc": str(definition["evolution_desc"]),
+			"category": "专属法宝进化",
+			"icon": skill_id
+		})
 	return result
+
+
+func _element_for_skill(skill_id: String) -> String:
+	for element_variant in ELEMENT_DEFS.keys():
+		var element_id := str(element_variant)
+		if str(ELEMENT_DEFS[element_id].get("skill_id", "")) == skill_id:
+			return element_id
+	return ""
+
+
+func _element_name(element_id: String) -> String:
+	return str(ELEMENT_DEFS.get(element_id, {}).get("name", "未知"))
+
+
+func _skill_level_cap(skill_id: String) -> int:
+	if primary_element.is_empty():
+		# Level 4 is the commitment point: choosing it establishes the main element.
+		return 4
+	return 5 if _element_for_skill(skill_id) == primary_element else 3
+
+
+func _element_cultivation_cap(element_id: String) -> int:
+	if primary_element.is_empty():
+		return 1
+	return 3 if element_id == primary_element else 1
+
+
+func _artifact_slot_cap() -> int:
+	return MAX_ARTIFACT_SLOTS if not primary_element.is_empty() else MAX_ARTIFACT_SLOTS - 1
+
+
+func _cultivation_level(element_id: String) -> int:
+	return int(element_cultivation_levels.get(element_id, 0))
+
+
+func _collect_element_cultivation_candidates() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for element_variant in ELEMENT_DEFS.keys():
+		var element_id := str(element_variant)
+		var definition: Dictionary = ELEMENT_DEFS[element_id]
+		if not skills.has(str(definition["skill_id"])):
+			continue
+		if _cultivation_level(element_id) < _element_cultivation_cap(element_id):
+			result.append(_element_cultivation_card(element_id))
+	return result
+
+
+func _element_cultivation_card(element_id: String) -> Dictionary:
+	var definition: Dictionary = ELEMENT_DEFS[element_id]
+	var next_level := _cultivation_level(element_id) + 1
+	var description := str(definition["cultivation_desc"])
+	if primary_element.is_empty():
+		description += "；立道后可继续深修主修元素"
+	elif primary_element == element_id:
+		description += "；主修专精效果"
+	else:
+		description += "；兼修仅可提升一次"
+	return {
+		"id": "cultivation_" + element_id,
+		"kind": "element_cultivation",
+		"element_id": element_id,
+		"target_id": element_id,
+		"name": "%s系修炼 · %s Lv%d" % [_element_name(element_id), str(definition["cultivation_name"]), next_level],
+		"desc": description,
+		"category": "元素修炼",
+		"icon": str(definition["icon"])
+	}
 
 
 func _skill_card(skill_id: String, card_kind: String) -> Dictionary:
@@ -588,10 +702,18 @@ func _skill_card(skill_id: String, card_kind: String) -> Dictionary:
 	var card_id := "acquire_" + skill_id
 	if card_kind == "skill_level":
 		var current_data: Dictionary = skills[skill_id]
+		var current_level := int(current_data.get("level", 1))
+		var element_id := _element_for_skill(skill_id)
 		card_id = "upgrade_" + skill_id
-		card_name += "精进 · Lv%d" % (int(current_data.get("level", 1)) + 1)
-		description = str(definition["upgrade_desc"])
-	return {"id": card_id, "kind": card_kind, "skill_id": skill_id, "name": card_name, "desc": description, "category": "攻击技能" if card_kind == "skill_acquire" else "技能精进", "icon": skill_id}
+		if primary_element.is_empty() and current_level >= 3:
+			card_name = "立道突破 · %s Lv4" % str(definition["name"])
+			description = "确定%s系为本局主修；该系可升至 Lv5，其他元素最高 Lv3。" % _element_name(element_id)
+		else:
+			card_name += "精进 · Lv%d" % (current_level + 1)
+			description = str(definition["upgrade_desc"])
+			if element_id == primary_element and current_level == 4:
+				description += "；Lv5 后需配合专属法宝才能最终进化"
+	return {"id": card_id, "kind": card_kind, "skill_id": skill_id, "name": card_name, "desc": description, "category": "攻击技能" if card_kind == "skill_acquire" else ("立道突破" if card_name.begins_with("立道突破") else "技能精进"), "icon": skill_id}
 
 
 func _branch_card(skill_id: String, branch_data: Dictionary) -> Dictionary:
@@ -695,6 +817,8 @@ func _upgrade_weight(card: Dictionary) -> float:
 	match str(card.get("kind", "")):
 		"skill_level":
 			return 5.0
+		"element_cultivation":
+			return 2.6
 		"artifact_level":
 			return 3.8
 		"artifact_acquire":
@@ -755,7 +879,11 @@ func _apply_upgrade(upgrade: Dictionary) -> void:
 			skill_cooldowns[skill_id] = 0.0
 		"skill_level":
 			var skill_data: Dictionary = skills[skill_id]
-			skill_data["level"] = mini(5, int(skill_data.get("level", 1)) + 1)
+			var current_level := int(skill_data.get("level", 1))
+			if primary_element.is_empty() and current_level >= 3:
+				primary_element = _element_for_skill(skill_id)
+			var level_cap := _skill_level_cap(skill_id)
+			skill_data["level"] = mini(level_cap, current_level + 1)
 			skills[skill_id] = skill_data
 		"skill_branch":
 			var branch_skill: Dictionary = skills[skill_id]
@@ -764,15 +892,25 @@ func _apply_upgrade(upgrade: Dictionary) -> void:
 			skills[skill_id] = branch_skill
 		"skill_evolution":
 			var evolution_skill: Dictionary = skills[skill_id]
-			evolution_skill["evolved"] = str(upgrade.get("evolution_id", ""))
+			var evolution_id := str(upgrade.get("evolution_id", ""))
+			evolution_skill["evolved"] = evolution_id
 			skills[skill_id] = evolution_skill
-			_spawn_skill_effect("ice" if str(upgrade.get("evolution_id", "")) == "ice_array" else "lightning", player.position, 115.0, 0.55)
+			var element_id := str(upgrade.get("element_id", primary_element))
+			var effect_kind := str(ELEMENT_DEFS.get(element_id, {}).get("effect", "lightning"))
+			_spawn_skill_effect(effect_kind, player.position, 115.0, 0.55)
 		"artifact_acquire":
 			artifacts[artifact_id] = {"level": 1}
 		"artifact_level":
 			var artifact_data: Dictionary = artifacts[artifact_id]
 			artifact_data["level"] = mini(3, int(artifact_data.get("level", 1)) + 1)
 			artifacts[artifact_id] = artifact_data
+		"element_cultivation":
+			var element_id := str(upgrade.get("element_id", ""))
+			if ELEMENT_DEFS.has(element_id):
+				var current_cultivation := _cultivation_level(element_id)
+				element_cultivation_levels[element_id] = mini(_element_cultivation_cap(element_id), current_cultivation + 1)
+				var effect_kind := str(ELEMENT_DEFS[element_id].get("effect", "hit"))
+				_spawn_skill_effect(effect_kind, player.position, 58.0, 0.42)
 		"general_upgrade":
 			var general_id := str(upgrade.get("target_id", ""))
 			var new_level := int(general_upgrade_levels.get(general_id, 0)) + 1
@@ -799,22 +937,35 @@ func _artifact_level(artifact_id: String) -> int:
 	return int(data.get("level", 1))
 
 
+func _tick_element_cultivation(delta: float) -> void:
+	var water_level := _cultivation_level("water")
+	if water_level <= 0 or player == null:
+		water_recovery_accumulator = 0.0
+		return
+	water_recovery_accumulator += delta
+	while water_recovery_accumulator >= 1.0:
+		water_recovery_accumulator -= 1.0
+		player.heal(0.35 * float(water_level))
+
+
 func _skill_damage(skill_id: String, base_damage: float) -> float:
 	var skill_data: Dictionary = skills.get(skill_id, {})
 	var skill_level := int(skill_data.get("level", 1))
 	var multiplier := 1.0 + float(skill_level - 1) * 0.18
-	if _artifact_level("talisman_scroll") > 0 and skill_id in ["fire_talisman", "thunder_talisman"]:
+	if skill_id == "copper_coin_sword":
+		multiplier *= 1.0 + 0.08 * float(_cultivation_level("metal"))
+	if _artifact_level("talisman_scroll") > 0 and skill_id == "fire_talisman":
 		multiplier *= 1.0 + 0.12 * float(_artifact_level("talisman_scroll"))
 	if _artifact_level("thunder_seal") > 0 and skill_id == "thunder_talisman":
 		multiplier *= 1.0 + 0.15 * float(_artifact_level("thunder_seal"))
 	if _artifact_level("cold_relic") > 0 and skill_id == "water_array":
 		multiplier *= 1.0 + 0.12 * float(_artifact_level("cold_relic"))
-	if _artifact_level("sword_manual") > 0 and skill_id in ["copper_coin_sword", "peachwood_sword"]:
+	if _artifact_level("sword_manual") > 0 and skill_id == "copper_coin_sword":
 		multiplier *= 1.0 + 0.12 * float(_artifact_level("sword_manual"))
-	if _artifact_level("formation_manual") > 0 and skill_id in ["water_array", "earth_formation"]:
+	if _artifact_level("formation_manual") > 0 and skill_id == "earth_formation":
 		multiplier *= 1.0 + 0.12 * float(_artifact_level("formation_manual"))
 	var evolved := str(skill_data.get("evolved", ""))
-	if evolved == "ice_array" or evolved == "five_thunder":
+	if not evolved.is_empty():
 		multiplier *= 1.3
 	return base_damage * multiplier
 
@@ -913,6 +1064,8 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 				_apply_area_damage(player.position, guardian_radius, damage * 0.72, "wood", 0.0, false, 20.0)
 			else:
 				_spawn_skill_projectile(target, skill_id, damage)
+			if evolved == "greenwood_guardian":
+				_apply_area_damage(player.position, 68.0 + float(skill_level) * 3.0, damage * 0.45, "wood", 0.0, false, 18.0)
 		"water_array":
 			var water_radius := 76.0 + float(skill_level) * 9.0
 			var slow_duration := 1.2 + float(skill_level - 1) * 0.12
@@ -928,13 +1081,18 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 				slow_duration = 2.25
 			_apply_area_damage(target.position, water_radius, damage, "ice" if evolved == "ice_array" else "water", slow_duration, true, 0.0)
 		"earth_formation":
-			var earth_radius := 66.0 + float(skill_level) * 8.0
-			var knockback := 0.0
+			var earth_cultivation := _cultivation_level("earth")
+			var earth_radius := (66.0 + float(skill_level) * 8.0) * (1.0 + 0.06 * float(earth_cultivation))
+			var knockback := 8.0 * float(earth_cultivation)
 			if branch == "mountain":
 				earth_radius += 16.0
-				knockback = 22.0
+				knockback += 22.0
 			if branch == "earthspike":
 				damage *= 1.6
+			if evolved == "earth_seal":
+				earth_radius += 30.0
+				damage *= 1.25
+				knockback += 12.0
 			_apply_area_damage(target.position, earth_radius, damage, "earth", 0.0, false, knockback)
 
 	skill_cooldowns[skill_id] = cooldown
@@ -983,9 +1141,11 @@ func _resolve_projectile_hit(projectile) -> void:
 				target.wet_timer = 0.0
 				_apply_area_damage(target.position, 44.0, damage * 0.35, "steam")
 			elif branch == "flame":
-				target.apply_burn(2.8, 2.8 + float(skill_data.get("level", 1)) * 0.55)
+				target.apply_burn(2.8 + 0.2 * float(_cultivation_level("fire")), 2.8 + float(skill_data.get("level", 1)) * 0.55 + 0.35 * float(_cultivation_level("fire")))
 			else:
-				target.apply_burn(1.35, 1.7)
+				target.apply_burn(1.35 + 0.15 * float(_cultivation_level("fire")), 1.7 + 0.3 * float(_cultivation_level("fire")))
+			if evolved == "heavenfire_array":
+				_spawn_fire_zone(target.position, int(skill_data.get("level", 5)), true)
 			_spawn_skill_effect("fire", target.position, 22.0, 0.22)
 		"thunder_talisman":
 			var was_wet: bool = target.wet_timer > 0.0
@@ -1001,7 +1161,8 @@ func _resolve_projectile_hit(projectile) -> void:
 				chain_count += 1
 			if branch == "heaven" and evolved != "five_thunder":
 				chain_count = 0
-			_apply_chain_damage(target, damage * 0.58, chain_count)
+			var chain_multiplier := 0.58 * (1.0 + 0.1 * float(_cultivation_level("thunder")))
+			_apply_chain_damage(target, damage * chain_multiplier, chain_count)
 			_spawn_skill_effect("lightning", target.position, 32.0, 0.25)
 		"copper_coin_sword":
 			target.take_damage(damage)
@@ -1011,6 +1172,9 @@ func _resolve_projectile_hit(projectile) -> void:
 			elif branch == "return":
 				target.take_damage(damage * 0.55)
 				_spawn_skill_effect("wood", target.position, 25.0, 0.22)
+			if evolved == "golden_sword_array":
+				_apply_chain_damage(target, damage * 0.42, 2)
+				_spawn_skill_effect("slash", target.position, 38.0, 0.24)
 		"peachwood_sword":
 			target.take_damage(damage)
 			if branch == "chase":
@@ -1066,20 +1230,8 @@ func _tick_fire_zones(delta: float) -> void:
 			if target != null:
 				var skill_data: Dictionary = skills["fire_talisman"]
 				var level := int(skill_data.get("level", 1))
-				var radius := 78.0 + float(level - 1) * 7.0
-				var duration := 3.0
-				fire_zones.append({
-					"position": target.position,
-					"radius": radius,
-					"time": duration,
-					"duration": duration,
-					"tick_timer": 0.25,
-					"damage": 2.8 + float(level) * 0.9
-				})
-				if fire_zones.size() > 4:
-					fire_zones.remove_at(0)
-				_spawn_skill_effect("fire", target.position, 34.0, 0.32)
-				fire_zone_timer = maxf(3.8, 5.0 - float(level - 1) * 0.22)
+				_spawn_fire_zone(target.position, level, false)
+				fire_zone_timer = maxf(3.8, 5.0 - float(level - 1) * 0.22 - 0.08 * float(_cultivation_level("fire")))
 			else:
 				fire_zone_timer = 0.6
 
@@ -1104,6 +1256,28 @@ func _tick_fire_zones(delta: float) -> void:
 		fire_zones[i] = zone
 	if not fire_zones.is_empty():
 		queue_redraw()
+
+
+func _spawn_fire_zone(center: Vector2, skill_level: int, evolved_burst: bool = false) -> void:
+	var cultivation_level := _cultivation_level("fire")
+	var radius := 78.0 + float(skill_level - 1) * 7.0 + float(cultivation_level) * 3.0
+	var duration := 3.0 + float(cultivation_level) * 0.28
+	var damage := 2.8 + float(skill_level) * 0.9 + float(cultivation_level) * 0.45
+	if evolved_burst:
+		radius += 14.0
+		duration += 0.7
+		damage += 1.0
+	fire_zones.append({
+		"position": center,
+		"radius": radius,
+		"time": duration,
+		"duration": duration,
+		"tick_timer": 0.25,
+		"damage": damage
+	})
+	if fire_zones.size() > 4:
+		fire_zones.remove_at(0)
+	_spawn_skill_effect("fire", center, 42.0 if evolved_burst else 34.0, 0.36)
 
 
 func _tick_skill_effects(delta: float) -> void:
