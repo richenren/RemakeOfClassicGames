@@ -123,14 +123,23 @@ func _test_skill_build_system(main: Variant) -> void:
 	if not main.enemies.is_empty():
 		var target: Variant = main.enemies[0]
 		target.position = main.player.position + Vector2(100.0, 0.0)
-		main.skills["fire_talisman"] = {"level": 1, "branch": "", "evolved": ""}
-		main.skill_cooldowns["fire_talisman"] = 0.0
-		var projectile_count: int = int(main.projectiles.size())
-		main._cast_auto_skill("fire_talisman", target)
-		_check(main.projectiles.size() > projectile_count, "已获得的火符会实际发射独立技能投射物")
-		for projectile in main.projectiles:
-			projectile.queue_free()
-		main.projectiles.clear()
+		var projectile_skills: Array[String] = ["fire_talisman", "thunder_talisman", "copper_coin_sword", "peachwood_sword"]
+		for skill_variant in main.AUTO_SKILL_DEFS.keys():
+			var skill_id := str(skill_variant)
+			main.skills.clear()
+			main.skill_cooldowns.clear()
+			main.skills[skill_id] = {"level": 1, "branch": "", "evolved": ""}
+			target.hp = target.max_hp
+			var projectile_count: int = int(main.projectiles.size())
+			var hp_before: float = target.hp
+			main._cast_auto_skill(skill_id, target)
+			if skill_id in projectile_skills:
+				_check(main.projectiles.size() > projectile_count, "%s 会发射独立技能投射物" % str(main.AUTO_SKILL_DEFS[skill_id]["name"]))
+			else:
+				_check(target.hp < hp_before, "%s 会对范围内敌人造成伤害" % str(main.AUTO_SKILL_DEFS[skill_id]["name"]))
+			for projectile in main.projectiles:
+				projectile.queue_free()
+			main.projectiles.clear()
 		main.skills.clear()
 		main.skill_cooldowns.clear()
 
