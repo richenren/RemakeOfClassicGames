@@ -2,7 +2,7 @@
 
 个人与家庭使用的 Windows 电脑 + Android 安卓手机双端 2D 游戏开发项目。
 
-> 当前阶段：首款游戏《镇邪录》处于 Godot 可玩原型迭代。本轮已将战场背景、年轻道士/僵尸显示比例、技能选择卡和 HUD 按已确认的概念图重构为可运行的 2D 版本，并加入多视口布局测试；六大元素主修、修炼与法宝进化规则保持不变。Godot 4.5.1 Headless CI 已通过 **144 项自动化检查、0 项失败**（[查看本轮 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40658780813)）。Windows 实际画面仍需目视验收，重点检查大幅技能插画、道士/僵尸比例与小屏 HUD；Android 真机测试不属于本轮范围。
+> 当前阶段：首款游戏《镇邪录》处于 Godot 可玩原型迭代。本轮在保留战斗逻辑与技能选择交互的前提下，精修义庄背景、增加 12 幅横向技能/修炼插画，并为 800×600、640×360 增加紧凑 HUD、触控热区一致性与镜头缩放适配。Godot 4.5.1 Headless CI 已通过 **188 项自动化检查、0 项失败**（[查看本轮 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40663231092)）。Windows 实际画面仍需目视验收，重点检查大幅技能插画、道士/僵尸比例与小屏 HUD；Android 真机测试不属于本轮范围。
 
 ## 项目目标
 
@@ -36,7 +36,7 @@
 
 - [Godot 可玩原型与运行说明](game/README.md)
 - [原型测试范围与结果记录](game/TESTING.md)
-- [最新 Godot Headless 测试运行记录：144 项通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40658780813)
+- [最新 Godot Headless 测试运行记录：188 项通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40663231092)
 - [打开 game/ 项目目录](game/)
 
 ## 文档
@@ -66,4 +66,4 @@
 
 ## 下一步
 
-当前开发基线为 `feat/godot-playable-prototype-v0.1`。本轮背景/头像资源、角色尺寸、升级卡响应式布局与现有战斗逻辑已通过 144 项 Headless 自动化检查；下一步在 Windows 独立窗口按 1280×720、1067×744、800×600、640×360 复测视觉和实际点击区域。后续仍需完善角色/怪物多帧动画、障碍物与 Boss 战场约束、法坛任务、战前主动道术选择和局外成长。Android 真机测试留到后续阶段，NAS 同步留到 V0.2。
+当前开发基线为 `feat/godot-playable-prototype-v0.1`。本轮原生分辨率义庄背景、横向技能卡插画、紧凑 HUD、触控热区与镜头缩放已通过 188 项 Headless 自动化检查；下一步仍需在 Windows 独立窗口按 1280×720、1067×744、800×600、640×360 目视复测背景层次、插画构图、角色比例和实际交互。后续仍需完善角色/怪物多帧动画、障碍物与 Boss 战场约束、法坛任务、战前主动道术选择和局外成长。Android 真机测试留到后续阶段，NAS 同步留到 V0.2。
