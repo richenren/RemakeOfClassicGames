@@ -39,7 +39,7 @@
 - 导入/解析检查：`godot --headless --editor --path game --quit`。
 - 主场景启动检查：`godot --headless --path game --quit-after 5`。
 
-本轮已完成义庄背景细节、横向技能卡插画、角色显示比例与小屏 HUD/镜头适配；Godot 4.5.1 Headless CI 已通过 **188 项自动化检查、0 项失败**（[查看本轮 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40663231092)）。Windows 独立窗口仍需目视验收最新卡片比例、角色尺寸和实际点击热区，Android 真机测试不属于本轮范围。
+本轮已完成义庄背景细节、横向技能卡插画、角色显示比例与小屏 HUD/镜头适配；Godot 4.5.1 Headless CI 已通过 **190 项自动化检查、0 项失败**（[查看本轮 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40664497047)）。Windows 独立窗口仍需目视验收最新卡片比例、角色尺寸和实际点击热区，Android 真机测试不属于本轮范围。
 
 ## 已知问题
 
@@ -70,4 +70,4 @@
 
 - 本目录是原型，不是完整 V0.1 交付版本。
 - 数值仅用于验证战斗闭环，后续应移入可配置资源并通过试玩平衡。
-- 角色比例、清朝僵尸造型、技能卡独立插画与战斗逻辑更新后的验证结果见 [最新 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40663231092)。Windows 视觉复测仍待完成；Android 真机测试不属于本轮范围。
+- 角色比例、清朝僵尸造型、技能卡独立插画与战斗逻辑更新后的验证结果见 [最新 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40664497047)。Windows 视觉复测仍待完成；Android 真机测试不属于本轮范围。
