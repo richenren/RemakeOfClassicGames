@@ -8,6 +8,7 @@ const HUD_SCRIPT = preload("res://scripts/hud.gd")
 
 const WORLD_SIZE := Vector2(2400.0, 1600.0)
 const MAX_ENEMIES := 100
+const BOSS_PHASE_ENEMY_CAP := 18
 
 var player
 var hud
@@ -149,12 +150,13 @@ func _process(delta: float) -> void:
 			attack_timer = player.attack_interval
 
 		spawn_timer -= delta
-		if spawn_timer <= 0.0 and enemies.size() < MAX_ENEMIES:
+		if spawn_timer <= 0.0 and _count_live_ordinary_enemies() < _ordinary_enemy_cap():
 			_spawn_wave()
-			spawn_timer = maxf(0.72, 2.5 - elapsed_seconds / 260.0)
+			spawn_timer = _spawn_interval()
 
 		if not boss_spawned and elapsed_seconds >= 480.0:
 			boss_spawned = true
+			_trim_regular_enemies_for_boss_phase(BOSS_PHASE_ENEMY_CAP)
 			spawn_enemy("boss")
 
 		_tick_combat_skills(delta)
@@ -258,12 +260,57 @@ func _random_enemy_kind() -> String:
 	return "walker"
 
 
+func _ordinary_enemy_cap() -> int:
+		if boss_spawned:
+			return BOSS_PHASE_ENEMY_CAP
+		if elapsed_seconds < 120.0:
+			return 24
+		if elapsed_seconds < 300.0:
+			return 34
+		return 46
+
+
+func _spawn_interval() -> float:
+	if boss_spawned:
+		return 1.7
+	if elapsed_seconds < 120.0:
+		return 2.05
+	if elapsed_seconds < 300.0:
+		return 1.55
+	return 1.15
+
+
+func _count_live_ordinary_enemies() -> int:
+	var count := 0
+	for enemy in enemies:
+		if is_instance_valid(enemy) and enemy.hp > 0.0 and not enemy.is_boss:
+			count += 1
+	return count
+
+
+func _trim_regular_enemies_for_boss_phase(max_count: int) -> void:
+	while _count_live_ordinary_enemies() > max_count:
+		var farthest = null
+		var farthest_distance := -1.0
+		for enemy in enemies:
+			if not is_instance_valid(enemy) or enemy.hp <= 0.0 or enemy.is_boss:
+				continue
+			var distance: float = player.position.distance_squared_to(enemy.position)
+			if distance > farthest_distance:
+				farthest_distance = distance
+				farthest = enemy
+		if farthest == null:
+			break
+		enemies.erase(farthest)
+		farthest.queue_free()
+
+
 func _spawn_wave() -> void:
 	var amount := 1
 	if elapsed_seconds > 90.0 and randf() < 0.24:
 		amount = 2
 	for i in range(amount):
-		if enemies.size() >= MAX_ENEMIES:
+		if enemies.size() >= MAX_ENEMIES or _count_live_ordinary_enemies() >= _ordinary_enemy_cap():
 			break
 		spawn_enemy(_random_enemy_kind())
 
@@ -279,21 +326,15 @@ func spawn_enemy(kind: String = "walker") -> void:
 	enemy.position = spawn_position
 	enemy.visible = true
 	enemy.z_as_relative = false
-	enemy.z_index = 20
+	enemy.z_index = 24 if kind == "boss" else 20
 	add_child(enemy)
 	enemies.append(enemy)
 
 
 func _auto_attack() -> void:
-	var target = null
-	var best_distance := 620.0
-	for enemy in enemies:
-		if not is_instance_valid(enemy) or enemy.hp <= 0.0:
-			continue
-		var distance: float = player.position.distance_to(enemy.position)
-		if distance < best_distance:
-			best_distance = distance
-			target = enemy
+	# Once the boss is within attack range, basic attacks help finish the encounter
+	# instead of being swallowed by the nearest crowd member.
+	var target = _find_combat_target(player.position, 620.0)
 	if target == null:
 		return
 
@@ -316,6 +357,9 @@ func _tick_enemies(delta: float) -> void:
 			continue
 		var separation := _get_separation(enemy)
 		enemy.tick(delta, player.position, separation)
+		if enemy.is_boss and not str(enemy.boss_attack_event).is_empty():
+			_resolve_boss_attack(enemy, str(enemy.boss_attack_event))
+			enemy.boss_attack_event = ""
 		var collision_distance: float = enemy.collision_radius + player.collision_radius
 		if enemy.position.distance_squared_to(player.position) <= collision_distance * collision_distance:
 			if enemy.hp <= 0.0:
@@ -338,9 +382,24 @@ func _get_separation(enemy) -> Vector2:
 			continue
 		var offset: Vector2 = enemy.position - other.position
 		var distance := offset.length()
-		if distance > 0.001 and distance < 36.0:
-			result += offset.normalized() * ((36.0 - distance) / 36.0)
+		var desired_distance := 58.0 if enemy.is_boss or other.is_boss else 36.0
+		if distance > 0.001 and distance < desired_distance:
+			result += offset.normalized() * ((desired_distance - distance) / desired_distance)
 	return result
+
+
+func _resolve_boss_attack(boss, attack_kind: String) -> void:
+	var target_position: Vector2 = boss.position if attack_kind == "slam" else boss.boss_attack_target
+	var radius := 148.0 if attack_kind == "slam" else 104.0
+	_spawn_skill_effect("boss_slam" if attack_kind == "slam" else "boss_zone", target_position, radius, 0.42)
+	if player.position.distance_to(target_position) > radius:
+		return
+	var damage_multiplier := 1.25 if attack_kind == "slam" else 1.4
+	player.take_damage(boss.contact_damage * damage_multiplier)
+	var push_direction: Vector2 = player.position - target_position
+	if push_direction.length_squared() < 0.001:
+		push_direction = Vector2.UP
+	player.position += push_direction.normalized() * (58.0 if attack_kind == "slam" else 34.0)
 
 
 func _tick_projectiles(delta: float) -> void:
@@ -366,7 +425,12 @@ func _remove_dead_enemies() -> void:
 			state = "victory"
 		else:
 			kills += 1
-			_spawn_xp_orb(enemy.position, 1)
+			var xp_value := 1
+			if enemy.kind == "jumper":
+				xp_value = 2
+			elif enemy.kind == "armored":
+				xp_value = 3
+			_spawn_xp_orb(enemy.position, xp_value)
 		enemies.remove_at(i)
 		enemy.queue_free()
 
@@ -399,7 +463,7 @@ func _maybe_level_up() -> void:
 		return
 	player.xp -= player.xp_to_next
 	player.level += 1
-	player.xp_to_next = ceili(float(player.xp_to_next) * 1.24 + 2.0)
+	player.xp_to_next = ceili(float(player.xp_to_next) * 1.14 + 1.0)
 	_open_upgrade_choices()
 
 
@@ -553,37 +617,94 @@ func _active_skill_card() -> Dictionary:
 
 
 func _fill_level_cards(core: Array[Dictionary], general: Array[Dictionary], desired_count: int) -> void:
-	var remaining := desired_count - level_cards.size()
-	if remaining <= 0:
+	if level_cards.size() >= desired_count:
 		return
 
-	# The first candidate is a build-defining skill/artifact whenever one is available.
-	if not core.is_empty():
-		var preferred: Dictionary = core.pop_front()
-		_append_card_if_new(preferred)
-	remaining = desired_count - level_cards.size()
-	if remaining <= 0:
-		return
-
-	core.shuffle()
+	var acquisitions: Array[Dictionary] = []
+	var preferred: Array[Dictionary] = []
+	for card in core:
+		if str(card.get("kind", "")) == "skill_acquire":
+			acquisitions.append(card)
+		else:
+			preferred.append(card)
+	acquisitions.shuffle()
+	preferred.shuffle()
 	general.shuffle()
-	var include_general := not general.is_empty() and randf() < 0.34
-	var core_slots := remaining - (1 if include_general else 0)
-	while core_slots > 0 and not core.is_empty():
-		_append_card_if_new(core.pop_back())
-		core_slots -= 1
-	remaining = desired_count - level_cards.size()
 
-	if include_general and remaining > 0 and not _has_general_card():
-		if not general.is_empty():
-			_append_card_if_new(general.pop_back())
-	remaining = desired_count - level_cards.size()
+	# The first level-up always teaches a real attack skill. After that, new
+	# skills become progressively less common so a build can mature.
+	if skills.is_empty() and level_cards.is_empty() and not acquisitions.is_empty():
+		_append_card_if_new(acquisitions.pop_back())
 
-	while remaining > 0 and not core.is_empty():
-		_append_card_if_new(core.pop_back())
-		remaining = desired_count - level_cards.size()
-	if remaining > 0 and not _has_general_card() and not general.is_empty():
-		_append_card_if_new(general.pop_back())
+	var acquisition_chance := 0.68 if skills.size() < 2 else (0.28 if skills.size() < MAX_AUTO_SKILL_SLOTS else 0.0)
+	if level_cards.size() < desired_count and not acquisitions.is_empty() and not _has_new_skill_acquisition() and randf() < acquisition_chance:
+		_append_card_if_new(acquisitions.pop_back())
+
+	while level_cards.size() < desired_count:
+		var candidates: Array[Dictionary] = []
+		for card in preferred:
+			candidates.append(card)
+		if not _has_general_card():
+			for card in general:
+				candidates.append(card)
+		if candidates.is_empty():
+			if not acquisitions.is_empty() and not _has_new_skill_acquisition():
+				_append_card_if_new(acquisitions.pop_back())
+				continue
+			break
+
+		var selected := _take_weighted_upgrade(candidates)
+		if selected.is_empty():
+			break
+		var selected_id := str(selected.get("id", ""))
+		if str(selected.get("kind", "")) == "general_upgrade":
+			for i in range(general.size() - 1, -1, -1):
+				if str(general[i].get("id", "")) == selected_id:
+					general.remove_at(i)
+					break
+		else:
+			for i in range(preferred.size() - 1, -1, -1):
+				if str(preferred[i].get("id", "")) == selected_id:
+					preferred.remove_at(i)
+					break
+		_append_card_if_new(selected)
+
+
+func _has_new_skill_acquisition() -> bool:
+	for card in level_cards:
+		if str(card.get("kind", "")) == "skill_acquire":
+			return true
+	return false
+
+
+func _upgrade_weight(card: Dictionary) -> float:
+	match str(card.get("kind", "")):
+		"skill_level":
+			return 5.0
+		"artifact_level":
+			return 3.8
+		"artifact_acquire":
+			return 2.7
+		"active_skill_upgrade":
+			return 1.2
+		"general_upgrade":
+			return 0.85
+		_:
+			return 1.0
+
+
+func _take_weighted_upgrade(candidates: Array[Dictionary]) -> Dictionary:
+	var total_weight := 0.0
+	for card in candidates:
+		total_weight += _upgrade_weight(card)
+	if total_weight <= 0.0:
+		return {}
+	var roll := randf() * total_weight
+	for card in candidates:
+		roll -= _upgrade_weight(card)
+		if roll <= 0.0:
+			return card
+	return candidates.back()
 
 
 func _append_card_if_new(card: Dictionary) -> void:
@@ -703,10 +824,18 @@ func _find_nearest_enemy(origin: Vector2, max_distance: float, excluded: Array =
 	return nearest
 
 
+func _find_combat_target(origin: Vector2, max_distance: float, excluded: Array = []):
+	var boss = get_boss()
+	if boss != null and is_instance_valid(boss) and boss.hp > 0.0 and not excluded.has(boss):
+		if origin.distance_to(boss.position) <= max_distance:
+			return boss
+	return _find_nearest_enemy(origin, max_distance, excluded)
+
+
 func _find_nearest_targets(origin: Vector2, max_distance: float, limit: int) -> Array:
 	var targets: Array = []
 	while targets.size() < limit:
-		var target = _find_nearest_enemy(origin, max_distance, targets)
+		var target = _find_combat_target(origin, max_distance, targets)
 		if target == null:
 			break
 		targets.append(target)
@@ -733,7 +862,7 @@ func _tick_combat_skills(delta: float) -> void:
 		skill_cooldowns[skill_id] = maxf(0.0, float(skill_cooldowns.get(skill_id, 0.0)) - delta)
 		if float(skill_cooldowns[skill_id]) > 0.0:
 			continue
-		var target = _find_nearest_enemy(player.position, 700.0)
+		var target = _find_combat_target(player.position, 700.0)
 		if target == null:
 			skill_cooldowns[skill_id] = 0.25
 			continue
@@ -862,6 +991,7 @@ func _resolve_projectile_hit(projectile) -> void:
 			_spawn_skill_effect("lightning", target.position, 32.0, 0.25)
 		"copper_coin_sword":
 			target.take_damage(damage)
+			_spawn_skill_effect("slash", target.position, 25.0, 0.18)
 			if branch == "pierce":
 				_apply_chain_damage(target, damage * 0.52, 2)
 			elif branch == "return":
@@ -874,6 +1004,7 @@ func _resolve_projectile_hit(projectile) -> void:
 			_spawn_skill_effect("wood", target.position, 18.0, 0.2)
 		_:
 			target.take_damage(damage)
+			_spawn_skill_effect("hit", target.position, 18.0, 0.16)
 
 
 func _apply_chain_damage(origin_enemy, damage: float, max_targets: int) -> void:
@@ -890,6 +1021,9 @@ func _apply_chain_damage(origin_enemy, damage: float, max_targets: int) -> void:
 
 
 func _spawn_skill_effect(effect_kind: String, center: Vector2, radius: float, duration: float) -> void:
+	# Cap transient particles so dense late-game combat cannot grow the effect list without bound.
+	if skill_effects.size() >= 80:
+		skill_effects.remove_at(0)
 	skill_effects.append({"kind": effect_kind, "position": center, "radius": radius, "time": duration, "duration": duration})
 	queue_redraw()
 
@@ -934,8 +1068,30 @@ func _draw_skill_effects() -> void:
 				draw_circle(center, radius * (0.65 + progress * 0.35), Color(0.82, 0.83, 0.76, life * 0.16))
 				draw_arc(center, radius, 0.0, TAU, 40, Color(0.8, 0.82, 0.78, life * 0.4), 1.5)
 			"fire":
-				draw_circle(center, radius * 0.72, Color(0.94, 0.36, 0.12, life * 0.18))
-				draw_arc(center, radius, 0.0, TAU, 36, Color(1.0, 0.62, 0.25, life * 0.72), 2.0)
+				var burst_radius := radius * (0.25 + progress * 1.0)
+				draw_circle(center, burst_radius * 0.62, Color(0.94, 0.36, 0.12, life * 0.24))
+				draw_arc(center, burst_radius, 0.0, TAU, 36, Color(1.0, 0.62, 0.25, life * 0.72), 2.0)
+				for i in range(7):
+					var angle := TAU * float(i) / 7.0 + progress * 0.42
+					var inner := radius * (0.12 + progress * 0.12)
+					var outer := radius * (0.45 + progress * 0.68)
+					draw_line(center + Vector2(cos(angle), sin(angle)) * inner, center + Vector2(cos(angle), sin(angle)) * outer, Color(1.0, 0.72, 0.32, life), 2.0)
+			"slash":
+				draw_line(center + Vector2(-radius * 0.75, radius * 0.55), center + Vector2(radius * 0.72, -radius * 0.55), Color(0.98, 0.86, 0.58, life), 3.2)
+				draw_line(center + Vector2(-radius * 0.38, radius * 0.72), center + Vector2(radius * 0.48, -radius * 0.25), Color(0.78, 0.63, 0.36, life * 0.75), 1.8)
+			"hit":
+				draw_circle(center, radius * (0.25 + progress * 0.45), Color(1.0, 0.88, 0.62, life * 0.35))
+				draw_arc(center, radius * (0.35 + progress * 0.55), 0.0, TAU, 24, Color(1.0, 0.78, 0.45, life * 0.75), 1.6)
+			"boss_slam":
+				var slam_radius := radius * (0.18 + progress * 0.82)
+				draw_circle(center, slam_radius, Color(0.58, 0.08, 0.06, life * 0.16))
+				draw_arc(center, slam_radius, 0.0, TAU, 48, Color(0.92, 0.28, 0.16, life * 0.86), 4.0)
+				for i in range(8):
+					var angle := TAU * float(i) / 8.0
+					draw_line(center + Vector2(cos(angle), sin(angle)) * slam_radius * 0.65, center + Vector2(cos(angle), sin(angle)) * slam_radius, Color(0.92, 0.44, 0.24, life * 0.7), 2.0)
+			"boss_zone":
+				draw_circle(center, radius, Color(0.72, 0.08, 0.07, life * 0.12))
+				draw_arc(center, radius, 0.0, TAU, 48, Color(0.98, 0.22, 0.12, life * 0.9), 3.0)
 			"wood":
 				draw_arc(center, radius, 0.0, TAU, 40, Color(0.7, 0.73, 0.5, life * 0.7), 2.0)
 			"lightning":

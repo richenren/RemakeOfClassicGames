@@ -89,11 +89,18 @@ func gain_xp(amount: int) -> void:
 
 func _draw() -> void:
 	var gait := absf(sin(gait_phase))
-	var bob := sin(gait_phase * 2.0) * 2.2 if is_moving else sin(animation_time * 2.1) * 0.65
-	var squash_x := 1.0 + (gait * 0.025 if is_moving else 0.0)
-	var stretch_y := 1.0 - (gait * 0.018 if is_moving else 0.0)
-	var sprite_tilt := clampf(facing.x * 0.075, -0.075, 0.075) if is_moving else sin(animation_time * 0.8) * 0.01
-	var sprite_region: Rect2 = PLAYER_MOVE_REGION if is_moving else PLAYER_IDLE_REGION
+	# Keep the torso grounded; step changes are carried by the two existing poses,
+	# alternating footfall dust and a subtle side-to-side weight shift.
+	var bob := gait * 0.65 if is_moving else sin(animation_time * 2.1) * 0.45
+	var squash_x := 1.0 + (gait * 0.018 if is_moving else 0.0)
+	var stretch_y := 1.0 - (gait * 0.012 if is_moving else 0.0)
+	var gait_lean := sin(gait_phase) * 0.028 if is_moving else 0.0
+	var sprite_tilt := clampf(facing.x * 0.06, -0.06, 0.06) + gait_lean if is_moving else sin(animation_time * 0.8) * 0.008
+	# The existing atlas has two distinct Taoist poses. Alternate them on each
+	# half-step instead of holding a single static moving pose for the whole run.
+	var sprite_region: Rect2 = PLAYER_IDLE_REGION
+	if is_moving:
+		sprite_region = PLAYER_MOVE_REGION if floori(gait_phase / PI) % 2 == 0 else PLAYER_IDLE_REGION
 	var sprite_rect := Rect2(-24.0, -32.0, 48.0, 64.0)
 	var tint := Color.WHITE
 	if hit_flash > 0.0:

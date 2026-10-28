@@ -20,6 +20,7 @@ func _run_tests() -> void:
 	_test_enemy_variants()
 	_test_xp_orb()
 	_test_end_screen_layout()
+	_test_skill_art_assets()
 
 	var main: Variant = MAIN_SCENE.instantiate()
 	root.add_child(main)
@@ -76,6 +77,10 @@ func _test_skill_build_system(main: Variant) -> void:
 	_check(main.AUTO_SKILL_DEFS.size() == 6, "首版配置六种自动攻击技能")
 	_check(main.ARTIFACT_DEFS.size() == 6, "首版配置六种被动法器")
 	_check(main.GENERAL_UPGRADE_DEFS.size() == 4, "通用强化池只包含四项设计内容")
+	_check(main._ordinary_enemy_cap() == 24, "前期尸潮存在明确存活上限")
+	main.elapsed_seconds = 400.0
+	_check(main._ordinary_enemy_cap() == 46, "中后期尸潮压力按阶段提升")
+	main.elapsed_seconds = 0.0
 
 	main._open_upgrade_choices()
 	var skill_card_index := -1
@@ -154,6 +159,19 @@ func _test_skill_build_system(main: Variant) -> void:
 		main.skill_cooldowns.clear()
 
 
+func _test_skill_art_assets() -> void:
+	var atlas := load("res://assets/sprites/skill_art_atlas.svg") as Texture2D
+	_check(atlas != null, "国风技能插画图集可加载")
+	if atlas != null:
+		_check(atlas.get_size() == Vector2(768.0, 128.0), "六种技能插画共享 768×128 图集")
+	var hud: Variant = HUD_SCRIPT.new()
+	root.add_child(hud)
+	_check(hud._skill_art_region("fire_talisman").position.x == 0.0, "火符使用专属插画帧")
+	_check(hud._skill_art_region("thunder_talisman").position.x == 128.0, "雷符使用专属插画帧")
+	_check(hud._skill_art_region("water_array").position.x == 512.0, "水阵使用专属插画帧")
+	hud.queue_free()
+
+
 func _test_end_screen_layout() -> void:
 	var hud: Variant = HUD_SCRIPT.new()
 	root.add_child(hud)
@@ -195,6 +213,7 @@ func _test_enemy_variants() -> void:
 	walker.tick(0.5, Vector2(100.0, 0.0), Vector2.ZERO)
 	_check(walker.position.x > old_x, "普通敌人会追踪玩家")
 	_check(walker.gait_phase > 0.0, "普通敌人追踪时更新步态动画")
+	_check(walker.footstep_flash > 0.0, "普通敌人移动时产生交替步态反馈")
 	walker.queue_free()
 
 	var jumper: Variant = ENEMY_SCRIPT.new()
@@ -216,6 +235,15 @@ func _test_enemy_variants() -> void:
 	_check(boss.is_boss and boss.max_hp >= 1000.0, "尸王具备 Boss 标识和独立生命值")
 	_check(is_equal_approx(boss.slow_multiplier, 0.72), "Boss 对减速效果具有抗性")
 	_check(is_equal_approx(boss.slow_timer, 0.7), "Boss 减速持续时间受到抗性缩短")
+	boss.hp = boss.max_hp * 0.5
+	boss.tick(0.016, Vector2(180.0, 0.0), Vector2.ZERO)
+	_check(boss.boss_phase == 2 and boss.boss_action == "phase_shift", "尸王生命降至一半后进入暴走转阶段")
+	boss.boss_phase = 1
+	boss.hp = boss.max_hp
+	boss.boss_action = "slam_windup"
+	boss.boss_action_timer = 0.01
+	boss.tick(0.02, Vector2(180.0, 0.0), Vector2.ZERO)
+	_check(boss.boss_attack_event == "slam", "尸王震地预警结束后触发攻击事件")
 	boss.queue_free()
 
 
@@ -272,7 +300,8 @@ func _test_combat_and_progression(main: Variant) -> void:
 	player.xp = 0
 	player.xp_to_next = 100
 	main._tick_xp_orbs(0.016)
-	_check(player.xp == 1 and main.xp_orbs.is_empty(), "战斗掉落的灵气球可转化为经验")
+	var expected_xp := 1 if target.kind == "walker" else (2 if target.kind == "jumper" else 3)
+	_check(player.xp == expected_xp and main.xp_orbs.is_empty(), "不同敌人按威胁等级提供对应经验")
 
 	player.hp = 50.0
 	main.heal_charges = 2
@@ -307,11 +336,24 @@ func _test_combat_and_progression(main: Variant) -> void:
 	var boss_objective: Dictionary = main.hud.objective_data()
 	_check(boss_objective.get("title", "").contains("击败尸王"), "尸王出现后当前目标切换为击败尸王")
 	var boss: Variant = main.get_boss()
+	boss.position = player.position + Vector2(250.0, 0.0)
+	var nearby_mob: Variant = ENEMY_SCRIPT.new()
+	nearby_mob.setup("walker")
+	nearby_mob.position = player.position + Vector2(80.0, 0.0)
+	main.add_child(nearby_mob)
+	main.enemies.append(nearby_mob)
+	_check(main._find_combat_target(player.position, 620.0) == boss, "尸王进入攻击范围后优先成为自动攻击目标")
+	main.enemies.erase(nearby_mob)
+	nearby_mob.queue_free()
 	boss.hp = 0.0
 	main._remove_dead_enemies()
 	_check(main.state == "victory", "尸王死亡后进入胜利结算")
 	var victory_objective: Dictionary = main.hud.objective_data()
 	_check(victory_objective.get("title", "").contains("任务完成"), "胜利后任务提示切换为已完成")
+	for i in range(100):
+		main._spawn_skill_effect("fire", Vector2.ZERO, 22.0, 0.2)
+	_check(main.skill_effects.size() <= 80, "密集战斗的短时特效数量保持有界")
+	main.skill_effects.clear()
 
 
 func _check(condition: bool, description: String) -> void:
