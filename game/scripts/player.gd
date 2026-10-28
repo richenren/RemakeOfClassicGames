@@ -13,6 +13,8 @@ var move_speed: float = 215.0
 var damage: float = 18.0
 var attack_interval: float = 0.82
 var pickup_radius: float = 92.0
+var xp_gain_multiplier: float = 1.0
+var xp_fractional: float = 0.0
 var invuln_time: float = 0.0
 var level: int = 1
 var xp: int = 0
@@ -22,11 +24,17 @@ var facing: Vector2 = Vector2.UP
 var collision_radius: float = 13.0
 var hit_flash: float = 0.0
 var is_moving: bool = false
+var animation_time: float = 0.0
+var gait_phase: float = 0.0
+var footstep_flash: float = 0.0
+var footstep_side: float = 1.0
 
 
 func tick(delta: float) -> void:
+	animation_time += delta
 	invuln_time = maxf(0.0, invuln_time - delta)
 	hit_flash = maxf(0.0, hit_flash - delta)
+	footstep_flash = maxf(0.0, footstep_flash - delta)
 
 	var keyboard_move := Vector2.ZERO
 	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
@@ -45,6 +53,13 @@ func tick(delta: float) -> void:
 	if is_moving:
 		facing = move_vector.normalized()
 		position += move_vector * move_speed * delta
+		var old_phase := gait_phase
+		gait_phase += delta * 11.0
+		if floori(gait_phase / PI) > floori(old_phase / PI):
+			footstep_flash = 0.13
+			footstep_side *= -1.0
+	else:
+		gait_phase += delta * 2.0
 
 	position.x = clampf(position.x, WORLD_MIN.x, WORLD_MAX.x)
 	position.y = clampf(position.y, WORLD_MIN.y, WORLD_MAX.y)
@@ -66,16 +81,18 @@ func heal(amount: float) -> void:
 
 
 func gain_xp(amount: int) -> void:
-	xp += amount
+	var total_xp := float(amount) * xp_gain_multiplier + xp_fractional
+	var whole_xp := floori(total_xp)
+	xp_fractional = total_xp - float(whole_xp)
+	xp += whole_xp
 
 
 func _draw() -> void:
-	# Soft ground shadow and a restrained talisman-gold rim help the sprite read on dark terrain.
-	draw_set_transform(Vector2(0.0, 13.0), 0.0, Vector2(1.45, 0.48))
-	draw_circle(Vector2.ZERO, 15.0, Color(0.015, 0.014, 0.012, 0.42))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	draw_circle(Vector2(0.0, 13.0), 12.0, Color(0.66, 0.49, 0.23, 0.12))
-
+	var gait := absf(sin(gait_phase))
+	var bob := sin(gait_phase * 2.0) * 2.2 if is_moving else sin(animation_time * 2.1) * 0.65
+	var squash_x := 1.0 + (gait * 0.025 if is_moving else 0.0)
+	var stretch_y := 1.0 - (gait * 0.018 if is_moving else 0.0)
+	var sprite_tilt := clampf(facing.x * 0.075, -0.075, 0.075) if is_moving else sin(animation_time * 0.8) * 0.01
 	var sprite_region: Rect2 = PLAYER_MOVE_REGION if is_moving else PLAYER_IDLE_REGION
 	var sprite_rect := Rect2(-24.0, -32.0, 48.0, 64.0)
 	var tint := Color.WHITE
@@ -84,9 +101,18 @@ func _draw() -> void:
 	elif invuln_time > 0.0 and int(Time.get_ticks_msec() / 80) % 2 == 0:
 		tint = Color(1.0, 1.0, 1.0, 0.62)
 
-	if is_moving and facing.x < -0.1:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2(-1.0, 1.0))
-		draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, tint, false)
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	else:
-		draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, tint, false)
+	# The shadow stays on the ground while the body bobs and leans during each step.
+	draw_set_transform(Vector2(0.0, 13.0 + absf(bob) * 0.15), 0.0, Vector2(1.45 + gait * 0.04, 0.48 - gait * 0.015))
+	draw_circle(Vector2.ZERO, 15.0, Color(0.015, 0.014, 0.012, 0.42))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	draw_circle(Vector2(0.0, 13.0), 12.0, Color(0.66, 0.49, 0.23, 0.12))
+
+	if is_moving and footstep_flash > 0.0:
+		var dust_alpha := footstep_flash / 0.13 * 0.22
+		draw_circle(Vector2(-8.0 * footstep_side, 25.0), 4.0, Color(0.70, 0.62, 0.43, dust_alpha))
+		draw_circle(Vector2(-11.0 * footstep_side, 27.0), 2.5, Color(0.70, 0.62, 0.43, dust_alpha * 0.75))
+
+	var flip_x := -1.0 if facing.x < -0.1 else 1.0
+	draw_set_transform(Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * squash_x, stretch_y))
+	draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, sprite_region, tint, false)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
