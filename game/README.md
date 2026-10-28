@@ -36,7 +36,7 @@
 - 导入/解析检查：`godot --headless --editor --path game --quit`。
 - 主场景启动检查：`godot --headless --path game --quit-after 5`。
 
-本轮加入主修锁定、元素修炼、六系法宝进化与独立修炼插画；自动化测试将在本次提交后重新运行。Windows 独立窗口仍需确认实际美术观感与卡片排版；Android 真机测试不属于本轮范围。
+本轮加入主修锁定、元素修炼、六系法宝进化与独立修炼插画；Godot 4.5.1 Headless CI 已通过 **125 项自动化检查、0 项失败**（[查看本轮运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40650259003)）。Windows 独立窗口仍需确认实际美术观感与卡片排版；Android 真机测试不属于本轮范围。
 
 ## 已知问题
 

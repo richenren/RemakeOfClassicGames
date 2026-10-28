@@ -46,4 +46,4 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 3. **编辑器内嵌游戏视口 HUD 左侧文字被裁切（低优先级）**：小尺寸内嵌视口无法完整显示 1280×720 HUD；独立调试窗口中显示正常。建议使用独立窗口或放大编辑器进行验收。
 4. **Windows WASAPI 音频设备日志（低优先级，暂不改游戏代码）**：错误来自引擎音频驱动，独立游戏窗口未复现，项目当前无音频资源。若后续加入音效，再检查 Windows 默认输出设备及占用情况。
 
-上一轮 Headless 测试结果为 **98 项通过、0 项失败**（[历史 CI 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40644755837)）。本轮新增主修规则、六系修炼与进化测试，当前提交的 CI 结果待更新。Windows 实际窗口仍需目视复测，尤其检查主角比例、清朝僵尸辨识度、技能卡插画清晰度和文字排版；Android 真机测试不属于本轮任务范围。
+本轮 Headless 测试结果为 **125 项通过、0 项失败**（[GitHub Actions 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40650259003)）。新增断言覆盖唯一主修锁定、兼修等级上限、主修元素修炼成长、水系持续恢复、主修核心法宝优先出现、六大元素最终进化条件，以及六种原创修炼插画的图集映射。Windows 实际窗口仍需目视复测，尤其检查六系修炼卡的插画清晰度、卡片标题/描述排版和战斗中各修炼效果的观感；Android 真机测试不属于本轮任务范围。
