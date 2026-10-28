@@ -25,9 +25,70 @@ var active_skill_base_cooldown: float = 12.0
 var active_skill_effect_time: float = 0.0
 const ACTIVE_SKILL_EFFECT_DURATION := 0.34
 const ACTIVE_SKILL_RADIUS := 155.0
+const MAX_AUTO_SKILL_SLOTS := 4
+const MAX_ARTIFACT_SLOTS := 3
+
+const AUTO_SKILL_DEFS := {
+	"fire_talisman": {"name": "火符", "desc": "自动索敌投射火符，命中附加灼烧", "upgrade_desc": "火符伤害与灼烧效果提升", "damage": 15.0, "cooldown": 1.65},
+	"thunder_talisman": {"name": "雷符", "desc": "雷符爆发，可对附近尸群传导", "upgrade_desc": "雷符伤害提升，传导更强", "damage": 22.0, "cooldown": 2.15},
+	"copper_coin_sword": {"name": "铜钱剑", "desc": "御使铜钱剑追击敌人，强化贯穿或回旋", "upgrade_desc": "铜钱剑伤害与出手频率提升", "damage": 17.0, "cooldown": 1.8},
+	"peachwood_sword": {"name": "桃木剑", "desc": "御剑驱邪，可追击或环身护主", "upgrade_desc": "桃木剑伤害与护身范围提升", "damage": 16.0, "cooldown": 1.9},
+	"water_array": {"name": "水阵", "desc": "在敌群脚下展开水阵，造成伤害并施加湿润", "upgrade_desc": "水阵范围、伤害与控制提升", "damage": 10.0, "cooldown": 3.0},
+	"earth_formation": {"name": "地脉阵", "desc": "震动地脉压制一片区域，适合群体清场", "upgrade_desc": "地脉阵范围与伤害提升", "damage": 21.0, "cooldown": 2.8}
+}
+
+const ARTIFACT_DEFS := {
+	"cold_relic": {"name": "寒魄法器", "desc": "强化水/冰控制，并解锁水阵进化", "icon": "cold_relic"},
+	"thunder_seal": {"name": "天雷法印", "desc": "强化雷系伤害，并解锁雷符进化", "icon": "thunder_seal"},
+	"talisman_scroll": {"name": "符箓秘卷", "desc": "火符与雷符伤害提高 12%", "icon": "talisman_scroll"},
+	"sword_manual": {"name": "御剑诀", "desc": "铜钱剑与桃木剑伤害提高 12%", "icon": "sword_manual"},
+	"formation_manual": {"name": "阵法真解", "desc": "水阵与地脉阵伤害提高 12%", "icon": "formation_manual"},
+	"body_jade": {"name": "护身玉", "desc": "每级受到的接触伤害降低 8%", "icon": "body_jade"}
+}
+
+const GENERAL_UPGRADE_DEFS := {
+	"swift_step": {"name": "身法", "desc": "移动速度提高 8%", "icon": "swift_step"},
+	"spirit_gain": {"name": "纳气", "desc": "灵气获取效率提高 15%", "icon": "spirit_gain"},
+	"spirit_sense": {"name": "广纳", "desc": "灵气拾取范围提高 25%", "icon": "spirit_sense"},
+	"vitality": {"name": "强身", "desc": "最大生命 +20，并恢复 20 生命", "icon": "vitality"}
+}
+
+const SKILL_BRANCHES := {
+	"fire_talisman": [
+		{"id": "flame", "name": "烈焰", "desc": "灼烧持续更久，持续伤害显著提高"},
+		{"id": "spread", "name": "散符", "desc": "每次出手额外追击一名敌人"}
+	],
+	"thunder_talisman": [
+		{"id": "chain", "name": "连锁", "desc": "雷击可向更多附近敌人传导"},
+		{"id": "heaven", "name": "天罚", "desc": "大幅提高单次雷击伤害，减少传导"}
+	],
+	"copper_coin_sword": [
+		{"id": "pierce", "name": "贯穿", "desc": "命中后穿透效果波及附近敌人"},
+		{"id": "return", "name": "回旋", "desc": "命中后追加一次回旋伤害"}
+	],
+	"peachwood_sword": [
+		{"id": "guardian", "name": "护身", "desc": "剑气环身击退近处敌人"},
+		{"id": "chase", "name": "追邪", "desc": "飞剑命中后追击另一名敌人"}
+	],
+	"water_array": [
+		{"id": "cold", "name": "寒流", "desc": "大幅延长减速，为冰系进化铺路"},
+		{"id": "tide", "name": "潮涌", "desc": "扩大水阵范围，覆盖更多敌人"}
+	],
+	"earth_formation": [
+		{"id": "mountain", "name": "镇岳", "desc": "扩大镇压范围并击退敌人"},
+		{"id": "earthspike", "name": "地刺", "desc": "牺牲部分控制，换取更高爆发伤害"}
+	]
+}
+
 var heal_charges: int = 2
 var boss_spawned: bool = false
 var level_cards: Array[Dictionary] = []
+var skills: Dictionary = {}
+var skill_cooldowns: Dictionary = {}
+var artifacts: Dictionary = {}
+var general_upgrade_levels: Dictionary = {"swift_step": 0, "spirit_gain": 0, "spirit_sense": 0, "vitality": 0}
+var active_skill_level: int = 1
+var skill_effects: Array[Dictionary] = []
 
 var joystick_touch_id: int = -1
 
@@ -96,10 +157,12 @@ func _process(delta: float) -> void:
 			boss_spawned = true
 			spawn_enemy("boss")
 
+		_tick_combat_skills(delta)
 		_tick_enemies(delta)
 		_tick_projectiles(delta)
 		_remove_dead_enemies()
 		_tick_xp_orbs(delta)
+		_tick_skill_effects(delta)
 
 		if player.hp <= 0.0 and state == "playing":
 			state = "game_over"
@@ -255,8 +318,15 @@ func _tick_enemies(delta: float) -> void:
 		enemy.tick(delta, player.position, separation)
 		var collision_distance: float = enemy.collision_radius + player.collision_radius
 		if enemy.position.distance_squared_to(player.position) <= collision_distance * collision_distance:
+			if enemy.hp <= 0.0:
+				continue
 			if player.invuln_time <= 0.0:
-				player.take_damage(enemy.contact_damage)
+				var jade_level := 0
+				if artifacts.has("body_jade"):
+					var jade_data: Dictionary = artifacts["body_jade"]
+					jade_level = int(jade_data.get("level", 1))
+				var contact_multiplier := maxf(0.65, 1.0 - float(jade_level) * 0.08)
+				player.take_damage(enemy.contact_damage * contact_multiplier)
 				if player.hp <= 0.0:
 					state = "game_over"
 
@@ -278,7 +348,7 @@ func _tick_projectiles(delta: float) -> void:
 		var projectile = projectiles[i]
 		projectile.tick(delta)
 		if projectile.impacted and is_instance_valid(projectile.target) and enemies.has(projectile.target):
-			projectile.target.take_damage(projectile.damage)
+			_resolve_projectile_hit(projectile)
 		if not projectile.alive:
 			projectiles.remove_at(i)
 			projectile.queue_free()
@@ -334,41 +404,541 @@ func _maybe_level_up() -> void:
 
 
 func _open_upgrade_choices() -> void:
-	var pool: Array[Dictionary] = [
-		{"id": "talisman_power", "name": "符箓精进", "desc": "基础符箓伤害提高 25%"},
-		{"id": "swift_step", "name": "身法", "desc": "移动速度提高 12%"},
-		{"id": "vitality", "name": "强身", "desc": "最大生命 +20，并恢复 20 生命"},
-		{"id": "spirit_sense", "name": "广纳", "desc": "灵气吸收范围提高 25%"},
-		{"id": "rapid_talisman", "name": "符箓连发", "desc": "自动攻击间隔缩短 10%"},
-		{"id": "control_art", "name": "镇邪诀精进", "desc": "主动道术冷却缩短 10%"}
-	]
-	pool.shuffle()
 	level_cards.clear()
-	for i in range(mini(3, pool.size())):
-		level_cards.append(pool[i])
+
+	# A skill's Lv3 branch is a mandatory two-way decision, not a random generic buff.
+	var branchable: Array[String] = []
+	for skill_variant in skills.keys():
+		var skill_id := str(skill_variant)
+		var skill_data: Dictionary = skills[skill_id]
+		if int(skill_data.get("level", 1)) == 2 and str(skill_data.get("branch", "")).is_empty():
+			branchable.append(skill_id)
+	if not branchable.is_empty():
+		branchable.shuffle()
+		var branch_skill := branchable[0]
+		for branch_data in SKILL_BRANCHES.get(branch_skill, []):
+			level_cards.append(_branch_card(branch_skill, branch_data))
+		_fill_level_cards(_collect_core_candidates(), _collect_general_candidates(), 3)
+		state = "level_up"
+		return
+
+	# Evolution is offered explicitly once its skill and matching artifact are both ready.
+	var evolutions := _collect_evolution_candidates()
+	if not evolutions.is_empty():
+		evolutions.shuffle()
+		level_cards.append(evolutions[0])
+	_fill_level_cards(_collect_core_candidates(), _collect_general_candidates(), 3)
 	state = "level_up"
+
+
+func _collect_core_candidates() -> Array[Dictionary]:
+	var skill_acquisitions: Array[Dictionary] = []
+	var skill_upgrades: Array[Dictionary] = []
+	var artifact_candidates: Array[Dictionary] = []
+
+	for skill_variant in AUTO_SKILL_DEFS.keys():
+		var skill_id := str(skill_variant)
+		if skills.has(skill_id):
+			var skill_data: Dictionary = skills[skill_id]
+			var skill_level := int(skill_data.get("level", 1))
+			var branch_pending := skill_level == 2 and str(skill_data.get("branch", "")).is_empty()
+			if skill_level < 5 and not branch_pending:
+				skill_upgrades.append(_skill_card(skill_id, "skill_level"))
+		elif skills.size() < MAX_AUTO_SKILL_SLOTS:
+			skill_acquisitions.append(_skill_card(skill_id, "skill_acquire"))
+
+	for artifact_variant in ARTIFACT_DEFS.keys():
+		var artifact_id := str(artifact_variant)
+		if artifacts.has(artifact_id):
+			var artifact_data: Dictionary = artifacts[artifact_id]
+			if int(artifact_data.get("level", 1)) < 3:
+				artifact_candidates.append(_artifact_card(artifact_id, "artifact_level"))
+		elif artifacts.size() < MAX_ARTIFACT_SLOTS:
+			artifact_candidates.append(_artifact_card(artifact_id, "artifact_acquire"))
+
+	var result: Array[Dictionary] = []
+	# Prevent the first several level-ups from being consumed entirely by generic stats.
+	if skills.size() < MAX_AUTO_SKILL_SLOTS and not skill_acquisitions.is_empty():
+		skill_acquisitions.shuffle()
+		result.append(skill_acquisitions.pop_back())
+	elif not skill_upgrades.is_empty():
+		skill_upgrades.shuffle()
+		result.append(skill_upgrades.pop_back())
+	elif not artifact_candidates.is_empty():
+		artifact_candidates.shuffle()
+		result.append(artifact_candidates.pop_back())
+
+	for card in skill_acquisitions:
+		result.append(card)
+	for card in skill_upgrades:
+		result.append(card)
+	for card in artifact_candidates:
+		result.append(card)
+
+	# Active-art upgrade is deliberately lower-weight than acquiring or improving a build skill.
+	if active_skill_level < 3 and (randf() < 0.28 or result.is_empty()):
+		result.append(_active_skill_card())
+	return result
+
+
+func _collect_general_candidates() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for upgrade_variant in GENERAL_UPGRADE_DEFS.keys():
+		var upgrade_id := str(upgrade_variant)
+		if int(general_upgrade_levels.get(upgrade_id, 0)) < 3:
+			result.append(_general_card(upgrade_id))
+	return result
+
+
+func _collect_evolution_candidates() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if skills.has("water_array") and artifacts.has("cold_relic"):
+		var water_data: Dictionary = skills["water_array"]
+		if int(water_data.get("level", 1)) >= 5 and str(water_data.get("evolved", "")).is_empty():
+			result.append({"id": "evolve_ice_array", "kind": "skill_evolution", "skill_id": "water_array", "evolution_id": "ice_array", "name": "冰魄阵", "desc": "水阵进化为冰魄阵，强化范围控制与冻结", "category": "技能进化", "icon": "ice_array"})
+	if skills.has("thunder_talisman") and artifacts.has("thunder_seal"):
+		var thunder_data: Dictionary = skills["thunder_talisman"]
+		if int(thunder_data.get("level", 1)) >= 5 and str(thunder_data.get("evolved", "")).is_empty():
+			result.append({"id": "evolve_five_thunder", "kind": "skill_evolution", "skill_id": "thunder_talisman", "evolution_id": "five_thunder", "name": "五雷敕令", "desc": "雷符进化为五雷敕令，强化爆发与连锁清场", "category": "技能进化", "icon": "five_thunder"})
+	return result
+
+
+func _skill_card(skill_id: String, card_kind: String) -> Dictionary:
+	var definition: Dictionary = AUTO_SKILL_DEFS[skill_id]
+	var card_name := str(definition["name"])
+	var description := str(definition["desc"])
+	var card_id := "acquire_" + skill_id
+	if card_kind == "skill_level":
+		var current_data: Dictionary = skills[skill_id]
+		card_id = "upgrade_" + skill_id
+		card_name += "精进 · Lv%d" % (int(current_data.get("level", 1)) + 1)
+		description = str(definition["upgrade_desc"])
+	return {"id": card_id, "kind": card_kind, "skill_id": skill_id, "name": card_name, "desc": description, "category": "攻击技能" if card_kind == "skill_acquire" else "技能精进", "icon": skill_id}
+
+
+func _branch_card(skill_id: String, branch_data: Dictionary) -> Dictionary:
+	return {
+		"id": "branch_%s_%s" % [skill_id, str(branch_data["id"])],
+		"kind": "skill_branch",
+		"skill_id": skill_id,
+		"branch_id": str(branch_data["id"]),
+		"name": "%s · %s" % [str(AUTO_SKILL_DEFS[skill_id]["name"]), str(branch_data["name"])],
+		"desc": str(branch_data["desc"]),
+		"category": "Lv3 关键分支",
+		"icon": "%s_%s" % [skill_id, str(branch_data["id"])]
+	}
+
+
+func _artifact_card(artifact_id: String, card_kind: String) -> Dictionary:
+	var definition: Dictionary = ARTIFACT_DEFS[artifact_id]
+	var card_name := str(definition["name"])
+	var description := str(definition["desc"])
+	var card_id := "acquire_" + artifact_id
+	if card_kind == "artifact_level":
+		var current_data: Dictionary = artifacts[artifact_id]
+		card_id = "upgrade_" + artifact_id
+		card_name += " · Lv%d" % (int(current_data.get("level", 1)) + 1)
+		description = "法器效果提升一级"
+	return {"id": card_id, "kind": card_kind, "artifact_id": artifact_id, "name": card_name, "desc": description, "category": "被动法器", "icon": str(definition["icon"])}
+
+
+func _general_card(upgrade_id: String) -> Dictionary:
+	var definition: Dictionary = GENERAL_UPGRADE_DEFS[upgrade_id]
+	var next_level := int(general_upgrade_levels.get(upgrade_id, 0)) + 1
+	return {"id": "general_" + upgrade_id, "kind": "general_upgrade", "target_id": upgrade_id, "name": "%s · Lv%d" % [str(definition["name"]), next_level], "desc": str(definition["desc"]), "category": "通用强化", "icon": str(definition["icon"])}
+
+
+func _active_skill_card() -> Dictionary:
+	return {"id": "active_skill_upgrade", "kind": "active_skill_upgrade", "name": "镇尸诀精进 · Lv%d" % (active_skill_level + 1), "desc": "道术范围与伤害提高，冷却略微缩短", "category": "主动道术", "icon": "control_art"}
+
+
+func _fill_level_cards(core: Array[Dictionary], general: Array[Dictionary], desired_count: int) -> void:
+	var remaining := desired_count - level_cards.size()
+	if remaining <= 0:
+		return
+
+	# The first candidate is a build-defining skill/artifact whenever one is available.
+	if not core.is_empty():
+		var preferred: Dictionary = core.pop_front()
+		_append_card_if_new(preferred)
+	remaining = desired_count - level_cards.size()
+	if remaining <= 0:
+		return
+
+	core.shuffle()
+	general.shuffle()
+	var include_general := not general.is_empty() and randf() < 0.34
+	var core_slots := remaining - (1 if include_general else 0)
+	while core_slots > 0 and not core.is_empty():
+		_append_card_if_new(core.pop_back())
+		core_slots -= 1
+	remaining = desired_count - level_cards.size()
+
+	if include_general and remaining > 0 and not _has_general_card():
+		if not general.is_empty():
+			_append_card_if_new(general.pop_back())
+	remaining = desired_count - level_cards.size()
+
+	while remaining > 0 and not core.is_empty():
+		_append_card_if_new(core.pop_back())
+		remaining = desired_count - level_cards.size()
+	if remaining > 0 and not _has_general_card() and not general.is_empty():
+		_append_card_if_new(general.pop_back())
+
+
+func _append_card_if_new(card: Dictionary) -> void:
+	var card_id := str(card.get("id", ""))
+	for existing in level_cards:
+		if str(existing.get("id", "")) == card_id:
+			return
+	level_cards.append(card)
+
+
+func _has_general_card() -> bool:
+	for card in level_cards:
+		if str(card.get("kind", "")) == "general_upgrade":
+			return true
+	return false
 
 
 func _select_upgrade(index: int) -> void:
 	if state != "level_up" or index < 0 or index >= level_cards.size():
 		return
 	var upgrade: Dictionary = level_cards[index]
-	match upgrade.id:
-		"talisman_power":
-			player.damage *= 1.25
-		"swift_step":
-			player.move_speed *= 1.12
-		"vitality":
-			player.max_hp += 20.0
-			player.heal(20.0)
-		"spirit_sense":
-			player.pickup_radius *= 1.25
-		"rapid_talisman":
-			player.attack_interval = maxf(0.32, player.attack_interval * 0.9)
-		"control_art":
-			active_skill_base_cooldown = maxf(7.0, active_skill_base_cooldown * 0.9)
+	_apply_upgrade(upgrade)
 	state = "playing"
 	_maybe_level_up()
+
+
+func _apply_upgrade(upgrade: Dictionary) -> void:
+	var kind := str(upgrade.get("kind", ""))
+	var skill_id := str(upgrade.get("skill_id", ""))
+	var artifact_id := str(upgrade.get("artifact_id", ""))
+	match kind:
+		"skill_acquire":
+			skills[skill_id] = {"level": 1, "branch": "", "evolved": ""}
+			skill_cooldowns[skill_id] = 0.0
+		"skill_level":
+			var skill_data: Dictionary = skills[skill_id]
+			skill_data["level"] = mini(5, int(skill_data.get("level", 1)) + 1)
+			skills[skill_id] = skill_data
+		"skill_branch":
+			var branch_skill: Dictionary = skills[skill_id]
+			branch_skill["level"] = 3
+			branch_skill["branch"] = str(upgrade.get("branch_id", ""))
+			skills[skill_id] = branch_skill
+		"skill_evolution":
+			var evolution_skill: Dictionary = skills[skill_id]
+			evolution_skill["evolved"] = str(upgrade.get("evolution_id", ""))
+			skills[skill_id] = evolution_skill
+			_spawn_skill_effect("ice" if str(upgrade.get("evolution_id", "")) == "ice_array" else "lightning", player.position, 115.0, 0.55)
+		"artifact_acquire":
+			artifacts[artifact_id] = {"level": 1}
+		"artifact_level":
+			var artifact_data: Dictionary = artifacts[artifact_id]
+			artifact_data["level"] = mini(3, int(artifact_data.get("level", 1)) + 1)
+			artifacts[artifact_id] = artifact_data
+		"general_upgrade":
+			var general_id := str(upgrade.get("target_id", ""))
+			var new_level := int(general_upgrade_levels.get(general_id, 0)) + 1
+			general_upgrade_levels[general_id] = new_level
+			match general_id:
+				"swift_step":
+					player.move_speed *= 1.08
+				"spirit_gain":
+					player.xp_gain_multiplier += 0.15
+				"spirit_sense":
+					player.pickup_radius *= 1.25
+				"vitality":
+					player.max_hp += 20.0
+					player.heal(20.0)
+		"active_skill_upgrade":
+			active_skill_level = mini(3, active_skill_level + 1)
+			active_skill_base_cooldown = maxf(8.0, active_skill_base_cooldown * 0.92)
+
+
+func _artifact_level(artifact_id: String) -> int:
+	if not artifacts.has(artifact_id):
+		return 0
+	var data: Dictionary = artifacts[artifact_id]
+	return int(data.get("level", 1))
+
+
+func _skill_damage(skill_id: String, base_damage: float) -> float:
+	var skill_data: Dictionary = skills.get(skill_id, {})
+	var skill_level := int(skill_data.get("level", 1))
+	var multiplier := 1.0 + float(skill_level - 1) * 0.18
+	if _artifact_level("talisman_scroll") > 0 and skill_id in ["fire_talisman", "thunder_talisman"]:
+		multiplier *= 1.0 + 0.12 * float(_artifact_level("talisman_scroll"))
+	if _artifact_level("thunder_seal") > 0 and skill_id == "thunder_talisman":
+		multiplier *= 1.0 + 0.15 * float(_artifact_level("thunder_seal"))
+	if _artifact_level("cold_relic") > 0 and skill_id == "water_array":
+		multiplier *= 1.0 + 0.12 * float(_artifact_level("cold_relic"))
+	if _artifact_level("sword_manual") > 0 and skill_id in ["copper_coin_sword", "peachwood_sword"]:
+		multiplier *= 1.0 + 0.12 * float(_artifact_level("sword_manual"))
+	if _artifact_level("formation_manual") > 0 and skill_id in ["water_array", "earth_formation"]:
+		multiplier *= 1.0 + 0.12 * float(_artifact_level("formation_manual"))
+	var evolved := str(skill_data.get("evolved", ""))
+	if evolved == "ice_array" or evolved == "five_thunder":
+		multiplier *= 1.3
+	return base_damage * multiplier
+
+
+func _skill_cooldown(skill_id: String, base_cooldown: float) -> float:
+	var skill_data: Dictionary = skills.get(skill_id, {})
+	var skill_level := int(skill_data.get("level", 1))
+	return maxf(0.82, base_cooldown * (1.0 - float(skill_level - 1) * 0.035))
+
+
+func _find_nearest_enemy(origin: Vector2, max_distance: float, excluded: Array = []):
+	var nearest = null
+	var best_distance := max_distance
+	for enemy in enemies:
+		if not is_instance_valid(enemy) or enemy.hp <= 0.0 or excluded.has(enemy):
+			continue
+		var distance: float = origin.distance_to(enemy.position)
+		if distance < best_distance:
+			best_distance = distance
+			nearest = enemy
+	return nearest
+
+
+func _find_nearest_targets(origin: Vector2, max_distance: float, limit: int) -> Array:
+	var targets: Array = []
+	while targets.size() < limit:
+		var target = _find_nearest_enemy(origin, max_distance, targets)
+		if target == null:
+			break
+		targets.append(target)
+	return targets
+
+
+func _spawn_skill_projectile(target, skill_id: String, damage: float) -> void:
+	var projectile = PROJECTILE_SCRIPT.new()
+	projectile.setup(target, damage, skill_id)
+	projectile.visible = true
+	projectile.z_as_relative = false
+	projectile.z_index = 30
+	var direction: Vector2 = (target.position - player.position).normalized()
+	player.facing = direction
+	projectile.position = player.position + direction * 18.0
+	add_child(projectile)
+	projectiles.append(projectile)
+	player.queue_redraw()
+
+
+func _tick_combat_skills(delta: float) -> void:
+	for skill_variant in skills.keys():
+		var skill_id := str(skill_variant)
+		skill_cooldowns[skill_id] = maxf(0.0, float(skill_cooldowns.get(skill_id, 0.0)) - delta)
+		if float(skill_cooldowns[skill_id]) > 0.0:
+			continue
+		var target = _find_nearest_enemy(player.position, 700.0)
+		if target == null:
+			skill_cooldowns[skill_id] = 0.25
+			continue
+		_cast_auto_skill(skill_id, target)
+
+
+func _cast_auto_skill(skill_id: String, target) -> void:
+	var skill_data: Dictionary = skills[skill_id]
+	var skill_level := int(skill_data.get("level", 1))
+	var branch := str(skill_data.get("branch", ""))
+	var evolved := str(skill_data.get("evolved", ""))
+	var definition: Dictionary = AUTO_SKILL_DEFS[skill_id]
+	var damage := _skill_damage(skill_id, float(definition["damage"]))
+	var cooldown := _skill_cooldown(skill_id, float(definition["cooldown"]))
+
+	match skill_id:
+		"fire_talisman":
+			var target_count := 2 if branch == "spread" else 1
+			var targets := _find_nearest_targets(player.position, 700.0, target_count)
+			for i in range(targets.size()):
+				_spawn_skill_projectile(targets[i], skill_id, damage * (0.78 if i > 0 else 1.0))
+			if branch == "spread":
+				cooldown *= 1.12
+		"thunder_talisman":
+			if branch == "heaven":
+				damage *= 1.8
+				cooldown *= 1.38
+			_spawn_skill_projectile(target, skill_id, damage)
+		"copper_coin_sword":
+			_spawn_skill_projectile(target, skill_id, damage)
+		"peachwood_sword":
+			if branch == "guardian":
+				var radius := 52.0 + float(skill_level) * 7.0
+				_apply_area_damage(player.position, radius, damage * 0.72, "wood", 0.0, false, 20.0)
+			else:
+				_spawn_skill_projectile(target, skill_id, damage)
+		"water_array":
+			var radius := 76.0 + float(skill_level) * 9.0
+			var slow_duration := 1.2 + float(skill_level - 1) * 0.12
+			if branch == "tide":
+				radius += 34.0
+			if branch == "cold":
+				slow_duration *= 1.7
+			if evolved == "ice_array":
+				radius += 12.0
+				slow_duration = 2.25
+			_apply_area_damage(target.position, radius, damage, "ice" if evolved == "ice_array" else "water", slow_duration, true, 0.0)
+		"earth_formation":
+			var earth_radius := 66.0 + float(skill_level) * 8.0
+			var knockback := 0.0
+			if branch == "mountain":
+				earth_radius += 16.0
+				knockback = 22.0
+			if branch == "earthspike":
+				damage *= 1.6
+			_apply_area_damage(target.position, earth_radius, damage, "earth", 0.0, false, knockback)
+
+	skill_cooldowns[skill_id] = cooldown
+
+
+func _apply_area_damage(center: Vector2, radius: float, damage: float, effect_kind: String, slow_duration: float = 0.0, apply_wet: bool = false, knockback: float = 0.0) -> void:
+	for enemy in enemies:
+		if not is_instance_valid(enemy) or enemy.hp <= 0.0:
+			continue
+		if enemy.position.distance_to(center) > radius:
+			continue
+		enemy.take_damage(damage)
+		if slow_duration > 0.0:
+			enemy.apply_slow(slow_duration, 0.68)
+		if apply_wet:
+			if enemy.burn_timer > 0.0:
+				enemy.burn_timer = 0.0
+				enemy.burn_dps = 0.0
+				enemy.take_damage(damage * 0.25)
+				_spawn_skill_effect("steam", enemy.position, 30.0, 0.24)
+			enemy.apply_wet(3.2)
+		if knockback > 0.0:
+			var push_direction: Vector2 = enemy.position - center
+			if push_direction.length_squared() < 0.001:
+				push_direction = enemy.position - player.position
+			if push_direction.length_squared() < 0.001:
+				push_direction = Vector2.UP
+			enemy.position += push_direction.normalized() * knockback
+	_spawn_skill_effect(effect_kind, center, radius, 0.48)
+
+
+func _resolve_projectile_hit(projectile) -> void:
+	var target = projectile.target
+	if not is_instance_valid(target):
+		return
+	var skill_id := str(projectile.skill_id)
+	var damage := float(projectile.damage)
+	var skill_data: Dictionary = skills.get(skill_id, {})
+	var branch := str(skill_data.get("branch", ""))
+	var evolved := str(skill_data.get("evolved", ""))
+
+	match skill_id:
+		"fire_talisman":
+			target.take_damage(damage)
+			if target.wet_timer > 0.0:
+				target.wet_timer = 0.0
+				_apply_area_damage(target.position, 44.0, damage * 0.35, "steam")
+			elif branch == "flame":
+				target.apply_burn(2.8, 2.8 + float(skill_data.get("level", 1)) * 0.55)
+			else:
+				target.apply_burn(1.35, 1.7)
+			_spawn_skill_effect("fire", target.position, 22.0, 0.22)
+		"thunder_talisman":
+			var was_wet: bool = target.wet_timer > 0.0
+			target.take_damage(damage * (1.35 if was_wet else 1.0))
+			if was_wet:
+				target.wet_timer = 0.0
+			var chain_count := 0
+			if branch == "chain":
+				chain_count = 3
+			if evolved == "five_thunder":
+				chain_count = 4
+			if was_wet:
+				chain_count += 1
+			if branch == "heaven" and evolved != "five_thunder":
+				chain_count = 0
+			_apply_chain_damage(target, damage * 0.58, chain_count)
+			_spawn_skill_effect("lightning", target.position, 32.0, 0.25)
+		"copper_coin_sword":
+			target.take_damage(damage)
+			if branch == "pierce":
+				_apply_chain_damage(target, damage * 0.52, 2)
+			elif branch == "return":
+				target.take_damage(damage * 0.55)
+				_spawn_skill_effect("wood", target.position, 25.0, 0.22)
+		"peachwood_sword":
+			target.take_damage(damage)
+			if branch == "chase":
+				_apply_chain_damage(target, damage * 0.52, 1)
+			_spawn_skill_effect("wood", target.position, 18.0, 0.2)
+		_:
+			target.take_damage(damage)
+
+
+func _apply_chain_damage(origin_enemy, damage: float, max_targets: int) -> void:
+	if max_targets <= 0 or not is_instance_valid(origin_enemy):
+		return
+	var hit_targets: Array = [origin_enemy]
+	for i in range(max_targets):
+		var next_target = _find_nearest_enemy(origin_enemy.position, 190.0, hit_targets)
+		if next_target == null:
+			break
+		next_target.take_damage(damage)
+		hit_targets.append(next_target)
+		_spawn_skill_effect("lightning", next_target.position, 24.0, 0.2)
+
+
+func _spawn_skill_effect(effect_kind: String, center: Vector2, radius: float, duration: float) -> void:
+	skill_effects.append({"kind": effect_kind, "position": center, "radius": radius, "time": duration, "duration": duration})
+	queue_redraw()
+
+
+func _tick_skill_effects(delta: float) -> void:
+	for i in range(skill_effects.size() - 1, -1, -1):
+		var effect: Dictionary = skill_effects[i]
+		effect["time"] = float(effect.get("time", 0.0)) - delta
+		if float(effect["time"]) <= 0.0:
+			skill_effects.remove_at(i)
+		else:
+			skill_effects[i] = effect
+	if not skill_effects.is_empty():
+		queue_redraw()
+
+
+func _draw_skill_effects() -> void:
+	for effect in skill_effects:
+		var center: Vector2 = effect.get("position", Vector2.ZERO)
+		var duration := maxf(0.01, float(effect.get("duration", 0.4)))
+		var life := clampf(float(effect.get("time", 0.0)) / duration, 0.0, 1.0)
+		var progress := 1.0 - life
+		var radius := float(effect.get("radius", 32.0)) * (0.82 + progress * 0.18)
+		var kind := str(effect.get("kind", ""))
+		match kind:
+			"water":
+				draw_arc(center, radius, 0.0, TAU, 56, Color(0.34, 0.72, 0.82, life * 0.72), 3.0)
+				draw_arc(center, radius * 0.68, 0.0, TAU, 48, Color(0.45, 0.82, 0.88, life * 0.48), 2.0)
+			"ice":
+				draw_arc(center, radius, 0.0, TAU, 56, Color(0.56, 0.82, 0.94, life * 0.86), 3.0)
+				for i in range(6):
+					var angle := TAU * float(i) / 6.0
+					draw_line(center + Vector2(cos(angle), sin(angle)) * radius * 0.72, center + Vector2(cos(angle), sin(angle)) * radius, Color(0.72, 0.9, 1.0, life * 0.8), 2.0)
+			"earth":
+				draw_arc(center, radius, 0.0, TAU, 48, Color(0.72, 0.61, 0.39, life * 0.8), 3.0)
+				draw_arc(center, radius * 0.58, 0.0, TAU, 40, Color(0.54, 0.48, 0.32, life * 0.55), 2.0)
+				for i in range(8):
+					var angle := TAU * float(i) / 8.0
+					draw_line(center + Vector2(cos(angle), sin(angle)) * radius * 0.76, center + Vector2(cos(angle), sin(angle)) * radius, Color(0.78, 0.68, 0.44, life * 0.7), 2.0)
+			"steam":
+				draw_circle(center, radius * (0.65 + progress * 0.35), Color(0.82, 0.83, 0.76, life * 0.16))
+				draw_arc(center, radius, 0.0, TAU, 40, Color(0.8, 0.82, 0.78, life * 0.4), 1.5)
+			"fire":
+				draw_circle(center, radius * 0.72, Color(0.94, 0.36, 0.12, life * 0.18))
+				draw_arc(center, radius, 0.0, TAU, 36, Color(1.0, 0.62, 0.25, life * 0.72), 2.0)
+			"wood":
+				draw_arc(center, radius, 0.0, TAU, 40, Color(0.7, 0.73, 0.5, life * 0.7), 2.0)
+			"lightning":
+				draw_arc(center, radius, 0.0, TAU, 32, Color(0.96, 0.84, 0.4, life * 0.8), 2.5)
+			"control":
+				draw_arc(center, radius, 0.0, TAU, 64, Color(0.92, 0.76, 0.38, life * 0.85), 3.0)
+				draw_arc(center, radius * 0.78, 0.0, TAU, 56, Color(0.74, 0.56, 0.3, life * 0.55), 1.5)
 
 
 func cast_active_skill() -> void:
@@ -376,13 +946,17 @@ func cast_active_skill() -> void:
 		return
 	active_skill_cooldown = active_skill_base_cooldown
 	active_skill_effect_time = ACTIVE_SKILL_EFFECT_DURATION
+	var skill_level_bonus := float(active_skill_level - 1)
+	var skill_radius := ACTIVE_SKILL_RADIUS + skill_level_bonus * 18.0
+	var skill_damage := 8.0 + skill_level_bonus * 4.0
 	queue_redraw()
+	_spawn_skill_effect("control", player.position, skill_radius, ACTIVE_SKILL_EFFECT_DURATION)
 	for enemy in enemies:
 		if not is_instance_valid(enemy) or enemy.hp <= 0.0:
 			continue
-		if enemy.position.distance_to(player.position) <= ACTIVE_SKILL_RADIUS:
-			enemy.apply_slow(2.0, 0.35)
-			enemy.take_damage(8.0)
+		if enemy.position.distance_to(player.position) <= skill_radius:
+			enemy.apply_slow(2.0 + skill_level_bonus * 0.35, 0.35)
+			enemy.take_damage(skill_damage)
 			if enemy.is_boss:
 				enemy.apply_slow(1.2, 0.72)
 
@@ -496,3 +1070,5 @@ func _draw() -> void:
 			var inner := Vector2(cos(angle), sin(angle)) * radius * 0.9
 			var outer := Vector2(cos(angle), sin(angle)) * radius
 			draw_line(player.position + inner, player.position + outer, Color(0.93, 0.81, 0.5, alpha * 0.8), 2.0)
+
+	_draw_skill_effects()
