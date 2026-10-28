@@ -36,7 +36,7 @@
 - 导入/解析检查：`godot --headless --editor --path game --quit`。
 - 主场景启动检查：`godot --headless --path game --quit-after 5`。
 
-Godot 4.5.1 Headless CI 已通过 71 项自动化检查、0 项失败；导入/解析和主场景启动均通过（[查看最新运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40617823140)）。已验证技能候选、分支选择、进化条件、技能投射物和动画状态。Windows 独立窗口仍需确认卡片图标、技能特效和步态的实际观感；尸王胜利结算仍待实机试玩。Android 真机测试不属于本轮范围。
+Godot 4.5.1 Headless CI 已通过 72 项自动化检查、0 项失败；导入/解析和主场景启动均通过（[查看最新运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40617976989)）。已验证技能候选、分支选择、进化条件、技能投射物和动画状态。Windows 独立窗口仍需确认卡片图标、技能特效和步态的实际观感；尸王胜利结算仍待实机试玩。Android 真机测试不属于本轮范围。
 
 ## 已知问题
 
@@ -67,4 +67,4 @@ Godot 4.5.1 Headless CI 已通过 71 项自动化检查、0 项失败；导入/�
 
 - 本目录是原型，不是完整 V0.1 交付版本。
 - 数值仅用于验证战斗闭环，后续应移入可配置资源并通过试玩平衡。
-- 技能构筑、卡片图标和程序步态更新后的验证结果见 [最新 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40617823140)。Windows 视觉复测仍待完成；Android 真机测试不属于本轮范围。
+- 技能构筑、卡片图标和程序步态更新后的验证结果见 [最新 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40617976989)。Windows 视觉复测仍待完成；Android 真机测试不属于本轮范围。
