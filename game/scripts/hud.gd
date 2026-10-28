@@ -56,7 +56,7 @@ func _draw_hud(view: Vector2) -> void:
 	var skill_ready: bool = main_ref.active_skill_cooldown <= 0.0
 	var skill_color := Color("#e8c86c") if skill_ready else Color("#9e8b6a")
 	_draw_skill_emblem(Vector2(skill_panel.end.x - 24.0, skill_panel.position.y + 86.0), skill_ready, skill_color)
-	_text(Vector2(skill_panel.position.x + 14.0, 103.0), "主动道术 · 镇尸诀", 13, skill_color)
+	_text(Vector2(skill_panel.position.x + 14.0, 103.0), "主动道术 · 镇尸诀 Lv%d" % main_ref.active_skill_level, 13, skill_color)
 	_text(Vector2(skill_panel.position.x + 14.0, 122.0), "就绪" if skill_ready else "冷却 %ds" % ceili(main_ref.active_skill_cooldown), 12, TEXT_COLOR)
 	var skill_ratio := 1.0 if skill_ready else 1.0 - clampf(main_ref.active_skill_cooldown / maxf(0.1, main_ref.active_skill_base_cooldown), 0.0, 1.0)
 	_bar(Rect2(skill_panel.position.x + 14.0, 130.0, 132.0, 6.0), skill_ratio, Color("#d1a84e"))
@@ -65,6 +65,7 @@ func _draw_hud(view: Vector2) -> void:
 
 	if main_ref.state != "game_over" and main_ref.state != "victory":
 		_draw_objective_panel(view)
+	_draw_build_strip(view)
 
 	var boss = main_ref.get_boss()
 	if boss != null:
@@ -83,27 +84,40 @@ func _draw_hud(view: Vector2) -> void:
 
 
 func _draw_level_up(view: Vector2) -> void:
-	draw_rect(Rect2(Vector2.ZERO, view), Color(0.015, 0.014, 0.012, 0.84))
-	_text(Vector2(view.x * 0.5 - 160.0, view.y * 0.5 - 145.0), "修为精进 · 选择一项", 28, Color("#f0d79b"))
-	_text(Vector2(view.x * 0.5 - 125.0, view.y * 0.5 - 112.0), "选择期间战斗与计时暂停", 15, MUTED_COLOR)
-	var card_width := minf(270.0, (view.x - 48.0) / 3.0 - 12.0)
-	var card_height := 154.0
-	var gap := 16.0
+	# A lighter veil keeps the battlefield visible while the card artwork becomes the focus.
+	draw_rect(Rect2(Vector2.ZERO, view), Color(0.008, 0.009, 0.008, 0.76))
+	var panel_width := minf(1040.0, view.x - 28.0)
+	var panel_rect := Rect2((view.x - panel_width) * 0.5, view.y * 0.5 - 204.0, panel_width, 408.0)
+	draw_rect(panel_rect, Color(0.035, 0.032, 0.027, 0.74))
+	draw_rect(panel_rect, Color(0.55, 0.44, 0.28, 0.62), false, 1.0)
+	draw_line(panel_rect.position + Vector2(28.0, 64.0), panel_rect.position + Vector2(panel_rect.size.x - 28.0, 64.0), Color(0.66, 0.53, 0.33, 0.45), 1.0)
+	_text(Vector2(view.x * 0.5 - 150.0, view.y * 0.5 - 158.0), "修为精进 · 选择一项", 28, Color("#f0d79b"))
+	_text(Vector2(view.x * 0.5 - 210.0, view.y * 0.5 - 126.0), "择一术法，改变本局构筑方向  ·  选择期间战斗与计时暂停", 14, Color("#c7b99d"))
+
+	var card_width := minf(300.0, (view.x - 84.0) / 3.0 - 22.0)
+	var card_height := 190.0
+	var gap := 22.0
 	var total_width := card_width * 3.0 + gap * 2.0
 	var start_x := (view.x - total_width) * 0.5
-	var y := view.y * 0.5 - 75.0
+	var y := view.y * 0.5 - 95.0
 	for i in range(mini(3, main_ref.level_cards.size())):
 		var card: Dictionary = main_ref.level_cards[i]
 		var rect := Rect2(start_x + i * (card_width + gap), y, card_width, card_height)
-		var accent := _upgrade_color(str(card.get("id", "")))
+		var card_id := str(card.get("id", ""))
+		var accent := _upgrade_color(card_id)
 		_draw_ornate_panel(rect, accent)
 		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 5.0)), accent)
-		_draw_upgrade_emblem(rect.position + Vector2(30.0, 38.0), str(card.get("id", "")), accent)
-		_text(rect.position + Vector2(56.0, 30.0), "%d  %s" % [i + 1, str(card.get("name", "未知强化"))], 17, Color("#f1d58f"))
-		_text(rect.position + Vector2(56.0, 52.0), _upgrade_category(str(card.get("id", ""))), 11, accent)
-		_text(rect.position + Vector2(16.0, 91.0), str(card.get("desc", "")), 14, TEXT_COLOR)
-		draw_line(rect.position + Vector2(14.0, 111.0), rect.position + Vector2(rect.size.x - 14.0, 111.0), Color("#4d493e"), 1.0)
-		_text(rect.position + Vector2(16.0, card_height - 18.0), "按 %d 选择  ·  点击卡片" % (i + 1), 12, MUTED_COLOR)
+		draw_rect(Rect2(rect.position + Vector2(8.0, 9.0), rect.size - Vector2(16.0, 18.0)), Color(accent.r, accent.g, accent.b, 0.12), false, 1.0)
+		_draw_card_art(rect.position + Vector2(43.0, 59.0), str(card.get("icon", card_id)), accent, 27.0)
+		_text(rect.position + Vector2(82.0, 37.0), str(card.get("name", "未知强化")), 17, Color("#f1dba4"))
+		_text(rect.position + Vector2(82.0, 60.0), str(card.get("category", _upgrade_category(card_id))), 11, accent)
+		_text(rect.position + Vector2(18.0, 119.0), str(card.get("desc", "")), 13, TEXT_COLOR)
+		draw_line(rect.position + Vector2(16.0, 145.0), rect.position + Vector2(rect.size.x - 16.0, 145.0), Color("#5b5140"), 1.0)
+		_text(rect.position + Vector2(18.0, 173.0), "按 %d 选择  ·  点击卡片" % (i + 1), 12, MUTED_COLOR)
+		if str(card.get("kind", "")) == "skill_evolution":
+			_text(rect.position + Vector2(rect.size.x - 50.0, 19.0), "进化", 10, accent)
+		elif str(card.get("kind", "")) == "skill_branch":
+			_text(rect.position + Vector2(rect.size.x - 48.0, 19.0), "分支", 10, accent)
 
 
 func _draw_objective_panel(_view: Vector2) -> void:
@@ -119,6 +133,49 @@ func _draw_objective_panel(_view: Vector2) -> void:
 	_text(rect.position + Vector2(43.0, 22.0), str(objective["title"]), 14, accent)
 	_text(rect.position + Vector2(43.0, 42.0), str(objective["detail"]), 12, TEXT_COLOR)
 	_bar(Rect2(rect.position.x + 14.0, rect.position.y + 56.0, rect.size.x - 28.0, 5.0), float(objective["progress"]), accent)
+
+
+func _draw_build_strip(view: Vector2) -> void:
+	var rect := Rect2(view.x - 258.0, 178.0, 240.0, 140.0)
+	_draw_ornate_panel(rect, Color("#8b7758"))
+	_text(rect.position + Vector2(12.0, 17.0), "当前构筑", 12, Color("#e7cf98"))
+
+	var skill_order: Array[String] = ["fire_talisman", "thunder_talisman", "copper_coin_sword", "peachwood_sword", "water_array", "earth_formation"]
+	var skill_labels: Array[String] = ["火符", "雷符", "铜剑", "桃剑", "水阵", "地脉"]
+	for i in range(4):
+		var center := rect.position + Vector2(31.0 + float(i) * 59.0, 43.0)
+		var skill_id := skill_order[i]
+		if main_ref.skills.has(skill_id):
+			var skill_data: Dictionary = main_ref.skills[skill_id]
+			var shown_id := str(skill_data.get("evolved", "")) if not str(skill_data.get("evolved", "")).is_empty() else skill_id
+			_draw_card_art(center, shown_id, _upgrade_color(shown_id), 15.0)
+			_text(center + Vector2(11.0, 5.0), str(skill_data.get("level", 1)), 9, TEXT_COLOR)
+		else:
+			draw_circle(center, 14.0, Color(0.08, 0.075, 0.065, 0.85))
+			draw_arc(center, 14.0, 0.0, TAU, 24, Color(0.55, 0.49, 0.38, 0.35), 1.0)
+			draw_line(center + Vector2(-4.0, 0.0), center + Vector2(4.0, 0.0), Color(0.55, 0.49, 0.38, 0.3), 1.0)
+		_text(center + Vector2(-14.0, 25.0), skill_labels[i], 9, MUTED_COLOR)
+
+	var artifact_ids: Array = main_ref.artifacts.keys()
+	artifact_ids.sort()
+	for i in range(3):
+		var center := rect.position + Vector2(48.0 + float(i) * 72.0, 88.0)
+		if i < artifact_ids.size():
+			var artifact_id := str(artifact_ids[i])
+			var artifact_data: Dictionary = main_ref.artifacts[artifact_id]
+			_draw_card_art(center, artifact_id, _upgrade_color(artifact_id), 13.0)
+			_text(center + Vector2(10.0, 4.0), str(artifact_data.get("level", 1)), 8, TEXT_COLOR)
+		else:
+			draw_circle(center, 12.0, Color(0.08, 0.075, 0.065, 0.65))
+			draw_arc(center, 12.0, 0.0, TAU, 24, Color(0.55, 0.49, 0.38, 0.3), 1.0)
+
+	var general_text := "身法 %d  纳气 %d  广纳 %d  强身 %d" % [
+		int(main_ref.general_upgrade_levels.get("swift_step", 0)),
+		int(main_ref.general_upgrade_levels.get("spirit_gain", 0)),
+		int(main_ref.general_upgrade_levels.get("spirit_sense", 0)),
+		int(main_ref.general_upgrade_levels.get("vitality", 0))
+	]
+	_text(rect.position + Vector2(12.0, 130.0), general_text, 9, MUTED_COLOR)
 
 
 func _draw_ornate_panel(rect: Rect2, accent: Color) -> void:
@@ -182,6 +239,70 @@ func _draw_skill_emblem(center: Vector2, ready: bool, color: Color) -> void:
 	draw_line(center + Vector2(-3.0, 1.0), center + Vector2(3.0, 4.0), Color("#6b352b"), 1.0)
 
 
+func _draw_card_art(center: Vector2, icon_id: String, accent: Color, radius: float = 24.0) -> void:
+	var scale_factor := radius / 24.0
+	draw_set_transform(center, 0.0, Vector2(scale_factor, scale_factor))
+	draw_circle(Vector2.ZERO, 24.0, Color(0.055, 0.05, 0.042, 0.98))
+	draw_circle(Vector2.ZERO, 20.5, Color(accent.r, accent.g, accent.b, 0.08))
+	draw_arc(Vector2.ZERO, 22.0, 0.0, TAU, 40, Color(accent.r, accent.g, accent.b, 0.92), 1.7)
+
+	if icon_id.contains("fire"):
+		draw_colored_polygon(PackedVector2Array([Vector2(0.0, -15.0), Vector2(9.0, -3.0), Vector2(7.0, 9.0), Vector2(0.0, 15.0), Vector2(-7.0, 8.0), Vector2(-8.0, -2.0)]), Color("#d9784d"))
+		draw_colored_polygon(PackedVector2Array([Vector2(0.0, -6.0), Vector2(4.0, 2.0), Vector2(0.0, 9.0), Vector2(-3.0, 2.0)]), Color("#f2d18a"))
+	elif icon_id.contains("thunder") or icon_id.contains("five_thunder"):
+		draw_colored_polygon(PackedVector2Array([Vector2(4.0, -17.0), Vector2(-8.0, 1.0), Vector2(-2.0, 1.0), Vector2(-5.0, 16.0), Vector2(9.0, -4.0), Vector2(3.0, -4.0)]), Color("#e7cf69"))
+		draw_line(Vector2(4.0, -17.0), Vector2(-8.0, 1.0), Color("#fff3b0"), 1.0)
+	elif icon_id.contains("copper_coin") or icon_id.contains("coin"):
+		draw_circle(Vector2.ZERO, 14.0, Color("#bd8b43"))
+		draw_arc(Vector2.ZERO, 14.0, 0.0, TAU, 36, Color("#f1d18a"), 2.0)
+		draw_rect(Rect2(-4.0, -4.0, 8.0, 8.0), Color("#3b3021"))
+		draw_arc(Vector2.ZERO, 8.0, 0.0, TAU, 28, Color("#8d6736"), 1.0)
+	elif icon_id.contains("peachwood") or icon_id.contains("sword_manual"):
+		draw_colored_polygon(PackedVector2Array([Vector2(0.0, -17.0), Vector2(4.0, -5.0), Vector2(2.0, 10.0), Vector2(-2.0, 10.0), Vector2(-4.0, -5.0)]), Color("#d7c7a2"))
+		draw_line(Vector2(-8.0, 3.0), Vector2(8.0, 3.0), Color("#a65d40"), 3.0)
+		draw_line(Vector2(0.0, 10.0), Vector2(0.0, 16.0), Color("#a65d40"), 3.0)
+	elif icon_id.contains("water_array") or icon_id.contains("ice_array") or icon_id.contains("cold_relic"):
+		if icon_id.contains("ice") or icon_id.contains("cold"):
+			for i in range(6):
+				var angle := TAU * float(i) / 6.0
+				draw_line(Vector2(cos(angle), sin(angle)) * 3.0, Vector2(cos(angle), sin(angle)) * 15.0, Color("#8fd4eb"), 2.0)
+			draw_arc(Vector2.ZERO, 8.0, 0.0, TAU, 24, Color("#c6eff7"), 1.3)
+		else:
+			draw_arc(Vector2.ZERO, 15.0, 0.0, TAU, 36, Color("#62b7d1"), 2.0)
+			draw_arc(Vector2.ZERO, 9.0, 0.0, TAU, 32, Color("#8ad8e6"), 1.7)
+			draw_line(Vector2(-12.0, 4.0), Vector2(12.0, 4.0), Color("#8ad8e6"), 1.5)
+	elif icon_id.contains("earth") or icon_id.contains("formation_manual"):
+		draw_colored_polygon(PackedVector2Array([Vector2(-17.0, 11.0), Vector2(-8.0, -4.0), Vector2(-1.0, 4.0), Vector2(7.0, -12.0), Vector2(17.0, 11.0)]), Color("#93845a"))
+		draw_line(Vector2(-17.0, 13.0), Vector2(17.0, 13.0), Color("#d0b979"), 2.0)
+		draw_arc(Vector2.ZERO, 18.0, PI * 0.12, PI * 0.88, 28, Color("#c4ad70"), 1.2)
+	elif icon_id.contains("talisman_scroll") or icon_id.contains("control_art") or icon_id.contains("active_skill"):
+		draw_colored_polygon(PackedVector2Array([Vector2(-9.0, -16.0), Vector2(9.0, -16.0), Vector2(8.0, 15.0), Vector2(-8.0, 15.0)]), Color("#d6b968"))
+		draw_line(Vector2(-4.0, -8.0), Vector2(4.0, -4.0), Color("#813d30"), 2.0)
+		draw_line(Vector2(-4.0, 0.0), Vector2(4.0, 4.0), Color("#813d30"), 2.0)
+		draw_line(Vector2(-3.0, 8.0), Vector2(3.0, 6.0), Color("#813d30"), 1.5)
+	elif icon_id.contains("thunder_seal"):
+		draw_circle(Vector2.ZERO, 15.0, Color("#9c7947"))
+		draw_arc(Vector2.ZERO, 15.0, 0.0, TAU, 32, Color("#e5ca77"), 1.5)
+		draw_colored_polygon(PackedVector2Array([Vector2(3.0, -11.0), Vector2(-5.0, 1.0), Vector2(0.0, 1.0), Vector2(-2.0, 10.0), Vector2(6.0, -3.0), Vector2(2.0, -3.0)]), Color("#f5e19a"))
+	elif icon_id.contains("body_jade") or icon_id.contains("vitality"):
+		draw_colored_polygon(PackedVector2Array([Vector2(0.0, -15.0), Vector2(12.0, -7.0), Vector2(10.0, 8.0), Vector2(0.0, 16.0), Vector2(-10.0, 8.0), Vector2(-12.0, -7.0)]), Color("#c17a65") if icon_id.contains("vitality") else Color("#6ebba0"))
+		draw_polyline(PackedVector2Array([Vector2(0.0, -15.0), Vector2(12.0, -7.0), Vector2(10.0, 8.0), Vector2(0.0, 16.0), Vector2(-10.0, 8.0), Vector2(-12.0, -7.0), Vector2(0.0, -15.0)]), Color("#e3d4a0"), 1.0, true)
+	elif icon_id.contains("swift_step"):
+		draw_line(Vector2(-13.0, 8.0), Vector2(4.0, -5.0), Color("#c17a65"), 4.0)
+		draw_line(Vector2(-4.0, 11.0), Vector2(13.0, -2.0), Color("#e7b48a"), 3.0)
+		draw_line(Vector2(1.0, -11.0), Vector2(13.0, -2.0), Color("#e7b48a"), 2.0)
+	elif icon_id.contains("spirit_gain"):
+		draw_colored_polygon(PackedVector2Array([Vector2(0.0, -16.0), Vector2(10.0, -2.0), Vector2(8.0, 8.0), Vector2(0.0, 14.0), Vector2(-8.0, 8.0), Vector2(-10.0, -2.0)]), Color("#6ebba0"))
+		draw_arc(Vector2(0.0, 3.0), 5.0, 0.0, TAU, 24, Color("#d3f3df"), 1.4)
+	elif icon_id.contains("spirit_sense"):
+		draw_arc(Vector2.ZERO, 7.0, 0.0, TAU, 28, Color("#6ebba0"), 2.0)
+		draw_arc(Vector2.ZERO, 14.0, 0.0, TAU, 32, Color("#8dd4ba"), 1.5)
+		draw_circle(Vector2.ZERO, 2.5, Color("#d3f3df"))
+	else:
+		draw_colored_polygon(PackedVector2Array([Vector2(0.0, -14.0), Vector2(4.0, -5.0), Vector2(14.0, -4.0), Vector2(6.0, 3.0), Vector2(9.0, 13.0), Vector2(0.0, 7.0), Vector2(-9.0, 13.0), Vector2(-6.0, 3.0), Vector2(-14.0, -4.0), Vector2(-4.0, -5.0)]), accent)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
 func _draw_upgrade_emblem(center: Vector2, upgrade_id: String, color: Color) -> void:
 	draw_circle(center, 17.0, Color(0.08, 0.07, 0.05, 0.95))
 	draw_arc(center, 17.0, 0.0, TAU, 32, color, 2.0)
@@ -203,33 +324,48 @@ func _draw_upgrade_emblem(center: Vector2, upgrade_id: String, color: Color) -> 
 
 
 func _upgrade_color(upgrade_id: String) -> Color:
-	match upgrade_id:
-		"talisman_power", "rapid_talisman":
-			return Color("#d9b65f")
-		"swift_step", "vitality":
-			return Color("#c17a65")
-		"spirit_sense":
-			return Color("#6ebba0")
-		"control_art":
-			return Color("#a995d0")
-		_:
-			return PANEL_EDGE
+	var normalized := upgrade_id
+	normalized = normalized.trim_prefix("acquire_").trim_prefix("upgrade_").trim_prefix("general_")
+	normalized = normalized.trim_prefix("branch_")
+	if normalized.contains("fire"):
+		return Color("#d9784d")
+	if normalized.contains("thunder") or normalized.contains("five_thunder"):
+		return Color("#e7cf69")
+	if normalized.contains("copper_coin") or normalized.contains("peachwood") or normalized.contains("sword_manual"):
+		return Color("#c9a66a")
+	if normalized.contains("water") or normalized.contains("ice") or normalized.contains("cold_relic"):
+		return Color("#69b9d0")
+	if normalized.contains("earth") or normalized.contains("formation_manual"):
+		return Color("#b2a071")
+	if normalized.contains("body_jade") or normalized.contains("vitality"):
+		return Color("#c17a65")
+	if normalized.contains("swift_step"):
+		return Color("#c17a65")
+	if normalized.contains("spirit"):
+		return Color("#6ebba0")
+	if normalized.contains("control") or normalized.contains("active_skill"):
+		return Color("#a995d0")
+	if normalized.contains("talisman_scroll"):
+		return Color("#d9b65f")
+	return PANEL_EDGE
 
 
 func _upgrade_category(upgrade_id: String) -> String:
-	match upgrade_id:
-		"talisman_power", "rapid_talisman":
-			return "攻击强化"
-		"swift_step":
-			return "身法强化"
-		"vitality":
-			return "生存强化"
-		"spirit_sense":
-			return "灵气强化"
-		"control_art":
-			return "道术强化"
-		_:
-			return "通用强化"
+	if upgrade_id.begins_with("branch_"):
+		return "Lv3 关键分支"
+	if upgrade_id.begins_with("evolve_"):
+		return "技能进化"
+	if upgrade_id.begins_with("active_skill"):
+		return "主动道术"
+	if upgrade_id.begins_with("general_") or upgrade_id in ["swift_step", "spirit_gain", "spirit_sense", "vitality"]:
+		return "通用强化"
+	if upgrade_id.contains("relic") or upgrade_id.contains("seal") or upgrade_id.contains("manual") or upgrade_id.contains("scroll") or upgrade_id.contains("body_jade"):
+		return "被动法器"
+	if upgrade_id.contains("fire") or upgrade_id.contains("thunder") or upgrade_id.contains("sword") or upgrade_id.contains("water") or upgrade_id.contains("earth") or upgrade_id.contains("peachwood") or upgrade_id.contains("copper_coin"):
+		return "攻击技能"
+	if upgrade_id == "control_art":
+		return "主动道术"
+	return "修行强化"
 
 
 func _draw_pause(view: Vector2) -> void:
@@ -275,13 +411,13 @@ func _draw_touch_controls(view: Vector2) -> void:
 
 func card_index_at(screen_position: Vector2) -> int:
 	var view := get_viewport_rect().size
-	var card_width := minf(270.0, (view.x - 48.0) / 3.0 - 12.0)
-	var card_height := 154.0
-	var gap := 16.0
+	var card_width := minf(300.0, (view.x - 84.0) / 3.0 - 22.0)
+	var card_height := 190.0
+	var gap := 22.0
 	var total_width := card_width * 3.0 + gap * 2.0
 	var start_x := (view.x - total_width) * 0.5
-	var y := view.y * 0.5 - 75.0
-	for i in range(3):
+	var y := view.y * 0.5 - 95.0
+	for i in range(mini(3, main_ref.level_cards.size())):
 		var rect := Rect2(start_x + i * (card_width + gap), y, card_width, card_height)
 		if rect.has_point(screen_position):
 			return i
