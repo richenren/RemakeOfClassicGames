@@ -777,6 +777,9 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 				water_radius += 34.0
 			if branch == "cold":
 				slow_duration *= 1.7
+			var cold_relic_level := _artifact_level("cold_relic")
+			if cold_relic_level > 0:
+				slow_duration *= 1.0 + float(cold_relic_level) * 0.12
 			if evolved == "ice_array":
 				water_radius += 12.0
 				slow_duration = 2.25
@@ -892,6 +895,7 @@ func _spawn_skill_effect(effect_kind: String, center: Vector2, radius: float, du
 
 
 func _tick_skill_effects(delta: float) -> void:
+	var had_effects := not skill_effects.is_empty()
 	for i in range(skill_effects.size() - 1, -1, -1):
 		var effect: Dictionary = skill_effects[i]
 		effect["time"] = float(effect.get("time", 0.0)) - delta
@@ -899,7 +903,7 @@ func _tick_skill_effects(delta: float) -> void:
 			skill_effects.remove_at(i)
 		else:
 			skill_effects[i] = effect
-	if not skill_effects.is_empty():
+	if had_effects or not skill_effects.is_empty():
 		queue_redraw()
 
 
