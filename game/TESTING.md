@@ -1,7 +1,7 @@
 # 《镇邪录》原型测试记录
 
 ## 本轮测试范围
-- 本轮视觉调整：中央升级面板宽高按视口比例约束，扩大卡片插画区域与技能图标显示比例，减弱升级时的遮罩；主角提升至 104×136 世界像素，普通僵尸/跳僵/铁甲尸绘制框同步扩大。CI 需重新运行后再更新测试计数。
+- 本轮视觉调整：中央升级面板宽高按视口比例约束，扩大卡片插画区域与技能图标显示比例，减弱升级时的遮罩；主角提升至 104×136 世界像素，普通僵尸/跳僵/铁甲尸绘制框同步扩大。Godot 4.5.1 Headless CI 已通过 144 项自动化检查、0 项失败（[本轮运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40658780813)）。
 
 
 - 工程导入与 GDScript 解析。
@@ -34,7 +34,7 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 
 ## 最新执行结果（2026-10-28）
 
-[本轮 GitHub Actions：144 项自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40655418805)
+[本轮 GitHub Actions：144 项自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40658780813)
 
 - [x] Godot 4.5.1 Headless 导入与脚本解析：通过。
 - [x] 本轮游戏逻辑、技能构筑、插画资源、尸潮阶段、尸王机制、背景/头像资源与多视口布局烟雾测试：**144 项通过，0 项失败**。
@@ -51,4 +51,4 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 3. **编辑器内嵌游戏视口 HUD 左侧文字被裁切（低优先级）**：小尺寸内嵌视口无法完整显示 1280×720 HUD；独立调试窗口中显示正常。建议使用独立窗口或放大编辑器进行验收。
 4. **Windows WASAPI 音频设备日志（低优先级，暂不改游戏代码）**：错误来自引擎音频驱动，独立游戏窗口未复现，项目当前无音频资源。若后续加入音效，再检查 Windows 默认输出设备及占用情况。
 
-本轮 Headless 测试结果为 **144 项通过、0 项失败**（[GitHub Actions 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40655418805)）。新增断言覆盖背景/头像 SVG、放大后的主角绘制尺寸，以及 1280×720、1067×744、800×600、640×360 四种视口下升级面板与三张卡片的边界/间距。Windows 实际窗口仍需目视复测，尤其检查技能卡插画比例、文字排版、主角与僵尸比例、战斗视野及小屏布局；Android 真机测试不属于本轮任务范围。
+本轮 Headless 测试结果为 **144 项通过、0 项失败**（[GitHub Actions 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40658780813)）。新增断言覆盖背景/头像 SVG、放大后的主角绘制尺寸，以及 1280×720、1067×744、800×600、640×360 四种视口下升级面板与三张卡片的边界/间距。Windows 实际窗口仍需目视复测，尤其检查技能卡插画比例、文字排版、主角与僵尸比例、战斗视野及小屏布局；Android 真机测试不属于本轮任务范围。
