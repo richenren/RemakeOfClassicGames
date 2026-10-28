@@ -295,7 +295,7 @@ func _trim_regular_enemies_for_boss_phase(max_count: int) -> void:
 		for enemy in enemies:
 			if not is_instance_valid(enemy) or enemy.hp <= 0.0 or enemy.is_boss:
 				continue
-			var distance := player.position.distance_squared_to(enemy.position)
+			var distance: float = player.position.distance_squared_to(enemy.position)
 			if distance > farthest_distance:
 				farthest_distance = distance
 				farthest = enemy
