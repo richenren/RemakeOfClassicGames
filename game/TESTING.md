@@ -1,7 +1,7 @@
 # 《镇邪录》原型测试记录
 
 ## 本轮测试范围
-- 本轮视觉调整：背景 SVG 提升至 2400×1600 原生分辨率并增加灵堂建筑、符纹、苔痕与湿石反光；新增六种攻击技能 + 六系修炼共 12 幅横向卡片插画；800×600、640×360 改用紧凑 HUD，并统一触控按钮的绘制与命中布局、增加小视口镜头缩放。上一轮 Godot 4.5.1 Headless CI 已通过 190 项自动化检查、0 项失败（[本轮运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40664497047)）。
+- 本轮视觉调整：背景 SVG 提升至 2400×1600 原生分辨率并增加灵堂建筑、符纹、苔痕与湿石反光；新增六种攻击技能 + 六系修炼共 12 幅横向卡片插画；800×600、640×360 改用紧凑 HUD，并统一触控按钮的绘制与命中布局、增加小视口镜头缩放。本轮 Godot 4.5.1 Headless CI 已通过 192 项自动化检查、0 项失败（[本轮运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40671410338)）。
 
 
 - 工程导入与 GDScript 解析。
@@ -35,10 +35,10 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 
 ## 最新执行结果（2026-10-28）
 
-[本轮 GitHub Actions：190 项自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40664497047)
+[本轮 GitHub Actions：192 项自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40671410338)
 
 - [x] Godot 4.5.1 Headless 导入与脚本解析：通过。
-- [x] 本轮游戏逻辑、技能构筑、12 幅横向卡片插画、原生分辨率背景、紧凑 HUD、触控热区、镜头缩放、尸潮阶段与尸王机制测试：**190 项通过，0 项失败**。
+- [x] 本轮游戏逻辑、技能构筑、12 幅横向卡片插画、原生分辨率背景、紧凑 HUD、触控热区、镜头缩放、尸潮阶段与尸王机制测试：**192 项通过，0 项失败**。
 - [x] 主场景 Headless 启动：通过。
 - [x] 既有 Windows 图形界面基础试玩：独立调试窗口正常显示地图、玩家、敌人；键盘移动、自动符箓攻击、血条、升级三选一、暂停/继续、失败结算已实测通过。此次新增的技能插画、尸王攻击预警、尸潮节奏与步态反馈仍需在 Windows 窗口目视复测。
 - [x] 新义庄背景、道士头像 SVG 导入，放大角色尺寸与 4 种视口下的升级卡不越界/不重叠检查均通过 CI。
@@ -52,4 +52,4 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 3. **编辑器内嵌游戏视口 HUD 左侧文字被裁切（低优先级）**：小尺寸内嵌视口无法完整显示 1280×720 HUD；独立调试窗口中显示正常。建议使用独立窗口或放大编辑器进行验收。
 4. **Windows WASAPI 音频设备日志（低优先级，暂不改游戏代码）**：错误来自引擎音频驱动，独立游戏窗口未复现，项目当前无音频资源。若后续加入音效，再检查 Windows 默认输出设备及占用情况。
 
-本轮 Headless 测试结果为 **190 项通过、0 项失败**（[GitHub Actions 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40664497047)）。新增断言覆盖背景原生尺寸与灵堂/符纹图层、12 幅横向技能/修炼插画映射、800×600/640×360 紧凑 HUD 面板边界、触控按钮和命中热区、相机缩放，以及既有四种视口下升级面板与三张卡片的边界/间距。Windows 实际窗口仍需目视复测，尤其检查背景层次、插画质感/留白、道士与僵尸实际比例、战斗视野和字体可读性；Android 真机测试不属于本轮任务范围。
+本轮 Headless 测试结果为 **192 项通过、0 项失败**（[GitHub Actions 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40671410338)）。新增断言覆盖背景原生尺寸与灵堂/符纹图层、12 幅横向技能/修炼插画映射、800×600/640×360 紧凑 HUD 面板边界、触控按钮和命中热区、相机缩放，以及既有四种视口下升级面板与三张卡片的边界/间距。Windows 实际窗口仍需目视复测，尤其检查背景层次、插画质感/留白、道士与僵尸实际比例、战斗视野和字体可读性；Android 真机测试不属于本轮任务范围。
