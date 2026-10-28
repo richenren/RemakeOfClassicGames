@@ -36,7 +36,7 @@
 - 导入/解析检查：`godot --headless --editor --path game --quit`。
 - 主场景启动检查：`godot --headless --path game --quit-after 5`。
 
-Godot 4.5.1 Headless CI 已通过 84 项自动化检查、0 项失败；导入/解析和主场景启动均通过（[查看最新运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40622672031)）。已验证技能候选权重、插画资源、分支/进化条件、经验收益、尸王目标优先级、Boss 阶段与特效数量上限。Windows 独立窗口仍需确认卡片、命中特效、尸王预警与步态的实际观感；Android 真机测试不属于本轮范围。
+Godot 4.5.1 Headless CI 已通过 90 项自动化检查、0 项失败；导入/解析和主场景启动均通过（[查看最新运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40627608061)）。已验证独立角色 SVG 导入、火焰区域持续伤害、雷符链路闪电、技能候选权重、经验收益与尸王机制。Windows 独立窗口仍需确认角色面部可读性、动作帧切换与特效观感；Android 真机测试不属于本轮范围。
 
 ## 已知问题
 
@@ -67,4 +67,4 @@ Godot 4.5.1 Headless CI 已通过 84 项自动化检查、0 项失败；导入/�
 
 - 本目录是原型，不是完整 V0.1 交付版本。
 - 数值仅用于验证战斗闭环，后续应移入可配置资源并通过试玩平衡。
-- 技能构筑、技能插画、尸王初版机制和程序步态更新后的验证结果见 [最新 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40622672031)。Windows 视觉复测仍待完成；Android 真机测试不属于本轮范围.
+- 独立角色美术、火焰区域与连锁闪电更新后的验证结果见 [最新 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40627608061)。Windows 视觉复测仍待完成；Android 真机测试不属于本轮范围。

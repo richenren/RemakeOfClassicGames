@@ -26,12 +26,12 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 2. `tests/test_smoke.gd` 游戏逻辑烟雾测试。
 3. 主场景 headless 启动检查。
 
-## 最新执行结果（2026-10-27）
+## 最新执行结果（2026-10-28）
 
-[GitHub Actions：技能插画、构筑权重、尸潮与尸王机制更新后自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40622672031)
+[GitHub Actions：独立角色 SVG、火焰区域与连锁闪电更新后自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40627608061)
 
 - [x] Godot 4.5.1 Headless 导入与脚本解析：通过。
-- [x] 游戏逻辑、技能构筑、插画资源、尸潮阶段与尸王机制烟雾测试：**84 项通过，0 项失败**。
+- [x] 游戏逻辑、技能构筑、插画资源、尸潮阶段与尸王机制烟雾测试：**90 项通过，0 项失败**。
 - [x] 主场景 Headless 启动：通过。
 - [x] 既有 Windows 图形界面基础试玩：独立调试窗口正常显示地图、玩家、敌人；键盘移动、自动符箓攻击、血条、升级三选一、暂停/继续、失败结算已实测通过。此次新增的技能插画、尸王攻击预警、尸潮节奏与步态反馈仍需在 Windows 窗口目视复测。
 - [ ] Windows 完整验收仍待完成：尸王胜利结算尚未在本轮实机试玩中验证。失败结算的文字重叠已通过新增近乎不透明的居中结果面板修复；新增的 3 项面板布局自动化断言已在 CI 通过，仍待本机图形界面复测确认。
@@ -44,4 +44,4 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 3. **编辑器内嵌游戏视口 HUD 左侧文字被裁切（低优先级）**：小尺寸内嵌视口无法完整显示 1280×720 HUD；独立调试窗口中显示正常。建议使用独立窗口或放大编辑器进行验收。
 4. **Windows WASAPI 音频设备日志（低优先级，暂不改游戏代码）**：错误来自引擎音频驱动，独立游戏窗口未复现，项目当前无音频资源。若后续加入音效，再检查 Windows 默认输出设备及占用情况。
 
-最新 Headless 测试结果为 **84 项通过、0 项失败**（[本轮 CI 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40622672031)）。新增断言覆盖插画图集、技能构筑权重、分阶段尸潮、不同敌人经验、尸王目标优先级、半血转阶段、震地事件与特效数量上限。Windows 实际窗口仍需目视复测；Android 真机测试不属于本轮任务范围。
+最新 Headless 测试结果为 **90 项通过、0 项失败**（[本轮 CI 运行记录](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40627608061)）。新增断言覆盖独立 SVG 角色资源、火符定时火焰区域及其持续伤害、雷符连锁闪电事件。Windows 实际窗口仍需目视复测；Android 真机测试不属于本轮任务范围。
