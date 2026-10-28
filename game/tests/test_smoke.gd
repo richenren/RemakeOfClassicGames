@@ -125,7 +125,7 @@ func _test_skill_build_system(main: Variant) -> void:
 		target.position = main.player.position + Vector2(100.0, 0.0)
 		main.skills["fire_talisman"] = {"level": 1, "branch": "", "evolved": ""}
 		main.skill_cooldowns["fire_talisman"] = 0.0
-		var projectile_count := main.projectiles.size()
+		var projectile_count: int = int(main.projectiles.size())
 		main._cast_auto_skill("fire_talisman", target)
 		_check(main.projectiles.size() > projectile_count, "已获得的火符会实际发射独立技能投射物")
 		for projectile in main.projectiles:
