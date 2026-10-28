@@ -152,6 +152,7 @@ func _ready() -> void:
 	gameplay_camera.position = player.position
 	add_child(gameplay_camera)
 	gameplay_camera.make_current()
+	gameplay_camera.zoom = Vector2.ONE * _camera_zoom_for_size(get_viewport_rect().size)
 
 
 func _process(delta: float) -> void:
@@ -161,6 +162,9 @@ func _process(delta: float) -> void:
 		gameplay_camera.global_position = player.global_position
 		if get_viewport().get_camera_2d() != gameplay_camera:
 			gameplay_camera.make_current()
+		var desired_zoom := Vector2.ONE * _camera_zoom_for_size(get_viewport_rect().size)
+		if not gameplay_camera.zoom.is_equal_approx(desired_zoom):
+			gameplay_camera.zoom = desired_zoom
 
 	if active_skill_effect_time > 0.0:
 		active_skill_effect_time = maxf(0.0, active_skill_effect_time - delta)
@@ -251,16 +255,14 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 			return
 		if state != "playing":
 			return
-
 		var view := get_viewport_rect().size
 		if event.position.y < 70.0 and absf(event.position.x - view.x * 0.5) < 150.0:
 			state = "paused"
 			return
-		var skill_center := Vector2(view.x - 82.0, view.y - 122.0)
-		var heal_center := Vector2(view.x - 51.0, view.y - 61.0)
-		if event.position.distance_to(skill_center) <= 58.0:
+		var touch: Dictionary = hud._touch_layout(view)
+		if event.position.distance_to(touch["skill_center"]) <= float(touch["skill_hit_radius"]):
 			cast_active_skill()
-		elif event.position.distance_to(heal_center) <= 42.0:
+		elif event.position.distance_to(touch["heal_center"]) <= float(touch["heal_hit_radius"]):
 			use_heal()
 		elif event.position.x < view.x * 0.42 and event.position.y > view.y * 0.52 and joystick_touch_id == -1:
 			joystick_touch_id = event.index
@@ -272,12 +274,17 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 
 
 func _update_mobile_move(screen_position: Vector2) -> void:
-	var center := Vector2(94.0, get_viewport_rect().size.y - 105.0)
+	var touch: Dictionary = hud._touch_layout(get_viewport_rect().size)
+	var center: Vector2 = touch["joystick_center"]
+	var move_radius: float = touch["joystick_move_radius"]
 	var offset := screen_position - center
-	player.mobile_move = offset.limit_length(52.0) / 52.0
-	if offset.length() < 12.0:
+	player.mobile_move = offset.limit_length(move_radius) / maxf(1.0, move_radius)
+	if offset.length() < 12.0 * float(touch["scale"]):
 		player.mobile_move = Vector2.ZERO
 
+
+func _camera_zoom_for_size(view_size: Vector2) -> float:
+	return clampf(minf(view_size.x / 1280.0, view_size.y / 720.0), 0.62, 1.0)
 
 func _random_enemy_kind() -> String:
 	var roll := randf()

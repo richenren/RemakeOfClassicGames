@@ -21,6 +21,7 @@ func _run_tests() -> void:
 	_test_xp_orb()
 	_test_end_screen_layout()
 	_test_responsive_layout()
+	_test_compact_hud_layout()
 	_test_skill_art_assets()
 
 	var main: Variant = MAIN_SCENE.instantiate()
@@ -52,6 +53,9 @@ func _test_camera_follow(main: Variant) -> void:
 		return
 	_check(main.get_viewport().get_camera_2d() == camera, "GameplayCamera 成为当前活动相机")
 	_check(camera.global_position.is_equal_approx(main.player.global_position), "启动时相机中心对准主角")
+	_check(is_equal_approx(main._camera_zoom_for_size(Vector2(1280.0, 720.0)), 1.0), "基准窗口保持 1:1 战斗镜头")
+	_check(is_equal_approx(main._camera_zoom_for_size(Vector2(800.0, 600.0)), 0.625), "800×600 窗口自动缩小镜头以扩大可见战场")
+	_check(is_equal_approx(main._camera_zoom_for_size(Vector2(640.0, 360.0)), 0.62), "640×360 窗口镜头保持最小可用缩放")
 	var original_position: Vector2 = main.player.position
 	main.player.position = original_position + Vector2(25.0, 10.0)
 	main._process(0.0)
@@ -95,7 +99,9 @@ func _test_sprite_assets(main: Variant) -> void:
 	var armored := load("res://assets/sprites/enemy_armored.svg") as Texture2D
 	var boss := load("res://assets/sprites/enemy_boss.svg") as Texture2D
 	var boss_phase2 := load("res://assets/sprites/enemy_boss_phase2.svg") as Texture2D
-	_check(background != null and background.get_size().x >= 1000.0 and background.get_size().y >= 700.0, "义庄高细节背景贴图可加载且尺寸足够")
+	_check(background != null and background.get_size() == Vector2(2400.0, 1600.0), "义庄背景以 2400×1600 原生画布加载，避免放大模糊")
+	var background_source := FileAccess.get_file_as_string("res://assets/sprites/graveyard_background.svg")
+	_check(background_source.contains("id=\"ruined-yizhuang-hall\"") and background_source.contains("id=\"ground-ritual-marks\""), "义庄背景包含灵堂建筑与低对比地面符纹细节")
 	_check(portrait != null and portrait.get_size().x >= 96.0, "道士专属头像可加载")
 	_check(main.player.PLAYER_DRAW_SIZE.x >= 84.0 and main.player.PLAYER_DRAW_SIZE.y >= 108.0, "主角在实际战斗中使用放大后的修长精细贴图")
 	_check(player_idle != null and player_walk != null, "道士待机与行走高清透明 SVG 可加载")
@@ -288,15 +294,46 @@ func _test_responsive_layout() -> void:
 		_check(no_overlap, "三张升级卡之间不重叠")
 	hud.queue_free()
 
+func _test_compact_hud_layout() -> void:
+	var hud: Variant = HUD_SCRIPT.new()
+	root.add_child(hud)
+	for view in [Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
+		var layout: Dictionary = hud._hud_layout(view)
+		_check(bool(layout.get("compact", false)), "小视口 %dx%d 启用紧凑 HUD" % [roundi(view.x), roundi(view.y)])
+		for key in ["status", "time", "skill", "objective", "boss", "controls", "build"]:
+			var rect: Rect2 = layout[key]
+			_check(rect.position.x >= -0.1 and rect.position.y >= -0.1 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "紧凑 HUD 的 %s 面板不越界 (%dx%d)" % [key, roundi(view.x), roundi(view.y)])
+		var status_rect: Rect2 = layout["status"]
+		var objective_rect: Rect2 = layout["objective"]
+		var time_rect: Rect2 = layout["time"]
+		var skill_rect: Rect2 = layout["skill"]
+		var controls_rect: Rect2 = layout["controls"]
+		var build_rect: Rect2 = layout["build"]
+		_check(status_rect.end.x < objective_rect.position.x and objective_rect.end.x < skill_rect.position.x, "小视口目标栏避开左右状态面板")
+		_check(time_rect.end.y < objective_rect.position.y, "小视口计时与目标栏垂直分离")
+		_check(controls_rect.end.y < build_rect.position.y, "小视口操作提示与构筑栏不重叠")
+		var touch: Dictionary = hud._touch_layout(view)
+		var skill_center: Vector2 = touch["skill_center"]
+		var heal_center: Vector2 = touch["heal_center"]
+		_check(skill_center.x >= float(touch["skill_radius"]) and skill_center.x + float(touch["skill_radius"]) <= view.x, "小视口道术按钮完整显示")
+		_check(heal_center.y + float(touch["heal_radius"]) <= view.y, "小视口治疗按钮完整显示")
+		_check(skill_center.distance_to(heal_center) > float(touch["skill_radius"]) + float(touch["heal_radius"]), "小视口道术与治疗按钮视觉上不重叠")
+		_check(skill_center.distance_to(heal_center) > float(touch["skill_hit_radius"]) + float(touch["heal_hit_radius"]), "小视口道术与治疗触控热区不重叠")
+	hud.queue_free()
+
 func _test_skill_art_assets() -> void:
 	var atlas := load("res://assets/sprites/skill_art_atlas.svg") as Texture2D
 	var cultivation_atlas := load("res://assets/sprites/element_cultivation_atlas.svg") as Texture2D
+	var card_atlas := load("res://assets/sprites/skill_card_art_atlas.svg") as Texture2D
 	_check(atlas != null, "国风技能插画图集可加载")
 	_check(cultivation_atlas != null, "六大元素修炼专属插画图集可加载")
+	_check(card_atlas != null, "横向高细节技能卡插画图集可加载")
 	if atlas != null:
 		_check(atlas.get_size() == Vector2(768.0, 128.0), "六种技能插画共享 768×128 图集")
 	if cultivation_atlas != null:
 		_check(cultivation_atlas.get_size() == Vector2(768.0, 128.0), "六种元素修炼插画共享 768×128 图集")
+	if card_atlas != null:
+		_check(card_atlas.get_size() == Vector2(3840.0, 208.0), "十二种技能/修炼卡插画使用 3840×208 横向图集")
 	var hud: Variant = HUD_SCRIPT.new()
 	root.add_child(hud)
 	_check(hud._skill_art_region("fire_talisman").position.x == 0.0, "火符使用专属插画帧")
@@ -305,6 +342,14 @@ func _test_skill_art_assets() -> void:
 	_check(hud._skill_art_region("peachwood_sword").position.x == 384.0, "桃木剑使用独立武器插画帧")
 	_check(hud._skill_art_region("water_array").position.x == 512.0, "水阵使用专属插画帧")
 	_check(hud._skill_art_region("earth_formation").position.x == 640.0, "地脉阵使用专属插画帧")
+	_check(hud._skill_card_art_region("fire_talisman").position.x == 0.0, "火符卡使用横向火符主视觉")
+	_check(hud._skill_card_art_region("thunder_talisman").position.x == 320.0, "雷符卡使用横向雷符主视觉")
+	_check(hud._skill_card_art_region("copper_coin_sword").position.x == 640.0, "铜钱剑卡使用横向御剑主视觉")
+	_check(hud._skill_card_art_region("peachwood_sword").position.x == 960.0, "桃木剑卡使用横向青木剑主视觉")
+	_check(hud._skill_card_art_region("water_array").position.x == 1280.0, "水阵卡使用横向水阵主视觉")
+	_check(hud._skill_card_art_region("earth_formation").position.x == 1600.0, "地脉阵卡使用横向地脉主视觉")
+	_check(hud._skill_card_art_region("cultivation_metal").position.x == 1920.0, "金系修炼卡有独立横向插画")
+	_check(hud._skill_card_art_region("cultivation_thunder").position.x == 3520.0, "雷系修炼卡有独立横向插画")
 	_check(hud._cultivation_art_region("cultivation_metal").position.x == 0.0, "金系修炼使用专属剑意插画")
 	_check(hud._cultivation_art_region("cultivation_wood").position.x == 128.0, "木系修炼使用专属青木插画")
 	_check(hud._cultivation_art_region("cultivation_water").position.x == 256.0, "水系修炼使用专属清泉插画")
