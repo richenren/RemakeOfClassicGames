@@ -766,21 +766,21 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 			_spawn_skill_projectile(target, skill_id, damage)
 		"peachwood_sword":
 			if branch == "guardian":
-				var radius := 52.0 + float(skill_level) * 7.0
-				_apply_area_damage(player.position, radius, damage * 0.72, "wood", 0.0, false, 20.0)
+				var guardian_radius := 52.0 + float(skill_level) * 7.0
+				_apply_area_damage(player.position, guardian_radius, damage * 0.72, "wood", 0.0, false, 20.0)
 			else:
 				_spawn_skill_projectile(target, skill_id, damage)
 		"water_array":
-			var radius := 76.0 + float(skill_level) * 9.0
+			var water_radius := 76.0 + float(skill_level) * 9.0
 			var slow_duration := 1.2 + float(skill_level - 1) * 0.12
 			if branch == "tide":
-				radius += 34.0
+				water_radius += 34.0
 			if branch == "cold":
 				slow_duration *= 1.7
 			if evolved == "ice_array":
-				radius += 12.0
+				water_radius += 12.0
 				slow_duration = 2.25
-			_apply_area_damage(target.position, radius, damage, "ice" if evolved == "ice_array" else "water", slow_duration, true, 0.0)
+			_apply_area_damage(target.position, water_radius, damage, "ice" if evolved == "ice_array" else "water", slow_duration, true, 0.0)
 		"earth_formation":
 			var earth_radius := 66.0 + float(skill_level) * 8.0
 			var knockback := 0.0
