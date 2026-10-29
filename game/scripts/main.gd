@@ -1552,7 +1552,7 @@ func _draw_skill_effects() -> void:
 				_draw_lightning_bolt(chain_mid, chain_mid + chain_side * minf(20.0, radius * 0.12), life * 0.58, progress * 7.0)
 			"control":
 				draw_arc(center, radius, 0.0, TAU, 64, Color(0.92, 0.76, 0.38, life * 0.85), 3.0)
-				draw_arc(center, radius * 0.78, 0.0, TAU, 56, Color(0.74, 0.56, 0.3, life * 0.55), 1.5)() -> void:
+				draw_arc(center, radius * 0.78, 0.0, TAU, 56, Color(0.74, 0.56, 0.3, life * 0.55), 1.5)
 	for effect in skill_effects:
 		var center: Vector2 = effect.get("position", Vector2.ZERO)
 		var duration := maxf(0.01, float(effect.get("duration", 0.4)))
