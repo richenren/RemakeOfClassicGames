@@ -114,7 +114,7 @@ func _test_sprite_assets(main: Variant) -> void:
 
 
 func _test_skill_build_system(main: Variant) -> void:
-	var original_player_level := main.player.level
+	var original_player_level: int = int(main.player.level)
 	_check(main.AUTO_SKILL_DEFS.size() == 6, "首版配置六种自动攻击技能")
 	_check(main.ARTIFACT_DEFS.size() == 6, "首版配置六种被动法器")
 	_check(main.ELEMENT_DEFS.size() == 6, "六大元素各自拥有攻击、修炼与法宝进化配置")
