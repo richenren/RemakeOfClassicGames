@@ -3,6 +3,7 @@ extends SceneTree
 const PLAYER_SCRIPT = preload("res://scripts/player.gd")
 const ENEMY_SCRIPT = preload("res://scripts/enemy.gd")
 const XP_ORB_SCRIPT = preload("res://scripts/xp_orb.gd")
+const PROJECTILE_SCRIPT = preload("res://scripts/projectile.gd")
 const HUD_SCRIPT = preload("res://scripts/hud.gd")
 const MAIN_SCENE = preload("res://scenes/main.tscn")
 
@@ -91,26 +92,45 @@ func _test_hud_presentation(main: Variant) -> void:
 func _test_sprite_assets(main: Variant) -> void:
 	var background := load("res://assets/sprites/graveyard_background.svg") as Texture2D
 	var portrait := load("res://assets/sprites/player_portrait.svg") as Texture2D
-	var creatures_atlas := load("res://assets/sprites/creatures_atlas.png") as Texture2D
 	_check(background != null and background.get_size() == Vector2(2400.0, 1600.0), "义庄背景以 2400×1600 原生画布加载，避免放大模糊")
 	var background_source := FileAccess.get_file_as_string("res://assets/sprites/graveyard_background.svg")
+	var portrait_source := FileAccess.get_file_as_string("res://assets/sprites/player_portrait.svg")
 	_check(background_source.contains("id=\"ruined-yizhuang-hall\"") and background_source.contains("id=\"ground-ritual-marks\""), "义庄背景包含灵堂建筑与低对比地面符纹细节")
-	_check(portrait != null and portrait.get_size().x >= 96.0, "道士专属头像可加载")
-	_check(creatures_atlas != null and creatures_atlas.get_size() == Vector2(384.0, 256.0), "最新国风角色/怪物透明图集可加载")
-	_check(main.player.CREATURES_ATLAS != null, "玩家脚本实际引用最新角色图集，而非旧版 SVG")
-	_check(main.player.PLAYER_DRAW_SIZE.x <= 56.0 and main.player.PLAYER_DRAW_SIZE.y <= 102.0, "主角采用更修长的 54×100 世界像素比例")
-	var player_source: Rect2 = main.player._player_source_rect()
-	_check(player_source.position.x >= 0.0 and player_source.position.y >= 0.0 and player_source.end.x <= 384.0 and player_source.end.y <= 256.0, "主角方向姿态裁切区域不越出图集")
+	_check(portrait != null and portrait.get_size() == Vector2(256.0, 256.0), "新版 256×256 道士近景头像可加载")
+	_check(portrait_source.contains("portraitClip") and portrait_source.contains("url(#gold)") and portrait_source.contains("url(#skin)"), "道士头像具备圆形裁切、鎏金边框和多层肤色明暗")
+	_check(main.player.PLAYER_IDLE_TEXTURE != null and main.player.PLAYER_WALK_TEXTURE != null, "玩家引用独立待机/行走全身 SVG")
+	_check(main.player.PLAYER_IDLE_TEXTURE.get_size() == Vector2(128.0, 160.0), "主角使用完整 128×160 画布，避免图集裁切缺脚")
+	_check(main.player.PLAYER_DRAW_SIZE.x <= 60.0 and main.player.PLAYER_DRAW_SIZE.y <= 72.0, "主角以 56×70 世界像素适配战场比例")
+	main.player.is_moving = false
+	_check(main.player._player_sprite_texture() == main.player.PLAYER_IDLE_TEXTURE, "主角静止时使用完整待机姿态")
+	main.player.is_moving = true
+	_check(main.player._player_sprite_texture() == main.player.PLAYER_WALK_TEXTURE, "主角移动时切换真实行走姿态")
+	main.player.is_moving = false
 	var walker: Variant = ENEMY_SCRIPT.new()
 	root.add_child(walker)
 	walker.setup("walker")
-	_check(walker.CREATURES_ATLAS != null, "敌人脚本实际引用最新角色图集")
-	_check(walker._sprite_draw_size_for_kind("walker").y <= 80.0, "普通行尸绘制高度降低，避免占据过多屏幕")
-	_check(walker._sprite_draw_size_for_kind("armored").y <= 84.0, "铁甲尸绘制比例独立控制")
+	_check(walker.WALKER_IDLE_TEXTURE != null and walker.WALKER_WALK_TEXTURE != null, "行尸引用独立待机/行走全身 SVG")
+	_check(walker.WALKER_IDLE_TEXTURE.get_size() == Vector2(96.0, 128.0), "行尸使用完整全身画布而非错误裁切矩形")
+	_check(walker._sprite_draw_size_for_kind("walker").y <= 60.0, "普通行尸显示尺寸适中，不遮挡战斗视野")
+	_check(walker._sprite_draw_size_for_kind("armored").y <= 64.0, "铁甲尸绘制比例独立控制")
 	_check(walker._sprite_draw_size_for_kind("boss").y > walker._sprite_draw_size_for_kind("walker").y, "尸王仍保持独立的精英体型")
-	var walker_source: Rect2 = walker._sprite_source_rect_for_kind("walker")
-	_check(walker_source.position.x >= 0.0 and walker_source.position.y >= 0.0 and walker_source.end.x <= 384.0 and walker_source.end.y <= 256.0, "普通敌人图集裁切区域不越界")
+	walker.is_moving = false
+	_check(walker._sprite_texture_for_kind("walker") == walker.WALKER_IDLE_TEXTURE, "行尸静止时显示待机姿态")
+	walker.is_moving = true
+	_check(walker._sprite_texture_for_kind("walker") == walker.WALKER_WALK_TEXTURE, "行尸移动时切换真实行走姿态")
+	_check(walker._sprite_texture_for_kind("armored") == walker.ARMORED_WALK_TEXTURE, "铁甲尸移动时使用独立行走素材")
+	walker.boss_phase = 2
+	_check(walker._sprite_texture_for_kind("boss") == walker.BOSS_PHASE2_TEXTURE, "尸王二阶段切换独立暴走素材")
 	walker.queue_free()
+
+	var fire_profile: Dictionary = PROJECTILE_SCRIPT.visual_profile_for_skill("fire_talisman")
+	var thunder_profile: Dictionary = PROJECTILE_SCRIPT.visual_profile_for_skill("thunder_talisman")
+	var metal_profile: Dictionary = PROJECTILE_SCRIPT.visual_profile_for_skill("copper_coin_sword")
+	var wood_profile: Dictionary = PROJECTILE_SCRIPT.visual_profile_for_skill("peachwood_sword")
+	_check(fire_profile["primary"] != thunder_profile["primary"], "火符和雷符投射物采用不同主色")
+	_check(thunder_profile["primary"] == Color("#b56cff"), "雷符使用高辨识度紫色闪电")
+	_check(metal_profile["primary"] != wood_profile["primary"] and metal_profile["primary"] != fire_profile["primary"], "金系剑气与木系桃木剑具备独立颜色")
+
 
 
 func _test_skill_build_system(main: Variant) -> void:
@@ -357,7 +377,7 @@ func _test_responsive_layout() -> void:
 func _test_compact_hud_layout() -> void:
 	var hud: Variant = HUD_SCRIPT.new()
 	root.add_child(hud)
-	for view in [Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
+	for view in [Vector2(1067.0, 600.0), Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
 		var layout: Dictionary = hud._hud_layout(view)
 		_check(bool(layout.get("compact", false)), "小视口 %dx%d 启用紧凑 HUD" % [roundi(view.x), roundi(view.y)])
 		for key in ["status", "time", "skill", "objective", "boss", "controls", "build"]:
@@ -372,6 +392,11 @@ func _test_compact_hud_layout() -> void:
 		_check(status_rect.end.x < objective_rect.position.x and objective_rect.end.x < skill_rect.position.x, "小视口目标栏避开左右状态面板")
 		_check(time_rect.end.y < objective_rect.position.y, "小视口计时与目标栏垂直分离")
 		_check(controls_rect.end.y < build_rect.position.y, "小视口操作提示与构筑栏不重叠")
+		_check(layout["build"].size.y >= 32.0, "紧凑构筑栏为单行图标保留足够高度")
+		if view == Vector2(1067.0, 600.0):
+			_check(bool(layout.get("compact", false)), "1067×600 游戏视口切换紧凑 HUD，避免标准面板遮挡战场")
+		if view == Vector2(640.0, 360.0):
+			_check(bool(layout.get("ultra_compact", false)), "640×360 使用超紧凑 HUD")
 		var touch: Dictionary = hud._touch_layout(view)
 		var skill_center: Vector2 = touch["skill_center"]
 		var heal_center: Vector2 = touch["heal_center"]
