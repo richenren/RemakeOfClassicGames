@@ -1,14 +1,17 @@
 extends Node2D
 
-const CREATURES_ATLAS: Texture2D = preload("res://assets/sprites/creatures_atlas.png")
-const WALKER_SOURCE_RECT := Rect2(258.0, 22.0, 60.0, 105.0)
-const JUMPER_SOURCE_RECT := Rect2(34.0, 140.0, 65.0, 114.0)
-const ARMORED_SOURCE_RECT := Rect2(153.0, 138.0, 64.0, 116.0)
-const BOSS_SOURCE_RECT := Rect2(258.0, 137.0, 124.0, 119.0)
-const WALKER_DRAW_SIZE := Vector2(50.0, 78.0)
-const JUMPER_DRAW_SIZE := Vector2(50.0, 76.0)
-const ARMORED_DRAW_SIZE := Vector2(56.0, 82.0)
-const BOSS_DRAW_SIZE := Vector2(86.0, 110.0)
+const WALKER_IDLE_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_walker.svg")
+const WALKER_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_walker_walk.svg")
+const JUMPER_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_jumper.svg")
+const ARMORED_IDLE_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_armored.svg")
+const ARMORED_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_armored_walk.svg")
+const BOSS_IDLE_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss.svg")
+const BOSS_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss_walk.svg")
+const BOSS_PHASE2_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss_phase2.svg")
+const WALKER_DRAW_SIZE := Vector2(42.0, 56.0)
+const JUMPER_DRAW_SIZE := Vector2(42.0, 48.0)
+const ARMORED_DRAW_SIZE := Vector2(46.0, 60.0)
+const BOSS_DRAW_SIZE := Vector2(76.0, 90.0)
 
 var kind: String = "walker"
 var max_hp: float = 30.0
@@ -258,16 +261,18 @@ func apply_burn(duration: float, damage_per_second: float) -> void:
 	queue_redraw()
 
 
-func _sprite_source_rect_for_kind(enemy_kind: String) -> Rect2:
+func _sprite_texture_for_kind(enemy_kind: String) -> Texture2D:
 	match enemy_kind:
 		"jumper":
-			return JUMPER_SOURCE_RECT
+			return JUMPER_TEXTURE
 		"armored":
-			return ARMORED_SOURCE_RECT
+			return ARMORED_WALK_TEXTURE if is_moving else ARMORED_IDLE_TEXTURE
 		"boss":
-			return BOSS_SOURCE_RECT
+			if boss_phase >= 2:
+				return BOSS_PHASE2_TEXTURE
+			return BOSS_WALK_TEXTURE if is_moving else BOSS_IDLE_TEXTURE
 		_:
-			return WALKER_SOURCE_RECT
+			return WALKER_WALK_TEXTURE if is_moving else WALKER_IDLE_TEXTURE
 
 
 func _sprite_draw_size_for_kind(enemy_kind: String) -> Vector2:
@@ -302,11 +307,10 @@ func _draw() -> void:
 	var sprite_tilt := clampf(facing_direction.x * 0.11, -0.11, 0.11) + gait_lean if is_moving else sin(animation_time * 0.8) * 0.009
 	var attack_offset := facing_direction * attack_pose * 2.6
 	var flip_x := -1.0 if facing_direction.x < -0.1 else 1.0
-	var source_rect := _sprite_source_rect_for_kind(kind)
 
 	# A separate ground shadow and small body inertia make the sprite sit inside the scene.
-	var shadow_radius := 28.0 if is_boss else (17.0 if kind == "armored" else 13.0)
-	var shadow_y := sprite_size.y * 0.33
+	var shadow_radius := 24.0 if is_boss else (15.0 if kind == "armored" else 11.5)
+	var shadow_y := sprite_size.y * 0.40
 	draw_set_transform(Vector2(0.0, shadow_y + absf(bob) * 0.12), 0.0, Vector2(1.35 - hop_height * 0.018, 0.42 - hop_height * 0.006))
 	draw_circle(Vector2.ZERO, shadow_radius, Color(0.01, 0.012, 0.01, 0.46))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
@@ -344,7 +348,7 @@ func _draw() -> void:
 	if is_boss and boss_phase == 2 and hit_flash <= 0.0:
 		tint = Color(1.0, 0.84, 0.78, 1.0)
 	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * squash_x, stretch_y))
-	draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, source_rect, tint, false, true)
+	draw_texture_rect(_sprite_texture_for_kind(kind), sprite_rect, false, tint)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if hit_flash > 0.0:
