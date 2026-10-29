@@ -467,7 +467,10 @@ func _remove_dead_enemies() -> void:
 			kills += 1
 			var wood_cultivation := _cultivation_level("wood")
 			if wood_cultivation > 0:
+				var hp_before: float = player.hp
 				player.heal(0.45 * float(wood_cultivation))
+				if player.hp > hp_before:
+					_spawn_cultivation_feedback("wood", player.position, 24.0)
 			var xp_value := 1
 			if enemy.kind == "jumper":
 				xp_value = 2
@@ -476,7 +479,6 @@ func _remove_dead_enemies() -> void:
 			_spawn_xp_orb(enemy.position, xp_value)
 		enemies.remove_at(i)
 		enemy.queue_free()
-
 
 func _spawn_xp_orb(spawn_position: Vector2, amount: int) -> void:
 	var orb = XP_ORB_SCRIPT.new()
@@ -1075,6 +1077,13 @@ func _artifact_level(artifact_id: String) -> int:
 	return int(data.get("level", 1))
 
 
+func _spawn_cultivation_feedback(element_id: String, center: Vector2, radius: float = 26.0) -> void:
+	if _cultivation_level(element_id) <= 0:
+		return
+	_spawn_skill_effect("cultivation_" + element_id, center, radius, 0.28)
+
+
+
 func _tick_element_cultivation(delta: float) -> void:
 	var water_level := _cultivation_level("water")
 	if water_level <= 0 or player == null:
@@ -1083,8 +1092,10 @@ func _tick_element_cultivation(delta: float) -> void:
 	water_recovery_accumulator += delta
 	while water_recovery_accumulator >= 1.0:
 		water_recovery_accumulator -= 1.0
+		var hp_before: float = player.hp
 		player.heal(0.35 * float(water_level))
-
+		if player.hp > hp_before:
+			_spawn_cultivation_feedback("water", player.position, 26.0)
 
 func _skill_damage(skill_id: String, base_damage: float) -> float:
 	var skill_data: Dictionary = skills.get(skill_id, {})
@@ -1215,7 +1226,9 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 			if evolved == "greenwood_guardian":
 				var evolved_guardian_radius := 68.0 + float(skill_level) * 3.0
 				_apply_area_damage(player.position, evolved_guardian_radius, damage * 0.45, "wood", 0.0, false, 18.0)
-				_spawn_skill_effect("wood_guardian", player.position, evolved_guardian_radius, 0.38)
+				_spawn_skill_effect("greenwood_guardian", player.position, evolved_guardian_radius, 0.42)
+				if _artifact_level("body_jade") > 0:
+					_spawn_skill_effect("body_jade", player.position, evolved_guardian_radius * 0.72, 0.34)
 		"water_array":
 			var water_radius := 76.0 + float(skill_level) * 9.0
 			var slow_duration := 1.2 + float(skill_level - 1) * 0.12
@@ -1281,7 +1294,14 @@ func _cast_thunder_strike(target, damage: float, branch: String, evolved: String
 		strike_target.wet_timer = 0.0
 	var direction: Vector2 = (strike_target.position - player.position).normalized()
 	_spawn_chain_effect(player.position + direction * 10.0, strike_target.position, 0.16)
-	_spawn_skill_effect("lightning", strike_target.position, 32.0, 0.25)
+	if evolved == "five_thunder":
+		_spawn_skill_effect("five_thunder", strike_target.position, 44.0, 0.36)
+		if _artifact_level("thunder_seal") > 0:
+			_spawn_skill_effect("thunder_seal", player.position, 42.0, 0.32)
+	else:
+		_spawn_skill_effect("lightning", strike_target.position, 32.0, 0.25)
+	if _cultivation_level("thunder") > 0:
+		_spawn_cultivation_feedback("thunder", strike_target.position, 26.0)
 	var chain_count := 0
 	if branch == "chain":
 		chain_count = 3
@@ -1320,11 +1340,13 @@ func _tick_pending_area_attacks(delta: float) -> void:
 			var evolved := bool(attack.get("evolved", false))
 			_apply_area_damage(center, radius, damage, "earth", 0.0, false, knockback)
 			_spawn_skill_effect("earth_seal" if evolved else "earth_spike", center, radius, 0.38)
+			if evolved and _artifact_level("formation_manual") > 0:
+				_spawn_skill_effect("formation_seal", center, radius * 0.78, 0.32)
+			if _cultivation_level("earth") > 0:
+				_spawn_cultivation_feedback("earth", center, minf(30.0, radius * 0.42))
 			pending_area_attacks.remove_at(i)
 		else:
 			pending_area_attacks[i] = attack
-
-
 
 func _apply_area_damage(center: Vector2, radius: float, damage: float, effect_kind: String, slow_duration: float = 0.0, apply_wet: bool = false, knockback: float = 0.0) -> void:
 	for enemy in enemies:
@@ -1387,6 +1409,11 @@ func _resolve_projectile_hit(projectile) -> void:
 					target.apply_burn(1.35 + 0.15 * float(_cultivation_level("fire")), 1.7 + 0.3 * float(_cultivation_level("fire")))
 			if evolved == "heavenfire_array":
 				_spawn_fire_zone(target.position, int(skill_data.get("level", 5)), true)
+				_spawn_skill_effect("heavenfire_impact", target.position, splash_radius, 0.36)
+				if _artifact_level("talisman_scroll") > 0:
+					_spawn_skill_effect("talisman_seal", target.position, splash_radius * 0.72, 0.32)
+			if _cultivation_level("fire") > 0:
+				_spawn_cultivation_feedback("fire", target.position, 24.0)
 		"water_array":
 			var splash_radius := float(projectile.splash_radius) if float(projectile.splash_radius) > 0.0 else 85.0
 			var slow_duration := float(projectile.slow_duration) if float(projectile.slow_duration) > 0.0 else 1.2
@@ -1399,6 +1426,10 @@ func _resolve_projectile_hit(projectile) -> void:
 					if splash_target.position.distance_to(target.position) <= splash_radius:
 						splash_target.apply_freeze(0.55)
 				_spawn_skill_effect("ice_splash", target.position, splash_radius, 0.38)
+				if _artifact_level("cold_relic") > 0:
+					_spawn_skill_effect("cold_relic", target.position, splash_radius * 0.68, 0.34)
+			if _cultivation_level("water") > 0:
+				_spawn_cultivation_feedback("water", target.position, 24.0)
 		"copper_coin_sword":
 			var hit_damage := damage
 			if branch == "pierce" and int(projectile.pierce_hit_count) > 1:
@@ -1410,6 +1441,10 @@ func _resolve_projectile_hit(projectile) -> void:
 			if evolved == "golden_sword_array":
 				_apply_chain_damage(target, damage * 0.42, 2, "metal")
 				_spawn_skill_effect("golden_sword_array", target.position, 38.0, 0.28)
+				if _artifact_level("sword_manual") > 0:
+					_spawn_skill_effect("sword_manual", target.position, 42.0, 0.3)
+			if _cultivation_level("metal") > 0:
+				_spawn_cultivation_feedback("metal", target.position, 24.0)
 		"peachwood_sword":
 			target.take_damage(damage)
 			if branch == "chase" and bool(projectile.allow_secondary_chase):
@@ -1578,6 +1613,14 @@ func _draw_skill_effects() -> void:
 			"earth_spike", "earth_seal":
 				draw_circle(center, radius * 0.42, Color(0.04, 0.035, 0.028, life * 0.22))
 				draw_arc(center, radius * 0.86, 0.0, TAU, 48, Color(0.72, 0.59, 0.37, life * 0.72), 2.0)
+				if kind == "earth_seal":
+					var seal_points := PackedVector2Array()
+					for seal_index in range(7):
+						var seal_angle := TAU * float(seal_index) / 6.0 - PI * 0.5
+						seal_points.append(center + Vector2(cos(seal_angle), sin(seal_angle)) * radius * 0.31)
+					draw_colored_polygon(PackedVector2Array([seal_points[0], seal_points[1], seal_points[2], seal_points[3], seal_points[4], seal_points[5]]), Color(0.45, 0.34, 0.19, life * 0.24))
+					draw_polyline(seal_points, Color(0.91, 0.74, 0.43, life * 0.92), 1.8, true)
+					draw_circle(center, radius * 0.12, Color(0.91, 0.74, 0.43, life * 0.65))
 				var spike_count := 9 if kind == "earth_seal" else 7
 				for i in range(spike_count):
 					var angle := TAU * float(i) / float(spike_count) + (0.08 if kind == "earth_seal" else 0.0)
@@ -1609,6 +1652,18 @@ func _draw_skill_effects() -> void:
 					var flame_tip := center + direction * (burst_radius * 0.42 + radius * (0.14 + 0.12 * sin(progress * 12.0 + float(i))))
 					draw_colored_polygon(PackedVector2Array([flame_base - tangent * 4.0, flame_tip, flame_base + tangent * 4.0]), Color(1.0, 0.34, 0.06, life * 0.82))
 					draw_line(flame_base, flame_tip, Color(1.0, 0.84, 0.42, life * 0.88), 1.4, true)
+			"heavenfire_impact":
+				var flame_radius := radius * (0.3 + progress * 0.7)
+				draw_circle(center, flame_radius * 0.52, Color(0.8, 0.12, 0.025, life * 0.26))
+				draw_arc(center, flame_radius * 0.88, 0.0, TAU, 48, Color(1.0, 0.42, 0.08, life * 0.9), 3.0)
+				for i in range(9):
+					var angle := TAU * float(i) / 9.0 + progress * 0.25
+					var direction := Vector2(cos(angle), sin(angle))
+					var tangent := Vector2(-direction.y, direction.x)
+					var base := center + direction * flame_radius * 0.42
+					var tip := center + direction * flame_radius * (0.78 + 0.14 * sin(elapsed_seconds * 8.0 + float(i)))
+					draw_colored_polygon(PackedVector2Array([base - tangent * 4.0, tip, base + tangent * 4.0]), Color(1.0, 0.34, 0.04, life * 0.78))
+					draw_line(base, tip, Color(1.0, 0.84, 0.42, life * 0.9), 1.5, true)
 			"slash", "golden_sword_array":
 				draw_line(center + Vector2(-radius * 0.75, radius * 0.55), center + Vector2(radius * 0.72, -radius * 0.55), Color(0.98, 0.86, 0.58, life), 3.2)
 				draw_line(center + Vector2(-radius * 0.38, radius * 0.72), center + Vector2(radius * 0.48, -radius * 0.25), Color(0.78, 0.63, 0.36, life * 0.75), 1.8)
@@ -1639,6 +1694,28 @@ func _draw_skill_effects() -> void:
 					draw_line(sword_base, sword_tip, Color(0.2, 0.75, 0.43, life * 0.8), 5.0, true)
 					draw_line(sword_base, sword_tip, Color(0.8, 1.0, 0.74, life * 0.9), 1.6, true)
 					draw_line(sword_base + tangent * 4.0, sword_base - tangent * 4.0, Color(0.62, 0.43, 0.24, life * 0.8), 1.8, true)
+			"five_thunder":
+				draw_circle(center, radius * 0.54, Color(0.34, 0.1, 0.72, life * 0.2))
+				draw_arc(center, radius * 0.92, 0.0, TAU, 56, Color(0.68, 0.4, 1.0, life * 0.88), 2.5)
+				draw_arc(center, radius * 0.58, 0.0, TAU, 44, Color(0.9, 0.78, 1.0, life * 0.82), 1.4)
+				for i in range(5):
+					var angle := TAU * float(i) / 5.0 + elapsed_seconds * 0.18
+					var direction := Vector2(cos(angle), sin(angle))
+					_draw_lightning_bolt(center + direction * radius * 0.95, center + direction * radius * 0.16, life, elapsed_seconds * 3.0 + float(i) * 1.2)
+			"greenwood_guardian":
+				draw_arc(center, radius * 0.82, 0.0, TAU, 48, Color(0.24, 0.72, 0.39, life * 0.62), 2.0)
+				draw_arc(center, radius * 0.62, 0.0, TAU, 40, Color(0.65, 0.91, 0.54, life * 0.38), 1.2)
+				for i in range(4):
+					var angle := elapsed_seconds * 2.4 + TAU * float(i) / 4.0
+					var direction := Vector2(cos(angle), sin(angle))
+					var tangent := Vector2(-direction.y, direction.x)
+					var sword_base := center + direction * radius * 0.38
+					var sword_tip := center + direction * radius * 0.88
+					draw_line(sword_base, sword_tip, Color(0.14, 0.56, 0.31, life * 0.82), 5.0, true)
+					draw_line(sword_base, sword_tip, Color(0.8, 1.0, 0.7, life * 0.92), 1.6, true)
+					draw_colored_polygon(PackedVector2Array([sword_tip, sword_tip - direction * 8.0 + tangent * 3.0, sword_tip - direction * 8.0 - tangent * 3.0]), Color(0.82, 1.0, 0.65, life * 0.9))
+					var leaf_center := center + direction * radius * 0.64 + tangent * 5.0
+					draw_colored_polygon(PackedVector2Array([leaf_center - tangent * 3.0, leaf_center + direction * 5.0, leaf_center + tangent * 3.0]), Color(0.36, 0.82, 0.42, life * 0.78))
 			"lightning":
 				draw_circle(center, radius * 0.58, Color(0.42, 0.14, 0.86, life * 0.25))
 				draw_arc(center, radius, 0.0, TAU, 36, Color(0.67, 0.36, 1.0, life * 0.86), 2.5)
@@ -1660,9 +1737,86 @@ func _draw_skill_effects() -> void:
 					var chain_mid := chain_start.lerp(chain_end, 0.55)
 					var chain_side := Vector2(-(chain_end - chain_start).y, (chain_end - chain_start).x).normalized()
 					_draw_lightning_bolt(chain_mid, chain_mid + chain_side * minf(20.0, radius * 0.12), life * 0.58, progress * 7.0)
+			"talisman_seal", "thunder_seal", "sword_manual", "body_jade", "cold_relic", "formation_seal":
+				_draw_artifact_sigil(center, radius, life, kind)
+			"cultivation_metal", "cultivation_wood", "cultivation_water", "cultivation_fire", "cultivation_earth", "cultivation_thunder":
+				_draw_cultivation_feedback(center, radius, life, kind.trim_prefix("cultivation_"))
 			"control":
 				draw_arc(center, radius, 0.0, TAU, 64, Color(0.92, 0.76, 0.38, life * 0.85), 3.0)
 				draw_arc(center, radius * 0.78, 0.0, TAU, 56, Color(0.74, 0.56, 0.3, life * 0.55), 1.5)
+
+func _draw_artifact_sigil(center: Vector2, radius: float, life: float, kind: String) -> void:
+	var gold := Color(0.9, 0.7, 0.35, life * 0.82)
+	var pale := Color(1.0, 0.9, 0.62, life * 0.9)
+	draw_circle(center, radius * 0.42, Color(0.5, 0.32, 0.12, life * 0.1))
+	draw_arc(center, radius * 0.76, 0.0, TAU, 48, gold, 1.8)
+	draw_arc(center, radius * 0.54, 0.0, TAU, 40, Color(0.74, 0.55, 0.27, life * 0.58), 1.1)
+	var points := PackedVector2Array()
+	for i in range(7):
+		var angle := TAU * float(i) / 6.0 - PI * 0.5
+		points.append(center + Vector2(cos(angle), sin(angle)) * radius * 0.48)
+	draw_polyline(points, gold, 1.2, true)
+	match kind:
+		"thunder_seal":
+			_draw_lightning_bolt(center + Vector2(0.0, -radius * 0.52), center + Vector2(0.0, radius * 0.52), life, elapsed_seconds * 4.0)
+		"talisman_seal":
+			draw_rect(Rect2(center + Vector2(-radius * 0.15, -radius * 0.42), Vector2(radius * 0.3, radius * 0.84)), gold, false, 1.8)
+			draw_line(center + Vector2(0.0, -radius * 0.3), center + Vector2(0.0, radius * 0.3), pale, 1.5, true)
+			draw_line(center + Vector2(-radius * 0.1, -radius * 0.05), center + Vector2(radius * 0.1, radius * 0.08), pale, 1.2, true)
+		"sword_manual":
+			draw_line(center + Vector2(-radius * 0.42, radius * 0.28), center + Vector2(radius * 0.38, -radius * 0.4), pale, 3.0, true)
+			draw_line(center + Vector2(-radius * 0.1, radius * 0.42), center + Vector2(radius * 0.46, -radius * 0.12), gold, 1.8, true)
+		"body_jade":
+			draw_colored_polygon(PackedVector2Array([center + Vector2(0.0, -radius * 0.42), center + Vector2(radius * 0.28, 0.0), center + Vector2(0.0, radius * 0.42), center + Vector2(-radius * 0.28, 0.0)]), Color(0.3, 0.72, 0.43, life * 0.26))
+			draw_polyline(PackedVector2Array([center + Vector2(0.0, -radius * 0.42), center + Vector2(radius * 0.28, 0.0), center + Vector2(0.0, radius * 0.42), center + Vector2(-radius * 0.28, 0.0), center + Vector2(0.0, -radius * 0.42)]), Color(0.67, 0.95, 0.62, life * 0.92), 1.8, true)
+		"cold_relic":
+			for i in range(6):
+				var angle := TAU * float(i) / 6.0
+				var direction := Vector2(cos(angle), sin(angle))
+				draw_line(center + direction * radius * 0.12, center + direction * radius * 0.44, pale, 1.5, true)
+				var tip := center + direction * radius * 0.5
+				var tangent := Vector2(-direction.y, direction.x)
+				draw_colored_polygon(PackedVector2Array([tip, tip - direction * 6.0 + tangent * 2.5, tip - direction * 6.0 - tangent * 2.5]), Color(0.65, 0.9, 1.0, life * 0.9))
+		"formation_seal":
+			for i in range(4):
+				var angle := TAU * float(i) / 4.0 + PI * 0.25
+				var direction := Vector2(cos(angle), sin(angle))
+				draw_line(center, center + direction * radius * 0.42, gold, 1.2, true)
+			draw_circle(center, radius * 0.12, pale)
+
+
+func _draw_cultivation_feedback(center: Vector2, radius: float, life: float, element_id: String) -> void:
+	match element_id:
+		"metal":
+			draw_line(center + Vector2(-radius * 0.7, radius * 0.4), center + Vector2(radius * 0.68, -radius * 0.5), Color(1.0, 0.82, 0.42, life * 0.92), 2.4, true)
+			draw_line(center + Vector2(-radius * 0.25, radius * 0.7), center + Vector2(radius * 0.45, radius * 0.08), Color(0.86, 0.66, 0.31, life * 0.72), 1.3, true)
+		"wood":
+			for i in range(3):
+				var angle := TAU * float(i) / 3.0 + elapsed_seconds
+				var direction := Vector2(cos(angle), sin(angle))
+				var tangent := Vector2(-direction.y, direction.x)
+				var leaf_center := center + direction * radius * 0.48
+				draw_colored_polygon(PackedVector2Array([leaf_center - tangent * 3.0, leaf_center + direction * 7.0, leaf_center + tangent * 3.0]), Color(0.38, 0.86, 0.47, life * 0.84))
+		"water":
+			draw_arc(center, radius * 0.68, 0.0, TAU, 32, Color(0.34, 0.82, 1.0, life * 0.78), 1.8)
+			for i in range(4):
+				var angle := TAU * float(i) / 4.0 + elapsed_seconds * 0.7
+				draw_circle(center + Vector2(cos(angle), sin(angle)) * radius * 0.45, 1.8, Color(0.82, 0.97, 1.0, life * 0.9))
+		"fire":
+			for i in range(5):
+				var angle := TAU * float(i) / 5.0 + elapsed_seconds * 0.4
+				var direction := Vector2(cos(angle), sin(angle))
+				draw_line(center + direction * radius * 0.18, center + direction * radius * 0.58, Color(1.0, 0.52, 0.16, life * 0.9), 1.8, true)
+		"earth":
+			draw_arc(center, radius * 0.68, 0.0, TAU, 32, Color(0.76, 0.64, 0.42, life * 0.8), 1.6)
+			for i in range(4):
+				var angle := TAU * float(i) / 4.0
+				draw_line(center, center + Vector2(cos(angle), sin(angle)) * radius * 0.58, Color(0.68, 0.56, 0.36, life * 0.85), 1.6, true)
+		"thunder":
+			_draw_lightning_bolt(center + Vector2(-radius * 0.35, -radius * 0.5), center + Vector2(radius * 0.12, radius * 0.42), life, elapsed_seconds * 3.0)
+			draw_arc(center, radius * 0.62, 0.0, TAU, 28, Color(0.7, 0.46, 1.0, life * 0.72), 1.4)
+
+
 
 func _draw_water_splash(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
 	var cyan := Color(0.25, 0.82, 1.0, life * 0.82)

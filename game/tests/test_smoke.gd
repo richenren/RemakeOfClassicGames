@@ -558,6 +558,14 @@ func _test_xp_orb() -> void:
 	orb.queue_free()
 
 
+func _has_skill_effect(main: Variant, effect_kind: String) -> bool:
+	for effect in main.skill_effects:
+		if str(effect.get("kind", "")) == effect_kind:
+			return true
+	return false
+
+
+
 func _test_combat_visuals(main: Variant) -> void:
 	var temp_enemy: Variant = ENEMY_SCRIPT.new()
 	temp_enemy.setup("walker")
@@ -704,6 +712,101 @@ func _test_combat_visuals(main: Variant) -> void:
 			saw_earth_spike = true
 	_check(saw_earth_spike, "地脉阵爆发时显示独立岩刺与碎石特效")
 
+	# Verify that every final evolution has its own visible signature and matching artifact feedback.
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.artifacts.clear()
+	main.fire_zones.clear()
+	main.pending_area_attacks.clear()
+	main.skill_effects.clear()
+	temp_enemy.position = main.player.position + Vector2(50.0, 0.0)
+	splash_enemy.position = main.player.position + Vector2(80.0, 0.0)
+	temp_enemy.hp = temp_enemy.max_hp
+	temp_enemy.wet_timer = 0.0
+	temp_enemy.burn_timer = 0.0
+	main.skills["fire_talisman"] = {"level": 5, "branch": "flame", "evolved": "heavenfire_array"}
+	main.artifacts["talisman_scroll"] = {"level": 1}
+	main._cast_auto_skill("fire_talisman", temp_enemy)
+	if not main.projectiles.is_empty():
+		main.projectiles[0].speed = 10000.0
+		main._tick_projectiles(0.1)
+	_check(main.fire_zones.size() > 0 and _has_skill_effect(main, "heavenfire_impact") and _has_skill_effect(main, "talisman_seal"), "焚天符阵具有独立爆燃与符箓法器反馈")
+
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.artifacts.clear()
+	main.skills["thunder_talisman"] = {"level": 5, "branch": "chain", "evolved": "five_thunder"}
+	main.artifacts["thunder_seal"] = {"level": 1}
+	temp_enemy.hp = temp_enemy.max_hp
+	main._cast_auto_skill("thunder_talisman", temp_enemy)
+	_check(_has_skill_effect(main, "five_thunder") and _has_skill_effect(main, "thunder_seal"), "五雷敕令具有五雷主效与天雷法印反馈")
+
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.artifacts.clear()
+	main.skills["copper_coin_sword"] = {"level": 5, "branch": "pierce", "evolved": "golden_sword_array"}
+	main.artifacts["sword_manual"] = {"level": 1}
+	temp_enemy.hp = temp_enemy.max_hp
+	main._cast_auto_skill("copper_coin_sword", temp_enemy)
+	if not main.projectiles.is_empty():
+		main._tick_projectiles(0.1)
+	_check(_has_skill_effect(main, "golden_sword_array") and _has_skill_effect(main, "sword_manual"), "金锋剑阵具有双剑气斩击与御剑诀反馈")
+
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.artifacts.clear()
+	main.skills["peachwood_sword"] = {"level": 5, "branch": "guardian", "evolved": "greenwood_guardian"}
+	main.artifacts["body_jade"] = {"level": 1}
+	temp_enemy.hp = temp_enemy.max_hp
+	main._cast_auto_skill("peachwood_sword", temp_enemy)
+	_check(_has_skill_effect(main, "greenwood_guardian") and _has_skill_effect(main, "body_jade"), "青木护身剑具有扩展剑环与护身玉反馈")
+
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.artifacts.clear()
+	main.skills["water_array"] = {"level": 5, "branch": "cold", "evolved": "ice_array"}
+	main.artifacts["cold_relic"] = {"level": 1}
+	temp_enemy.hp = temp_enemy.max_hp
+	temp_enemy.freeze_timer = 0.0
+	main._cast_auto_skill("water_array", temp_enemy)
+	if not main.projectiles.is_empty():
+		main.projectiles[0].speed = 10000.0
+		main._tick_projectiles(0.1)
+	_check(temp_enemy.freeze_timer > 0.0 and _has_skill_effect(main, "ice_splash") and _has_skill_effect(main, "cold_relic"), "冰魄阵实际冻结普通敌人并显示寒魄法器反馈")
+
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.artifacts.clear()
+	main.skills["earth_formation"] = {"level": 5, "branch": "mountain", "evolved": "earth_seal"}
+	main.artifacts["formation_manual"] = {"level": 1}
+	temp_enemy.hp = temp_enemy.max_hp
+	main._cast_auto_skill("earth_formation", temp_enemy)
+	main._tick_pending_area_attacks(0.22)
+	_check(_has_skill_effect(main, "earth_seal") and _has_skill_effect(main, "formation_seal"), "镇岳神印具有地脉印记与阵法真解反馈")
+
+	main.element_cultivation_levels = {"metal": 1, "wood": 1, "water": 1, "fire": 1, "earth": 1, "thunder": 1}
+	for element_id in ["metal", "wood", "water", "fire", "earth", "thunder"]:
+		main._spawn_cultivation_feedback(element_id, main.player.position, 24.0)
+	var all_cultivation_feedback := true
+	for element_id in ["metal", "wood", "water", "fire", "earth", "thunder"]:
+		if not _has_skill_effect(main, "cultivation_" + element_id):
+			all_cultivation_feedback = false
+	_check(all_cultivation_feedback, "六系元素修炼均有独立的战斗内反馈")
+	main.element_cultivation_levels = {"metal": 0, "wood": 0, "water": 0, "fire": 0, "earth": 0, "thunder": 0}
+
+
 	main._spawn_chain_effect(Vector2.ZERO, Vector2(80.0, 0.0), 0.24)
 	_check(str(main.skill_effects.back().get("kind", "")) == "lightning_chain", "雷符连锁伤害会生成可见的连接闪电")
 	for old_projectile in main.projectiles:
@@ -713,6 +816,7 @@ func _test_combat_visuals(main: Variant) -> void:
 	main.pending_area_attacks.clear()
 	main.skill_effects.clear()
 	main.skills.clear()
+	main.artifacts.clear()
 	main.enemies.erase(temp_enemy)
 	main.enemies.erase(splash_enemy)
 	temp_enemy.queue_free()
