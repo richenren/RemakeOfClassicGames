@@ -91,30 +91,30 @@ func _test_hud_presentation(main: Variant) -> void:
 func _test_sprite_assets(main: Variant) -> void:
 	var background := load("res://assets/sprites/graveyard_background.svg") as Texture2D
 	var portrait := load("res://assets/sprites/player_portrait.svg") as Texture2D
-	var player_idle := load("res://assets/sprites/player_taoist.svg") as Texture2D
-	var player_walk := load("res://assets/sprites/player_taoist_walk.svg") as Texture2D
-	var walker := load("res://assets/sprites/enemy_walker.svg") as Texture2D
-	var walker_walk := load("res://assets/sprites/enemy_walker_walk.svg") as Texture2D
-	var jumper := load("res://assets/sprites/enemy_jumper.svg") as Texture2D
-	var armored := load("res://assets/sprites/enemy_armored.svg") as Texture2D
-	var boss := load("res://assets/sprites/enemy_boss.svg") as Texture2D
-	var boss_phase2 := load("res://assets/sprites/enemy_boss_phase2.svg") as Texture2D
+	var creatures_atlas := load("res://assets/sprites/creatures_atlas.png") as Texture2D
 	_check(background != null and background.get_size() == Vector2(2400.0, 1600.0), "义庄背景以 2400×1600 原生画布加载，避免放大模糊")
 	var background_source := FileAccess.get_file_as_string("res://assets/sprites/graveyard_background.svg")
 	_check(background_source.contains("id=\"ruined-yizhuang-hall\"") and background_source.contains("id=\"ground-ritual-marks\""), "义庄背景包含灵堂建筑与低对比地面符纹细节")
 	_check(portrait != null and portrait.get_size().x >= 96.0, "道士专属头像可加载")
-	_check(main.player.PLAYER_DRAW_SIZE.x >= 84.0 and main.player.PLAYER_DRAW_SIZE.y >= 108.0, "主角在实际战斗中使用放大后的修长精细贴图")
-	_check(player_idle != null and player_walk != null, "道士待机与行走高清透明 SVG 可加载")
-	_check(walker != null and walker_walk != null and jumper != null and armored != null, "三类僵尸独立美术资源可加载")
-	_check(boss != null and boss_phase2 != null, "尸王一阶段与二阶段独立美术资源可加载")
-	if player_idle != null:
-		_check(player_idle.get_size() == Vector2(128.0, 160.0), "道士资源采用 128×160 高清角色画布")
-	if boss != null:
-		_check(boss.get_size() == Vector2(192.0, 224.0), "尸王资源使用更大画布以保证面部与服饰细节")
-	_check(main.player.is_moving == false, "玩家初始使用待机贴图状态")
+	_check(creatures_atlas != null and creatures_atlas.get_size() == Vector2(352.0, 256.0), "最新国风角色/怪物透明图集可加载")
+	_check(main.player.CREATURES_ATLAS != null, "玩家脚本实际引用最新角色图集，而非旧版 SVG")
+	_check(main.player.PLAYER_DRAW_SIZE.x <= 56.0 and main.player.PLAYER_DRAW_SIZE.y <= 102.0, "主角采用更修长的 54×100 世界像素比例")
+	var player_source: Rect2 = main.player._player_source_rect()
+	_check(player_source.position.x >= 0.0 and player_source.position.y >= 0.0 and player_source.end.x <= 352.0 and player_source.end.y <= 256.0, "主角方向姿态裁切区域不越出图集")
+	var walker: Variant = ENEMY_SCRIPT.new()
+	root.add_child(walker)
+	walker.setup("walker")
+	_check(walker.CREATURES_ATLAS != null, "敌人脚本实际引用最新角色图集")
+	_check(walker._sprite_draw_size_for_kind("walker").y <= 80.0, "普通行尸绘制高度降低，避免占据过多屏幕")
+	_check(walker._sprite_draw_size_for_kind("armored").y <= 84.0, "铁甲尸绘制比例独立控制")
+	_check(walker._sprite_draw_size_for_kind("boss").y > walker._sprite_draw_size_for_kind("walker").y, "尸王仍保持独立的精英体型")
+	var walker_source: Rect2 = walker._sprite_source_rect_for_kind("walker")
+	_check(walker_source.position.x >= 0.0 and walker_source.position.y >= 0.0 and walker_source.end.x <= 352.0 and walker_source.end.y <= 256.0, "普通敌人图集裁切区域不越界")
+	walker.queue_free()
 
 
 func _test_skill_build_system(main: Variant) -> void:
+	var original_player_level := main.player.level
 	_check(main.AUTO_SKILL_DEFS.size() == 6, "首版配置六种自动攻击技能")
 	_check(main.ARTIFACT_DEFS.size() == 6, "首版配置六种被动法器")
 	_check(main.ELEMENT_DEFS.size() == 6, "六大元素各自拥有攻击、修炼与法宝进化配置")
@@ -123,22 +123,32 @@ func _test_skill_build_system(main: Variant) -> void:
 	main.elapsed_seconds = 400.0
 	_check(main._ordinary_enemy_cap() == 46, "中后期尸潮压力按阶段提升")
 	main.elapsed_seconds = 0.0
+	main.player.level = 1
 	main.primary_element = ""
 	main.artifacts.clear()
 	main.skills.clear()
 	main.skill_cooldowns.clear()
+	main.level_cards.clear()
+	main.state = "playing"
 
 	main._open_upgrade_choices()
 	var skill_card_index := -1
 	var general_count := 0
+	var early_artifact_count := 0
+	var early_cultivation_count := 0
 	for i in range(main.level_cards.size()):
 		var card: Dictionary = main.level_cards[i]
 		if str(card.get("kind", "")) == "skill_acquire":
 			skill_card_index = i
 		if str(card.get("kind", "")) == "general_upgrade":
 			general_count += 1
+		if str(card.get("kind", "")) == "artifact_acquire":
+			early_artifact_count += 1
+		if str(card.get("kind", "")) == "element_cultivation":
+			early_cultivation_count += 1
 	_check(skill_card_index >= 0, "早期升级候选优先提供正式攻击技能")
 	_check(general_count <= 1, "每次升级最多出现一张通用强化卡")
+	_check(early_artifact_count == 0 and early_cultivation_count == 0, "主修未确定前不出现流派法器或元素修炼卡")
 	if skill_card_index >= 0:
 		main._select_upgrade(skill_card_index)
 	_check(main.skills.size() == 1, "选择攻击技能后正式技能进入构筑")
@@ -147,23 +157,62 @@ func _test_skill_build_system(main: Variant) -> void:
 	main.level_cards.clear()
 	main.state = "playing"
 
+	main.player.level = 3
 	main.skills["fire_talisman"] = {"level": 2, "branch": "", "evolved": ""}
 	main._open_upgrade_choices()
 	var branch_count := 0
+	var branch_info_count := 0
 	for card in main.level_cards:
 		if str(card.get("kind", "")) == "skill_branch" and str(card.get("skill_id", "")) == "fire_talisman":
 			branch_count += 1
-	_check(branch_count == 2, "技能达到 Lv3 时同时提供两个关键分支")
+		if str(card.get("kind", "")) == "branch_required_info":
+			branch_info_count += 1
+	_check(branch_count == 2 and branch_info_count == 1, "Lv3 关键分支只提供两条有效路线和一张不可选提示")
+	main._select_upgrade(2)
+	_check(main.state == "level_up" and str(main.skills["fire_talisman"]["branch"]).is_empty(), "点击分支提示卡不会跳过关键分支")
+	main._select_upgrade(0)
+	_check(main.state == "playing" and int(main.skills["fire_talisman"]["level"]) == 3 and not str(main.skills["fire_talisman"]["branch"]).is_empty(), "选择分支后技能升至 Lv3 并锁定分支")
 	main.skills.clear()
 	main.level_cards.clear()
 	main.state = "playing"
 
+	main.player.level = 4
+	main.primary_element = ""
 	main.skills["water_array"] = {"level": 3, "branch": "cold", "evolved": ""}
-	var breakthrough: Dictionary = main._skill_card("water_array", "skill_level")
-	_check(str(breakthrough.get("name", "")).begins_with("立道突破"), "技能 Lv3 突破 Lv4 时明确提示立道")
-	main._apply_upgrade(breakthrough)
-	_check(main.primary_element == "water" and int(main.skills["water_array"]["level"]) == 4, "首次突破 Lv4 锁定主修元素")
+	_check(main._skill_level_cap("water_array") == 3, "角色等级不足 Lv6 时主修技能暂时封顶 Lv3")
+	main._open_upgrade_choices()
+	var early_breakthrough := false
+	var early_water_upgrade := false
+	var early_artifact := false
+	var early_cultivation := false
+	for card in main.level_cards:
+		if str(card.get("name", "")).begins_with("立道突破"):
+			early_breakthrough = true
+		if str(card.get("kind", "")) == "skill_level" and str(card.get("skill_id", "")) == "water_array":
+			early_water_upgrade = true
+		if str(card.get("kind", "")) == "artifact_acquire":
+			early_artifact = true
+		if str(card.get("kind", "")) == "element_cultivation":
+			early_cultivation = true
+	_check(not early_breakthrough and not early_water_upgrade, "角色 Lv4 不会出现确定主修的突破选项")
+	_check(not early_artifact and not early_cultivation, "角色 Lv4 不会提前出现核心法器或元素修炼")
+	_check(main._collect_element_cultivation_candidates().is_empty(), "主修未确定时元素修炼候选池为空")
+	main.level_cards.clear()
+	main.state = "playing"
+
+	main.player.level = 6
+	main._open_upgrade_choices()
+	var breakthrough_index := -1
+	for i in range(main.level_cards.size()):
+		var card: Dictionary = main.level_cards[i]
+		if str(card.get("kind", "")) == "skill_level" and str(card.get("skill_id", "")) == "water_array" and str(card.get("name", "")).begins_with("立道突破"):
+			breakthrough_index = i
+	_check(breakthrough_index >= 0, "角色达到 Lv6 后保证出现明确的立道突破卡")
+	if breakthrough_index >= 0:
+		main._select_upgrade(breakthrough_index)
+	_check(main.primary_element == "water" and int(main.skills["water_array"]["level"]) == 4, "确认突破后锁定水系主修并将技能升至 Lv4")
 	_check(main._skill_level_cap("water_array") == 5 and main._skill_level_cap("fire_talisman") == 3, "主修可升 Lv5，兼修最高 Lv3")
+
 	main.skills["fire_talisman"] = {"level": 3, "branch": "flame", "evolved": ""}
 	var core_candidates: Array[Dictionary] = main._collect_core_candidates()
 	var secondary_can_breakthrough := false
@@ -182,7 +231,7 @@ func _test_skill_build_system(main: Variant) -> void:
 			has_water_cultivation = true
 		if str(card.get("element_id", "")) == "fire":
 			has_fire_cultivation = true
-	_check(has_water_cultivation and has_fire_cultivation, "已获取攻击技能后可选择对应元素修炼")
+	_check(has_water_cultivation and has_fire_cultivation, "主修确定后可选择已获取攻击技能对应的元素修炼")
 	main._apply_upgrade(main._element_cultivation_card("fire"))
 	_check(main._cultivation_level("fire") == 1, "兼修元素修炼可获得一次辅助效果")
 	var secondary_cultivation_available := false
@@ -201,9 +250,19 @@ func _test_skill_build_system(main: Variant) -> void:
 	main.water_recovery_accumulator = 0.0
 
 	main.primary_element = ""
-	_check(main._artifact_slot_cap() == 2, "立道前保留一个法器槽给未来主修核心法宝")
-	main.primary_element = "water"
 	main.skills.clear()
+	main.skills["water_array"] = {"level": 3, "branch": "cold", "evolved": ""}
+	main.artifacts.clear()
+	main.player.level = 4
+	_check(main._artifact_slot_cap() == 2, "立道前保留法器槽位上限，但不提前提供法器获取卡")
+	var pre_mainline_candidates: Array[Dictionary] = main._collect_core_candidates()
+	var pre_mainline_artifact := false
+	for card in pre_mainline_candidates:
+		if str(card.get("kind", "")) == "artifact_acquire":
+			pre_mainline_artifact = true
+	_check(not pre_mainline_artifact, "立道前候选池不出现会误导流派选择的核心法器")
+	main.primary_element = "water"
+	main.player.level = 6
 	main.skills["water_array"] = {"level": 4, "branch": "cold", "evolved": ""}
 	main.artifacts.clear()
 	main._open_upgrade_choices()
@@ -213,6 +272,7 @@ func _test_skill_build_system(main: Variant) -> void:
 			core_artifact_guaranteed = true
 	_check(core_artifact_guaranteed, "立道后优先提供主修元素对应的核心法宝")
 	main.level_cards.clear()
+	main.state = "playing"
 
 	for element_variant in main.ELEMENT_DEFS.keys():
 		var element_id := str(element_variant)
@@ -222,7 +282,8 @@ func _test_skill_build_system(main: Variant) -> void:
 		main.primary_element = element_id
 		main.skills.clear()
 		main.artifacts.clear()
-		main.skills[skill_id] = {"level": 5, "branch": "", "evolved": ""}
+		var branch_options: Array = main.SKILL_BRANCHES[skill_id]
+		main.skills[skill_id] = {"level": 5, "branch": str(branch_options[0]["id"]), "evolved": ""}
 		main.artifacts[artifact_id] = {"level": 1}
 		var element_evolutions: Array[Dictionary] = main._collect_evolution_candidates()
 		var found_evolution := false
@@ -266,8 +327,7 @@ func _test_skill_build_system(main: Variant) -> void:
 		main.skills.clear()
 		main.skill_cooldowns.clear()
 
-
-
+	main.player.level = original_player_level
 
 
 func _test_responsive_layout() -> void:
@@ -394,8 +454,15 @@ func _test_player() -> void:
 	player.mobile_move = Vector2.RIGHT
 	player.tick(0.1)
 	_check(player.position.x > 100.0, "玩家触屏移动输入可驱动位移")
-	_check(player.is_moving, "玩家移动时切换为移动贴图状态")
-	_check(player.gait_phase > 0.0, "玩家移动时更新步态动画相位")
+	_check(player.is_moving, "玩家移动时进入行走动画状态")
+	_check(player.gait_phase > 0.0, "玩家移动时更新连续步态动画相位")
+	var moving_speed: float = player.velocity.length()
+	_check(moving_speed > 0.0 and moving_speed < player.move_speed, "玩家起步采用加速度过渡而非瞬间达到最高速度")
+	player.mobile_move = Vector2.ZERO
+	player.tick(0.02)
+	_check(player.velocity.length() < moving_speed, "玩家松开输入后平滑减速而非瞬间停住")
+	player.trigger_attack(Vector2.LEFT)
+	_check(player.attack_pulse > 0.0 and player.facing.x < 0.0, "自动攻击触发短促转向/挥击反馈")
 
 	player.hp = 100.0
 	player.invuln_time = 0.0
@@ -414,9 +481,11 @@ func _test_enemy_variants() -> void:
 	walker.setup("walker")
 	_check(is_equal_approx(walker.max_hp, 34.0), "行尸基础属性正确")
 	var old_x: float = walker.position.x
-	walker.tick(0.5, Vector2(100.0, 0.0), Vector2.ZERO)
+	walker.tick(0.05, Vector2(100.0, 0.0), Vector2.ZERO)
 	_check(walker.position.x > old_x, "普通敌人会追踪玩家")
-	_check(walker.gait_phase > 0.0, "普通敌人追踪时更新步态动画")
+	_check(walker.velocity.length() < walker.move_speed, "普通敌人起步采用加速度过渡")
+	walker.tick(0.45, Vector2(100.0, 0.0), Vector2.ZERO)
+	_check(walker.gait_phase > 0.0, "普通敌人追踪时更新连续步态动画")
 	_check(walker.footstep_flash > 0.0, "普通敌人移动时产生交替步态反馈")
 	walker.queue_free()
 

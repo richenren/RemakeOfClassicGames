@@ -1,13 +1,14 @@
 extends Node2D
 
-const WALKER_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_walker.svg")
-const WALKER_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_walker_walk.svg")
-const JUMPER_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_jumper.svg")
-const ARMORED_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_armored.svg")
-const ARMORED_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_armored_walk.svg")
-const BOSS_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss.svg")
-const BOSS_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss_walk.svg")
-const BOSS_PHASE2_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss_phase2.svg")
+const CREATURES_ATLAS: Texture2D = preload("res://assets/sprites/creatures_atlas.png")
+const WALKER_SOURCE_RECT := Rect2(258.0, 22.0, 60.0, 105.0)
+const JUMPER_SOURCE_RECT := Rect2(34.0, 140.0, 65.0, 114.0)
+const ARMORED_SOURCE_RECT := Rect2(153.0, 138.0, 64.0, 116.0)
+const BOSS_SOURCE_RECT := Rect2(254.0, 137.0, 98.0, 119.0)
+const WALKER_DRAW_SIZE := Vector2(50.0, 78.0)
+const JUMPER_DRAW_SIZE := Vector2(50.0, 76.0)
+const ARMORED_DRAW_SIZE := Vector2(56.0, 82.0)
+const BOSS_DRAW_SIZE := Vector2(86.0, 110.0)
 
 var kind: String = "walker"
 var max_hp: float = 30.0
@@ -26,6 +27,8 @@ var animation_time: float = 0.0
 var gait_phase: float = 0.0
 var facing_direction: Vector2 = Vector2.LEFT
 var is_moving: bool = false
+var velocity: Vector2 = Vector2.ZERO
+var attack_pose: float = 0.0
 var hop_height: float = 0.0
 var footstep_flash: float = 0.0
 var footstep_side: float = 1.0
@@ -99,18 +102,27 @@ func tick(delta: float, player_position: Vector2, separation: Vector2) -> void:
 	if separation.length_squared() > 0.001:
 		direction = (direction + separation * 0.75).normalized()
 
-	is_moving = direction.length_squared() > 0.001
-	if is_moving:
-		facing_direction = direction
-		position += direction * move_speed * slow_multiplier * delta
+	var desired_velocity := direction * move_speed * slow_multiplier
+	var acceleration := 300.0 if kind == "armored" else (1050.0 if kind == "jumper" else 560.0)
+	velocity = velocity.move_toward(desired_velocity, acceleration * delta)
+	if velocity.length_squared() < 1.0 and direction == Vector2.ZERO:
+		velocity = Vector2.ZERO
+	is_moving = velocity.length_squared() > 25.0
+	if velocity.length_squared() > 4.0:
+		facing_direction = facing_direction.lerp(velocity.normalized(), clampf(delta * 8.5, 0.0, 1.0)).normalized()
+	position += velocity * delta
 
-	var cadence := 14.0 if kind == "jumper" else (4.0 if kind == "armored" else 7.2)
+	var cadence := 14.0 if kind == "jumper" else (4.2 if kind == "armored" else 7.2)
+	var speed_ratio := clampf(velocity.length() / maxf(1.0, move_speed), 0.0, 1.0)
 	var old_phase := gait_phase
-	gait_phase += delta * (cadence if is_moving else 1.4)
+	gait_phase += delta * lerpf(1.25, cadence, speed_ratio)
 	if is_moving and floori(gait_phase / PI) > floori(old_phase / PI):
 		footstep_flash = 0.12 if kind != "armored" else 0.16
 		footstep_side *= -1.0
-	hop_height = pow(maxf(0.0, sin(gait_phase)), 2.0) * 6.0 if kind == "jumper" and is_moving else 0.0
+	var desired_hop := pow(maxf(0.0, sin(gait_phase)), 2.0) * 7.5 if kind == "jumper" and is_moving else 0.0
+	hop_height = lerpf(hop_height, desired_hop, clampf(delta * 13.0, 0.0, 1.0))
+	var distance_to_player := position.distance_to(player_position)
+	attack_pose = move_toward(attack_pose, 1.0 if distance_to_player < collision_radius + 24.0 else 0.0, delta * 7.0)
 
 	position.x = clampf(position.x, 30.0, 2370.0)
 	position.y = clampf(position.y, 30.0, 1570.0)
@@ -124,10 +136,12 @@ func _tick_boss(delta: float, player_position: Vector2) -> void:
 		boss_action = "phase_shift"
 		boss_action_timer = 0.9
 		boss_cooldown = 1.0
+		velocity = Vector2.ZERO
 		return
 
 	if boss_action == "phase_shift":
 		is_moving = false
+		velocity = Vector2.ZERO
 		boss_action_timer -= delta
 		if boss_action_timer <= 0.0:
 			boss_action = "idle"
@@ -135,6 +149,8 @@ func _tick_boss(delta: float, player_position: Vector2) -> void:
 		return
 
 	if boss_action in ["charge_windup", "slam_windup", "zone_windup"]:
+		is_moving = false
+		velocity = Vector2.ZERO
 		boss_action_timer -= delta
 		if boss_action_timer <= 0.0:
 			match boss_action:
@@ -158,16 +174,19 @@ func _tick_boss(delta: float, player_position: Vector2) -> void:
 		is_moving = true
 		facing_direction = boss_charge_direction
 		var charge_speed := 390.0 if boss_phase == 2 else 330.0
-		position += boss_charge_direction * charge_speed * delta
+		velocity = boss_charge_direction * charge_speed
+		position += velocity * delta
 		gait_phase += delta * 15.0
 		boss_action_timer -= delta
 		if boss_action_timer <= 0.0:
 			boss_action = "recovery"
 			boss_action_timer = 0.38 if boss_phase == 2 else 0.52
+			velocity = Vector2.ZERO
 		return
 
 	if boss_action == "recovery":
 		is_moving = false
+		velocity = Vector2.ZERO
 		boss_action_timer -= delta
 		if boss_action_timer <= 0.0:
 			boss_action = "idle"
@@ -176,11 +195,14 @@ func _tick_boss(delta: float, player_position: Vector2) -> void:
 
 	var to_player: Vector2 = player_position - position
 	var distance := to_player.length()
-	is_moving = distance > 112.0
-	if is_moving:
-		facing_direction = to_player.normalized()
+	var desired_velocity := Vector2.ZERO
+	if distance > 112.0 and to_player.length_squared() > 1.0:
+		facing_direction = facing_direction.lerp(to_player.normalized(), clampf(delta * 4.0, 0.0, 1.0)).normalized()
 		var walk_speed := 64.0 if boss_phase == 2 else move_speed
-		position += facing_direction * walk_speed * slow_multiplier * delta
+		desired_velocity = facing_direction * walk_speed * slow_multiplier
+	velocity = velocity.move_toward(desired_velocity, 320.0 * delta)
+	position += velocity * delta
+	is_moving = velocity.length_squared() > 64.0
 	var old_phase := gait_phase
 	gait_phase += delta * (5.0 if is_moving else 1.5)
 	if is_moving and floori(gait_phase / PI) > floori(old_phase / PI):
@@ -205,6 +227,7 @@ func _tick_boss(delta: float, player_position: Vector2) -> void:
 	boss_action = chosen + "_windup"
 	boss_action_timer = 0.52 if boss_phase == 2 else 0.72
 	is_moving = false
+	velocity = Vector2.ZERO
 
 
 func take_damage(amount: float) -> void:
@@ -235,56 +258,67 @@ func apply_burn(duration: float, damage_per_second: float) -> void:
 	queue_redraw()
 
 
-func _draw() -> void:
-	var sprite_texture: Texture2D = WALKER_TEXTURE
-	var sprite_rect := Rect2(-38.0, -52.0, 76.0, 104.0)
-	var bar_width := 68.0
-	match kind:
-		"walker":
-			if is_moving and floori(gait_phase / PI) % 2 == 0:
-				sprite_texture = WALKER_WALK_TEXTURE
+func _sprite_source_rect_for_kind(enemy_kind: String) -> Rect2:
+	match enemy_kind:
 		"jumper":
-			sprite_texture = JUMPER_TEXTURE
-			sprite_rect = Rect2(-39.0, -47.0, 78.0, 94.0)
-			bar_width = 60.0
+			return JUMPER_SOURCE_RECT
 		"armored":
-			sprite_texture = ARMORED_TEXTURE
-			if is_moving and floori(gait_phase / PI) % 2 == 0:
-				sprite_texture = ARMORED_WALK_TEXTURE
-			sprite_rect = Rect2(-46.0, -58.0, 92.0, 116.0)
-			bar_width = 76.0
+			return ARMORED_SOURCE_RECT
 		"boss":
-			sprite_texture = BOSS_PHASE2_TEXTURE if boss_phase == 2 else (BOSS_WALK_TEXTURE if is_moving and floori(gait_phase / PI) % 2 == 0 else BOSS_TEXTURE)
-			sprite_rect = Rect2(-78.0, -90.0, 156.0, 180.0)
+			return BOSS_SOURCE_RECT
+		_:
+			return WALKER_SOURCE_RECT
 
-	var stride := sin(gait_phase) if is_moving else 0.0
+
+func _sprite_draw_size_for_kind(enemy_kind: String) -> Vector2:
+	match enemy_kind:
+		"jumper":
+			return JUMPER_DRAW_SIZE
+		"armored":
+			return ARMORED_DRAW_SIZE
+		"boss":
+			return BOSS_DRAW_SIZE
+		_:
+			return WALKER_DRAW_SIZE
+
+
+func _draw() -> void:
+	var sprite_size := _sprite_draw_size_for_kind(kind)
+	var sprite_rect := Rect2(-sprite_size * 0.5, sprite_size)
+	var stride := sin(gait_phase) if is_moving else sin(animation_time * 1.6) * 0.12
 	var bob := -hop_height
-	var tilt_scale := 1.0
 	if kind == "walker":
-		bob += absf(stride) * 0.65
-		tilt_scale = 1.0 + absf(stride) * 0.012
+		bob += absf(stride) * 1.0
 	elif kind == "armored":
-		bob += absf(stride) * 0.42
-		tilt_scale = 1.0 + absf(stride) * 0.008
+		bob += absf(stride) * 0.5
 	elif is_boss:
-		bob += absf(stride) * 0.9
-		tilt_scale = 1.0 + absf(stride) * 0.018
+		bob += absf(stride) * 1.1
+	else:
+		bob += sin(animation_time * 2.0) * 0.3
+	var speed_ratio := clampf(velocity.length() / maxf(1.0, move_speed), 0.0, 1.0)
+	var squash_x := 1.0 + absf(stride) * 0.025 * speed_ratio
+	var stretch_y := 1.0 - absf(stride) * 0.016 * speed_ratio
+	var gait_lean := sin(gait_phase) * 0.035 * speed_ratio if is_moving else 0.0
+	var sprite_tilt := clampf(facing_direction.x * 0.11, -0.11, 0.11) + gait_lean if is_moving else sin(animation_time * 0.8) * 0.009
+	var attack_offset := facing_direction * attack_pose * 2.6
+	var flip_x := -1.0 if facing_direction.x < -0.1 else 1.0
+	var source_rect := _sprite_source_rect_for_kind(kind)
 
-	# Jumper shadows contract during a hop; the body uses a different gait per enemy type.
-	var shadow_x := 1.45 - hop_height * 0.018
-	var shadow_y := 0.46 - hop_height * 0.012
-	draw_set_transform(Vector2(0.0, 21.0 if not is_boss else 34.0), 0.0, Vector2(maxf(0.9, shadow_x), maxf(0.18, shadow_y)))
-	draw_circle(Vector2.ZERO, 18.0 if not is_boss else 42.0, Color(0.01, 0.012, 0.01, 0.46))
+	# A separate ground shadow and small body inertia make the sprite sit inside the scene.
+	var shadow_radius := 28.0 if is_boss else (17.0 if kind == "armored" else 13.0)
+	var shadow_y := sprite_size.y * 0.33
+	draw_set_transform(Vector2(0.0, shadow_y + absf(bob) * 0.12), 0.0, Vector2(1.35 - hop_height * 0.018, 0.42 - hop_height * 0.006))
+	draw_circle(Vector2.ZERO, shadow_radius, Color(0.01, 0.012, 0.01, 0.46))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if is_boss:
-		draw_circle(Vector2(0.0, 16.0), 48.0, Color(0.36, 0.08, 0.07, 0.13 if boss_phase == 1 else 0.24))
+		draw_circle(Vector2(0.0, 16.0), 42.0, Color(0.36, 0.08, 0.07, 0.13 if boss_phase == 1 else 0.24))
 		if boss_phase == 2:
-			draw_arc(Vector2(0.0, 20.0), 58.0 + sin(animation_time * 5.0) * 3.0, 0.0, TAU, 48, Color(0.72, 0.16, 0.10, 0.62), 2.2)
+			draw_arc(Vector2(0.0, 20.0), 50.0 + sin(animation_time * 5.0) * 2.5, 0.0, TAU, 48, Color(0.72, 0.16, 0.10, 0.62), 2.2)
 		if boss_action == "charge_windup":
 			var charge_offset: Vector2 = boss_attack_target - position
-			draw_line(Vector2(0.0, 20.0), charge_offset, Color(0.95, 0.18, 0.12, 0.22), 12.0)
-			draw_line(Vector2(0.0, 20.0), charge_offset, Color(1.0, 0.55, 0.28, 0.82), 3.0)
+			draw_line(Vector2(0.0, 20.0), charge_offset, Color(0.95, 0.18, 0.12, 0.22), 10.0)
+			draw_line(Vector2(0.0, 20.0), charge_offset, Color(1.0, 0.55, 0.28, 0.82), 2.6)
 		elif boss_action == "slam_windup":
 			var warning_alpha := 0.35 + (1.0 - clampf(boss_action_timer / 0.72, 0.0, 1.0)) * 0.55
 			draw_circle(Vector2(0.0, 20.0), 148.0, Color(0.72, 0.08, 0.06, warning_alpha * 0.14))
@@ -295,45 +329,37 @@ func _draw() -> void:
 			draw_circle(zone_center, 104.0, Color(0.76, 0.08, 0.07, zone_alpha * 0.18))
 			draw_arc(zone_center, 104.0, 0.0, TAU, 48, Color(1.0, 0.28, 0.18, zone_alpha), 3.0)
 		elif boss_action == "phase_shift":
-			draw_circle(Vector2.ZERO, 74.0, Color(0.92, 0.14, 0.08, 0.18))
+			draw_circle(Vector2.ZERO, 64.0, Color(0.92, 0.14, 0.08, 0.18))
 	elif kind == "armored":
-		draw_circle(Vector2(0.0, 12.0), 21.0, Color(0.45, 0.40, 0.29, 0.10))
+		draw_circle(Vector2(0.0, 12.0), 18.0, Color(0.45, 0.40, 0.29, 0.10))
 
 	if slow_timer > 0.0:
-		draw_arc(Vector2(0.0, 9.0), collision_radius + 7.0, 0.0, TAU, 36, Color(0.45, 0.74, 0.62, 0.72), 2.0)
+		draw_arc(Vector2(0.0, 9.0), collision_radius + 6.0, 0.0, TAU, 36, Color(0.45, 0.74, 0.62, 0.72), 1.7)
 	if wet_timer > 0.0:
-		draw_arc(Vector2(0.0, 12.0), collision_radius + 5.0, PI * 0.1, PI * 0.9, 24, Color(0.35, 0.72, 0.88, 0.65), 1.8)
+		draw_arc(Vector2(0.0, 12.0), collision_radius + 4.0, PI * 0.1, PI * 0.9, 24, Color(0.35, 0.72, 0.88, 0.65), 1.6)
 	if burn_timer > 0.0:
 		draw_circle(Vector2(0.0, 4.0), collision_radius * 0.72, Color(0.95, 0.36, 0.12, 0.12))
 
 	var tint := Color("#fff0d0") if hit_flash > 0.0 else Color.WHITE
-	var flip_x := -1.0 if facing_direction.x < -0.1 else 1.0
-	var gait_lean := sin(gait_phase) * 0.028 if is_moving else 0.0
-	var sprite_tilt := clampf(facing_direction.x * 0.055, -0.055, 0.055) + gait_lean if is_moving else sin(animation_time) * 0.006
-	var stretch_y := 1.0 + absf(sin(gait_phase)) * 0.008 if is_moving else 1.0
-	draw_set_transform(Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * tilt_scale, stretch_y))
-	draw_texture_rect(sprite_texture, sprite_rect, false, tint)
-	# Tiny alternating footfalls and dust give the single-pose creature sprites a readable stride.
-	if is_moving:
-		var foot_y := 82.0 if is_boss else (58.0 if kind == "armored" else (50.0 if kind == "walker" else 47.0))
-		var stride_offset := sin(gait_phase) * 4.0
-		var foot_color := Color("#30271f") if kind != "armored" else Color("#25221d")
-		draw_line(Vector2(-6.0, foot_y - 4.0), Vector2(-6.0 + stride_offset, foot_y), foot_color, 3.2)
-		draw_line(Vector2(6.0, foot_y - 4.0), Vector2(6.0 - stride_offset, foot_y), foot_color, 3.2)
-		draw_line(Vector2(-6.0 + stride_offset, foot_y), Vector2(-2.0 + stride_offset, foot_y + 0.8), Color("#514031"), 2.5)
-		draw_line(Vector2(6.0 - stride_offset, foot_y), Vector2(2.0 - stride_offset, foot_y + 0.8), Color("#514031"), 2.5)
+	if is_boss and boss_phase == 2 and hit_flash <= 0.0:
+		tint = Color(1.0, 0.84, 0.78, 1.0)
+	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * squash_x, stretch_y))
+	draw_texture_rect_region(CREATURES_ATLAS, sprite_rect, source_rect, tint, false, true)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	if footstep_flash > 0.0 and is_moving:
-		var dust_alpha := footstep_flash / 0.16 * 0.18
-		draw_circle(Vector2(-9.0 * footstep_side, 42.0), 3.0, Color(0.70, 0.62, 0.43, dust_alpha))
-		draw_circle(Vector2(-12.0 * footstep_side, 44.0), 2.0, Color(0.70, 0.62, 0.43, dust_alpha * 0.7))
 
-	# Ordinary enemies keep compact health bars above the animated sprite.
+	if hit_flash > 0.0:
+		draw_arc(Vector2(0.0, 8.0), collision_radius + 3.0, 0.0, TAU, 28, Color(1.0, 0.82, 0.66, hit_flash * 3.0), 1.4)
+	if footstep_flash > 0.0 and is_moving:
+		var dust_alpha := footstep_flash / 0.16 * 0.16
+		draw_circle(Vector2(-7.0 * footstep_side, sprite_size.y * 0.4), 2.6, Color(0.70, 0.62, 0.43, dust_alpha))
+		draw_circle(Vector2(-10.0 * footstep_side, sprite_size.y * 0.42), 1.8, Color(0.70, 0.62, 0.43, dust_alpha * 0.7))
+
 	if not is_boss:
-		var bar_y := sprite_rect.position.y - 6.0 + bob
-		var bar_rect := Rect2(-bar_width * 0.5, bar_y, bar_width, 4.0)
+		var bar_width := 48.0 if kind == "walker" else (46.0 if kind == "jumper" else 54.0)
+		var bar_y := sprite_rect.position.y - 5.0 + bob
+		var bar_rect := Rect2(-bar_width * 0.5, bar_y, bar_width, 3.5)
 		draw_rect(bar_rect, Color("#171612"))
 		var ratio := clampf(hp / maxf(1.0, max_hp), 0.0, 1.0)
 		var hp_color := Color("#b45b4a") if ratio >= 0.3 else Color("#d17a4e")
 		draw_rect(Rect2(bar_rect.position, Vector2(bar_rect.size.x * ratio, bar_rect.size.y)), hp_color)
-		draw_rect(bar_rect, Color(0.72, 0.60, 0.42, 0.72), false, 1.0)
+		draw_rect(bar_rect, Color(0.72, 0.60, 0.42, 0.72), false, 0.8)

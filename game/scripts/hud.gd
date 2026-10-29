@@ -248,9 +248,10 @@ func _draw_level_up(view: Vector2) -> void:
 		var card_id := str(card.get("id", ""))
 		var card_kind := str(card.get("kind", ""))
 		var icon_id := str(card.get("icon", card_id))
-		var accent := _upgrade_color(card_id)
-		var hovered := rect.has_point(get_viewport().get_mouse_position())
-		var border_alpha := 1.0 if hovered else 0.88
+		var locked_info := card_kind == "branch_required_info"
+		var accent := Color("#756d5e") if locked_info else _upgrade_color(card_id)
+		var hovered := not locked_info and rect.has_point(get_viewport().get_mouse_position())
+		var border_alpha := 1.0 if hovered else 0.78
 		draw_rect(rect, Color("#100d0b", 0.99))
 		draw_rect(rect, Color(accent.r, accent.g, accent.b, border_alpha), false, 1.6 * scale if hovered else 1.1 * scale)
 		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 5.0 * scale)), accent)
@@ -264,9 +265,13 @@ func _draw_level_up(view: Vector2) -> void:
 		var art_height := minf(206.0 * scale, rect.size.y * 0.52)
 		var art_rect := Rect2(rect.position + Vector2(8.0, 8.0) * scale, Vector2(rect.size.x - 16.0 * scale, art_height))
 		_draw_skill_card_illustration(art_rect, icon_id, accent)
+		if locked_info:
+			draw_rect(art_rect, Color("#070809", 0.38))
 
 		var tag := "攻击"
-		if card_kind == "skill_evolution":
+		if card_kind == "branch_required_info":
+			tag = "提示"
+		elif card_kind == "skill_evolution":
 			tag = "进化"
 		elif card_kind == "skill_branch":
 			tag = "分支"
@@ -287,14 +292,14 @@ func _draw_level_up(view: Vector2) -> void:
 		while title_size > 10 and ThemeDB.fallback_font.get_string_size(title_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, title_size).x > rect.size.x - 26.0 * scale:
 			title_size -= 1
 		var title_y := art_rect.end.y + 6.0 * scale
-		_center_text(Rect2(rect.position.x + 12.0 * scale, title_y, rect.size.x - 24.0 * scale, 23.0 * scale), title_text, title_size, Color("#f0d79b"))
+		_center_text(Rect2(rect.position.x + 12.0 * scale, title_y, rect.size.x - 24.0 * scale, 23.0 * scale), title_text, title_size, Color("#b8ad99") if locked_info else Color("#f0d79b"))
 		_center_text(Rect2(rect.position.x + 12.0 * scale, title_y + 22.0 * scale, rect.size.x - 24.0 * scale, 17.0 * scale), str(card.get("category", _upgrade_category(card_id))), maxi(8, roundi(11.0 * scale)), accent)
 
 		var footer_y := rect.end.y - 14.0 * scale
 		var divider_y_card := rect.end.y - 58.0 * scale
 		var desc_y := title_y + 42.0 * scale
 		var desc_height := maxf(20.0 * scale, divider_y_card - desc_y - 8.0 * scale)
-		_draw_wrapped_text(Rect2(rect.position.x + 15.0 * scale, desc_y, rect.size.x - 30.0 * scale, desc_height), str(card.get("desc", "")), maxi(9, roundi(12.0 * scale)), TEXT_COLOR, 2)
+		_draw_wrapped_text(Rect2(rect.position.x + 15.0 * scale, desc_y, rect.size.x - 30.0 * scale, desc_height), str(card.get("desc", "")), maxi(9, roundi(12.0 * scale)), MUTED_COLOR if locked_info else TEXT_COLOR, 2)
 		draw_line(Vector2(rect.position.x + 14.0 * scale, divider_y_card), Vector2(rect.end.x - 14.0 * scale, divider_y_card), Color("#8e7449", 0.75), 1.0 * scale)
 		draw_colored_polygon(PackedVector2Array([
 			Vector2(rect.position.x + 18.0 * scale, divider_y_card + 17.0 * scale),
@@ -303,7 +308,8 @@ func _draw_level_up(view: Vector2) -> void:
 			Vector2(rect.position.x + 23.0 * scale, divider_y_card + 22.0 * scale)
 		]), Color("#e5bd70"))
 		_text(Vector2(rect.position.x + 34.0 * scale, divider_y_card + 21.0 * scale), _card_effect_line(card), maxi(8, roundi(11.0 * scale)), Color("#d9c59d"))
-		_center_text(Rect2(rect.position.x + 8.0 * scale, footer_y - 2.0 * scale, rect.size.x - 16.0 * scale, 13.0 * scale), "按 %d 选择  ·  点击卡片" % (i + 1), maxi(8, roundi(10.5 * scale)), Color("#c8b99a") if hovered else MUTED_COLOR)
+		var footer_text := "先选择前两项" if locked_info else "按 %d 选择  ·  点击卡片" % (i + 1)
+		_center_text(Rect2(rect.position.x + 8.0 * scale, footer_y - 2.0 * scale, rect.size.x - 16.0 * scale, 13.0 * scale), footer_text, maxi(8, roundi(10.5 * scale)), Color("#c8b99a") if hovered else MUTED_COLOR)
 		if hovered:
 			draw_rect(rect.grow(2.0 * scale), Color(accent.r, accent.g, accent.b, 0.45), false, 2.0 * scale)
 
@@ -476,12 +482,19 @@ func _card_effect_line(card: Dictionary) -> String:
 			return "术法威能提升"
 		"skill_branch":
 			return "关键分支 · 改变战斗方式"
+		"branch_required_info":
+			return "前两项为有效选择"
 		"skill_evolution":
 			return "终极进化 · 战斗表现质变"
 		"element_cultivation":
 			return "元素修炼 · 强化专属效果"
 		"artifact_acquire":
-			return "核心法宝 · 解锁进化条件"
+			var artifact_id := str(card.get("artifact_id", ""))
+			if main_ref.primary_element.is_empty():
+				return "被动法器 · 不锁定主修"
+			if main_ref._element_for_artifact(artifact_id) == main_ref.primary_element:
+				return "主修法宝 · 满足进化条件"
+			return "辅助法器 · 不解锁主修进化"
 		"artifact_level":
 			return "法器效果进一步强化"
 		"active_skill_upgrade":

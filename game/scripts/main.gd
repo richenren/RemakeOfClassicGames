@@ -30,6 +30,7 @@ const ACTIVE_SKILL_EFFECT_DURATION := 0.34
 const ACTIVE_SKILL_RADIUS := 155.0
 const MAX_AUTO_SKILL_SLOTS := 4
 const MAX_ARTIFACT_SLOTS := 3
+const MIN_PRIMARY_BREAKTHROUGH_PLAYER_LEVEL := 6
 
 const AUTO_SKILL_DEFS := {
 	"fire_talisman": {"name": "火符", "desc": "自动索敌投射火符，命中附加灼烧", "upgrade_desc": "火符伤害与灼烧效果提升", "damage": 15.0, "cooldown": 1.65},
@@ -173,6 +174,7 @@ func _process(delta: float) -> void:
 		elapsed_seconds += delta
 		active_skill_cooldown = maxf(0.0, active_skill_cooldown - delta)
 		player.tick(delta)
+		player.z_index = 10 + roundi(clampf(player.position.y / WORLD_SIZE.y, 0.0, 1.0) * 14.0)
 
 		attack_timer -= delta
 		if attack_timer <= 0.0:
@@ -379,7 +381,7 @@ func _auto_attack() -> void:
 	projectile.z_as_relative = false
 	projectile.z_index = 30
 	var direction: Vector2 = (target.position - player.position).normalized()
-	player.facing = direction
+	player.trigger_attack(direction)
 	projectile.position = player.position + direction * 18.0
 	add_child(projectile)
 	projectiles.append(projectile)
@@ -392,6 +394,7 @@ func _tick_enemies(delta: float) -> void:
 			continue
 		var separation := _get_separation(enemy)
 		enemy.tick(delta, player.position, separation)
+		enemy.z_index = 10 + roundi(clampf(enemy.position.y / WORLD_SIZE.y, 0.0, 1.0) * 14.0) + (1 if enemy.is_boss else 0)
 		if enemy.is_boss and not str(enemy.boss_attack_event).is_empty():
 			_resolve_boss_attack(enemy, str(enemy.boss_attack_event))
 			enemy.boss_attack_event = ""
@@ -508,36 +511,74 @@ func _maybe_level_up() -> void:
 func _open_upgrade_choices() -> void:
 	level_cards.clear()
 
-	# Reserve one artifact slot until a primary element is chosen, then guarantee
-	# its matching core artifact as a meaningful route toward final evolution.
-	if not primary_element.is_empty():
-		var core_artifact_id := str(ELEMENT_DEFS[primary_element]["artifact_id"])
-		if not artifacts.has(core_artifact_id) and artifacts.size() < MAX_ARTIFACT_SLOTS:
-			level_cards.append(_artifact_card(core_artifact_id, "artifact_acquire"))
-
-	# A skill's Lv3 branch is a mandatory two-way decision, not a random generic buff.
-	var branchable: Array[String] = []
-	for skill_variant in skills.keys():
-		var skill_id := str(skill_variant)
-		var skill_data: Dictionary = skills[skill_id]
-		if int(skill_data.get("level", 1)) == 2 and str(skill_data.get("branch", "")).is_empty():
-			branchable.append(skill_id)
+	# A Lv3 branch is a real fork in the build. Do not let a relic card bypass it.
+	var branchable := _collect_branchable_skills()
 	if not branchable.is_empty():
 		branchable.shuffle()
 		var branch_skill := branchable[0]
 		for branch_data in SKILL_BRANCHES.get(branch_skill, []):
 			level_cards.append(_branch_card(branch_skill, branch_data))
-		_fill_level_cards(_collect_core_candidates(), _collect_general_candidates(), 3)
+		level_cards.append(_branch_required_info_card(branch_skill))
 		state = "level_up"
 		return
 
-	# Evolution is offered explicitly once its skill and matching artifact are both ready.
-	var evolutions := _collect_evolution_candidates()
-	if not evolutions.is_empty():
-		evolutions.shuffle()
-		level_cards.append(evolutions[0])
+	# Mainline commitment is deliberately delayed until character Lv6 and then
+	# guaranteed as one clear choice. Earlier levels build skills and branches only.
+	if primary_element.is_empty():
+		var breakthroughs := _collect_primary_breakthrough_candidates()
+		if not breakthroughs.is_empty():
+			breakthroughs.shuffle()
+			level_cards.append(breakthroughs[0])
+			_fill_level_cards(_collect_core_candidates(), _collect_general_candidates(), 3)
+			state = "level_up"
+			return
+	else:
+		# Once a mainline is chosen, guarantee its matching core relic before random relics.
+		var core_artifact_id := str(ELEMENT_DEFS[primary_element]["artifact_id"])
+		if not artifacts.has(core_artifact_id) and artifacts.size() < MAX_ARTIFACT_SLOTS:
+			level_cards.append(_artifact_card(core_artifact_id, "artifact_acquire"))
+
+		var evolutions := _collect_evolution_candidates()
+		if not evolutions.is_empty():
+			evolutions.shuffle()
+			_append_card_if_new(evolutions[0])
+
 	_fill_level_cards(_collect_core_candidates(), _collect_general_candidates(), 3)
 	state = "level_up"
+
+
+func _collect_branchable_skills() -> Array[String]:
+	var result: Array[String] = []
+	for skill_variant in skills.keys():
+		var skill_id := str(skill_variant)
+		var skill_data: Dictionary = skills[skill_id]
+		if int(skill_data.get("level", 1)) == 2 and str(skill_data.get("branch", "")).is_empty():
+			result.append(skill_id)
+	return result
+
+
+func _branch_required_info_card(skill_id: String) -> Dictionary:
+	var skill_name := str(AUTO_SKILL_DEFS.get(skill_id, {}).get("name", "该技能"))
+	return {
+		"id": "branch_required_info",
+		"kind": "branch_required_info",
+		"skill_id": skill_id,
+		"name": "必须选择一条分支",
+		"desc": "先从前两张卡中选择%s的关键分支；其他强化会在下次升级恢复。" % skill_name,
+		"category": "系统提示 · 不可选",
+		"icon": skill_id
+	}
+
+
+func _collect_primary_breakthrough_candidates() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if not primary_element.is_empty() or player == null or player.level < MIN_PRIMARY_BREAKTHROUGH_PLAYER_LEVEL:
+		return result
+	for skill_variant in skills.keys():
+		var skill_id := str(skill_variant)
+		if _can_commit_primary(skill_id):
+			result.append(_skill_card(skill_id, "skill_level"))
+	return result
 
 
 func _collect_core_candidates() -> Array[Dictionary]:
@@ -551,7 +592,8 @@ func _collect_core_candidates() -> Array[Dictionary]:
 			var skill_data: Dictionary = skills[skill_id]
 			var skill_level := int(skill_data.get("level", 1))
 			var branch_pending := skill_level == 2 and str(skill_data.get("branch", "")).is_empty()
-			if skill_level < _skill_level_cap(skill_id) and not branch_pending:
+			var is_uncommitted_lv3 := primary_element.is_empty() and skill_level >= 3
+			if not is_uncommitted_lv3 and skill_level < _skill_level_cap(skill_id) and not branch_pending:
 				skill_upgrades.append(_skill_card(skill_id, "skill_level"))
 		elif skills.size() < MAX_AUTO_SKILL_SLOTS:
 			skill_acquisitions.append(_skill_card(skill_id, "skill_acquire"))
@@ -562,11 +604,10 @@ func _collect_core_candidates() -> Array[Dictionary]:
 			var artifact_data: Dictionary = artifacts[artifact_id]
 			if int(artifact_data.get("level", 1)) < 3:
 				artifact_candidates.append(_artifact_card(artifact_id, "artifact_level"))
-		elif artifacts.size() < _artifact_slot_cap():
+		elif not primary_element.is_empty() and artifacts.size() < _artifact_slot_cap():
 			artifact_candidates.append(_artifact_card(artifact_id, "artifact_acquire"))
 
 	var result: Array[Dictionary] = []
-	# Prevent the first several level-ups from being consumed entirely by generic stats.
 	if skills.size() < MAX_AUTO_SKILL_SLOTS and not skill_acquisitions.is_empty():
 		skill_acquisitions.shuffle()
 		result.append(skill_acquisitions.pop_back())
@@ -584,12 +625,9 @@ func _collect_core_candidates() -> Array[Dictionary]:
 	for card in artifact_candidates:
 		result.append(card)
 
-	# Elemental cultivation cards use the same three-choice pool and compete for XP.
-	# A non-primary element can be cultivated once; the chosen primary can deepen to Lv3.
 	for cultivation_card in _collect_element_cultivation_candidates():
 		result.append(cultivation_card)
 
-	# Active-art upgrade is deliberately lower-weight than acquiring or improving a build skill.
 	if active_skill_level < 3 and (randf() < 0.28 or result.is_empty()):
 		result.append(_active_skill_card())
 	return result
@@ -618,7 +656,7 @@ func _collect_evolution_candidates() -> Array[Dictionary]:
 		if not skills.has(skill_id) or not artifacts.has(artifact_id):
 			continue
 		var skill_data: Dictionary = skills[skill_id]
-		if int(skill_data.get("level", 1)) < 5 or not str(skill_data.get("evolved", "")).is_empty():
+		if int(skill_data.get("level", 1)) < 5 or str(skill_data.get("branch", "")).is_empty() or not str(skill_data.get("evolved", "")).is_empty():
 			continue
 		var evolution_id := str(definition["evolution_id"])
 		result.append({
@@ -648,16 +686,30 @@ func _element_name(element_id: String) -> String:
 	return str(ELEMENT_DEFS.get(element_id, {}).get("name", "未知"))
 
 
+func _element_for_artifact(artifact_id: String) -> String:
+	for element_variant in ELEMENT_DEFS.keys():
+		var element_id := str(element_variant)
+		if str(ELEMENT_DEFS[element_id].get("artifact_id", "")) == artifact_id:
+			return element_id
+	return ""
+
+
+func _can_commit_primary(skill_id: String) -> bool:
+	if not primary_element.is_empty() or player == null or player.level < MIN_PRIMARY_BREAKTHROUGH_PLAYER_LEVEL or not skills.has(skill_id):
+		return false
+	var skill_data: Dictionary = skills[skill_id]
+	return int(skill_data.get("level", 1)) == 3 and not str(skill_data.get("branch", "")).is_empty() and not _element_for_skill(skill_id).is_empty()
+
+
 func _skill_level_cap(skill_id: String) -> int:
 	if primary_element.is_empty():
-		# Level 4 is the commitment point: choosing it establishes the main element.
-		return 4
+		return 4 if player != null and player.level >= MIN_PRIMARY_BREAKTHROUGH_PLAYER_LEVEL else 3
 	return 5 if _element_for_skill(skill_id) == primary_element else 3
 
 
 func _element_cultivation_cap(element_id: String) -> int:
 	if primary_element.is_empty():
-		return 1
+		return 0
 	return 3 if element_id == primary_element else 1
 
 
@@ -671,6 +723,8 @@ func _cultivation_level(element_id: String) -> int:
 
 func _collect_element_cultivation_candidates() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
+	if primary_element.is_empty():
+		return result
 	for element_variant in ELEMENT_DEFS.keys():
 		var element_id := str(element_variant)
 		var definition: Dictionary = ELEMENT_DEFS[element_id]
@@ -686,7 +740,7 @@ func _element_cultivation_card(element_id: String) -> Dictionary:
 	var next_level := _cultivation_level(element_id) + 1
 	var description := str(definition["cultivation_desc"])
 	if primary_element.is_empty():
-		description += "；立道后可继续深修主修元素"
+		description += "；此项不会锁定主修，主修突破需角色达到 Lv6"
 	elif primary_element == element_id:
 		description += "；主修专精效果"
 	else:
@@ -714,8 +768,12 @@ func _skill_card(skill_id: String, card_kind: String) -> Dictionary:
 		var element_id := _element_for_skill(skill_id)
 		card_id = "upgrade_" + skill_id
 		if primary_element.is_empty() and current_level >= 3:
-			card_name = "立道突破 · %s Lv4" % str(definition["name"])
-			description = "确定%s系为本局主修；该系可升至 Lv5，其他元素最高 Lv3。" % _element_name(element_id)
+			if _can_commit_primary(skill_id):
+				card_name = "立道突破 · %s Lv4" % str(definition["name"])
+				description = "角色已达 Lv%d，确定%s系为本局主修；该系可升至 Lv5，其他元素最高 Lv3。" % [player.level, _element_name(element_id)]
+			else:
+				card_name = "立道未开 · %s" % str(definition["name"])
+				description = "角色达到 Lv%d 后，才可将此技能突破至 Lv4 并确定主修方向。" % MIN_PRIMARY_BREAKTHROUGH_PLAYER_LEVEL
 		else:
 			card_name += "精进 · Lv%d" % (current_level + 1)
 			description = str(definition["upgrade_desc"])
@@ -747,6 +805,14 @@ func _artifact_card(artifact_id: String, card_kind: String) -> Dictionary:
 		card_id = "upgrade_" + artifact_id
 		card_name += " · Lv%d" % (int(current_data.get("level", 1)) + 1)
 		description = "法器效果提升一级"
+	elif card_kind == "artifact_acquire":
+		var artifact_element := _element_for_artifact(artifact_id)
+		if primary_element.is_empty():
+			description = "提供被动效果；不会锁定主修方向。"
+		elif artifact_element == primary_element:
+			description += "；匹配当前主修，可作为最终进化条件"
+		else:
+			description += "；不满足当前主修的最终进化条件"
 	return {"id": card_id, "kind": card_kind, "artifact_id": artifact_id, "name": card_name, "desc": description, "category": "被动法器", "icon": str(definition["icon"])}
 
 
@@ -872,6 +938,8 @@ func _select_upgrade(index: int) -> void:
 	if state != "level_up" or index < 0 or index >= level_cards.size():
 		return
 	var upgrade: Dictionary = level_cards[index]
+	if str(upgrade.get("kind", "")) == "branch_required_info":
+		return
 	_apply_upgrade(upgrade)
 	state = "playing"
 	_maybe_level_up()
@@ -883,45 +951,95 @@ func _apply_upgrade(upgrade: Dictionary) -> void:
 	var artifact_id := str(upgrade.get("artifact_id", ""))
 	match kind:
 		"skill_acquire":
+			if not AUTO_SKILL_DEFS.has(skill_id) or skills.has(skill_id) or skills.size() >= MAX_AUTO_SKILL_SLOTS:
+				return
 			skills[skill_id] = {"level": 1, "branch": "", "evolved": ""}
 			skill_cooldowns[skill_id] = 0.0
 		"skill_level":
+			if not skills.has(skill_id):
+				return
 			var skill_data: Dictionary = skills[skill_id]
 			var current_level := int(skill_data.get("level", 1))
+			if current_level >= _skill_level_cap(skill_id):
+				return
 			if primary_element.is_empty() and current_level >= 3:
+				if not _can_commit_primary(skill_id):
+					return
 				primary_element = _element_for_skill(skill_id)
+				if primary_element.is_empty():
+					return
 			var level_cap := _skill_level_cap(skill_id)
-			skill_data["level"] = mini(level_cap, current_level + 1)
+			if current_level >= level_cap:
+				return
+			skill_data["level"] = current_level + 1
 			skills[skill_id] = skill_data
 		"skill_branch":
+			if not skills.has(skill_id):
+				return
 			var branch_skill: Dictionary = skills[skill_id]
+			if int(branch_skill.get("level", 1)) != 2 or not str(branch_skill.get("branch", "")).is_empty():
+				return
+			var branch_id := str(upgrade.get("branch_id", ""))
+			var valid_branch := false
+			for branch_option in SKILL_BRANCHES.get(skill_id, []):
+				if str(branch_option.get("id", "")) == branch_id:
+					valid_branch = true
+					break
+			if not valid_branch:
+				return
 			branch_skill["level"] = 3
-			branch_skill["branch"] = str(upgrade.get("branch_id", ""))
+			branch_skill["branch"] = branch_id
 			skills[skill_id] = branch_skill
 		"skill_evolution":
-			var evolution_skill: Dictionary = skills[skill_id]
+			var element_id := str(upgrade.get("element_id", ""))
 			var evolution_id := str(upgrade.get("evolution_id", ""))
+			if primary_element != element_id or not ELEMENT_DEFS.has(element_id) or not skills.has(skill_id) or not artifacts.has(artifact_id):
+				return
+			var evolution_skill: Dictionary = skills[skill_id]
+			var element_definition: Dictionary = ELEMENT_DEFS[element_id]
+			if str(element_definition.get("skill_id", "")) != skill_id or str(element_definition.get("artifact_id", "")) != artifact_id or str(element_definition.get("evolution_id", "")) != evolution_id:
+				return
+			if int(evolution_skill.get("level", 1)) < 5 or str(evolution_skill.get("branch", "")).is_empty() or not str(evolution_skill.get("evolved", "")).is_empty():
+				return
 			evolution_skill["evolved"] = evolution_id
 			skills[skill_id] = evolution_skill
-			var element_id := str(upgrade.get("element_id", primary_element))
-			var effect_kind := str(ELEMENT_DEFS.get(element_id, {}).get("effect", "lightning"))
+			var effect_kind := str(element_definition.get("effect", "lightning"))
 			_spawn_skill_effect(effect_kind, player.position, 115.0, 0.55)
 		"artifact_acquire":
+			if primary_element.is_empty() or not ARTIFACT_DEFS.has(artifact_id) or artifacts.has(artifact_id) or artifacts.size() >= _artifact_slot_cap():
+				return
 			artifacts[artifact_id] = {"level": 1}
 		"artifact_level":
+			if not artifacts.has(artifact_id):
+				return
 			var artifact_data: Dictionary = artifacts[artifact_id]
-			artifact_data["level"] = mini(3, int(artifact_data.get("level", 1)) + 1)
+			var current_artifact_level := int(artifact_data.get("level", 1))
+			if current_artifact_level >= 3:
+				return
+			artifact_data["level"] = current_artifact_level + 1
 			artifacts[artifact_id] = artifact_data
 		"element_cultivation":
 			var element_id := str(upgrade.get("element_id", ""))
-			if ELEMENT_DEFS.has(element_id):
-				var current_cultivation := _cultivation_level(element_id)
-				element_cultivation_levels[element_id] = mini(_element_cultivation_cap(element_id), current_cultivation + 1)
-				var effect_kind := str(ELEMENT_DEFS[element_id].get("effect", "hit"))
-				_spawn_skill_effect(effect_kind, player.position, 58.0, 0.42)
+			if primary_element.is_empty() or not ELEMENT_DEFS.has(element_id):
+				return
+			var element_definition: Dictionary = ELEMENT_DEFS[element_id]
+			if not skills.has(str(element_definition.get("skill_id", ""))):
+				return
+			var current_cultivation := _cultivation_level(element_id)
+			var cultivation_cap := _element_cultivation_cap(element_id)
+			if current_cultivation >= cultivation_cap:
+				return
+			element_cultivation_levels[element_id] = current_cultivation + 1
+			var effect_kind := str(element_definition.get("effect", "hit"))
+			_spawn_skill_effect(effect_kind, player.position, 58.0, 0.42)
 		"general_upgrade":
 			var general_id := str(upgrade.get("target_id", ""))
-			var new_level := int(general_upgrade_levels.get(general_id, 0)) + 1
+			if not GENERAL_UPGRADE_DEFS.has(general_id):
+				return
+			var current_general_level := int(general_upgrade_levels.get(general_id, 0))
+			if current_general_level >= 3:
+				return
+			var new_level := current_general_level + 1
 			general_upgrade_levels[general_id] = new_level
 			match general_id:
 				"swift_step":
@@ -934,7 +1052,9 @@ func _apply_upgrade(upgrade: Dictionary) -> void:
 					player.max_hp += 20.0
 					player.heal(20.0)
 		"active_skill_upgrade":
-			active_skill_level = mini(3, active_skill_level + 1)
+			if active_skill_level >= 3:
+				return
+			active_skill_level += 1
 			active_skill_base_cooldown = maxf(8.0, active_skill_base_cooldown * 0.92)
 
 
