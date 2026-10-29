@@ -100,7 +100,7 @@ func _test_sprite_assets(main: Variant) -> void:
 	_check(portrait_source.contains("portraitClip") and portrait_source.contains("url(#gold)") and portrait_source.contains("url(#skin)"), "道士头像具备圆形裁切、鎏金边框和多层肤色明暗")
 	_check(main.player.PLAYER_IDLE_TEXTURE != null and main.player.PLAYER_WALK_TEXTURE != null, "玩家引用独立待机/行走全身 SVG")
 	_check(main.player.PLAYER_IDLE_TEXTURE.get_size() == Vector2(128.0, 160.0), "主角使用完整 128×160 画布，避免图集裁切缺脚")
-	_check(main.player.PLAYER_DRAW_SIZE.x <= 60.0 and main.player.PLAYER_DRAW_SIZE.y <= 72.0, "主角以 56×70 世界像素适配战场比例")
+	_check(main.player.PLAYER_DRAW_SIZE.x >= 72.0 and main.player.PLAYER_DRAW_SIZE.y >= 90.0, "主角恢复足够大的全身绘制比例，避免缩小成贴纸")
 	main.player.is_moving = false
 	_check(main.player._player_sprite_texture() == main.player.PLAYER_IDLE_TEXTURE, "主角静止时使用完整待机姿态")
 	main.player.is_moving = true
@@ -111,8 +111,8 @@ func _test_sprite_assets(main: Variant) -> void:
 	walker.setup("walker")
 	_check(walker.WALKER_IDLE_TEXTURE != null and walker.WALKER_WALK_TEXTURE != null, "行尸引用独立待机/行走全身 SVG")
 	_check(walker.WALKER_IDLE_TEXTURE.get_size() == Vector2(96.0, 128.0), "行尸使用完整全身画布而非错误裁切矩形")
-	_check(walker._sprite_draw_size_for_kind("walker").y <= 60.0, "普通行尸显示尺寸适中，不遮挡战斗视野")
-	_check(walker._sprite_draw_size_for_kind("armored").y <= 64.0, "铁甲尸绘制比例独立控制")
+	_check(walker._sprite_draw_size_for_kind("walker").y >= 70.0, "普通行尸恢复可辨认的全身比例")
+	_check(walker._sprite_draw_size_for_kind("armored").y >= 76.0, "铁甲尸保留独立且更厚重的绘制比例")
 	_check(walker._sprite_draw_size_for_kind("boss").y > walker._sprite_draw_size_for_kind("walker").y, "尸王仍保持独立的精英体型")
 	walker.is_moving = false
 	_check(walker._sprite_texture_for_kind("walker") == walker.WALKER_IDLE_TEXTURE, "行尸静止时显示待机姿态")
@@ -130,6 +130,8 @@ func _test_sprite_assets(main: Variant) -> void:
 	_check(fire_profile["primary"] != thunder_profile["primary"], "火符和雷符投射物采用不同主色")
 	_check(thunder_profile["primary"] == Color("#b56cff"), "雷符使用高辨识度紫色闪电")
 	_check(metal_profile["primary"] != wood_profile["primary"] and metal_profile["primary"] != fire_profile["primary"], "金系剑气与木系桃木剑具备独立颜色")
+	var water_profile: Dictionary = PROJECTILE_SCRIPT.visual_profile_for_skill("water_array")
+	_check(water_profile["primary"] != fire_profile["primary"] and water_profile["element"] == "water", "水系投射物拥有独立的水球视觉配置")
 
 
 
@@ -327,7 +329,7 @@ func _test_skill_build_system(main: Variant) -> void:
 	if not main.enemies.is_empty():
 		var target: Variant = main.enemies[0]
 		target.position = main.player.position + Vector2(100.0, 0.0)
-		var projectile_skills: Array[String] = ["fire_talisman", "thunder_talisman", "copper_coin_sword", "peachwood_sword"]
+		var projectile_skills: Array[String] = ["fire_talisman", "copper_coin_sword", "peachwood_sword", "water_array"]
 		for skill_variant in main.AUTO_SKILL_DEFS.keys():
 			var skill_id := str(skill_variant)
 			main.skills.clear()
@@ -560,23 +562,84 @@ func _test_combat_visuals(main: Variant) -> void:
 	temp_enemy.position = main.player.position + Vector2(50.0, 0.0)
 	main.add_child(temp_enemy)
 	main.enemies.append(temp_enemy)
+	var splash_enemy: Variant = ENEMY_SCRIPT.new()
+	splash_enemy.setup("walker")
+	splash_enemy.position = main.player.position + Vector2(80.0, 0.0)
+	main.add_child(splash_enemy)
+	main.enemies.append(splash_enemy)
 	main.skills.clear()
 	main.skills["fire_talisman"] = {"level": 1, "branch": "", "evolved": ""}
 	main.fire_zone_timer = 0.01
 	main.fire_zones.clear()
 	main._tick_fire_zones(0.02)
 	_check(main.fire_zones.size() == 1, "火符按固定间隔自动生成持续火焰区域")
-	var hp_before: float = temp_enemy.hp
+	var hp_before_zone: float = temp_enemy.hp
 	main._tick_fire_zones(0.3)
-	_check(temp_enemy.hp < hp_before, "持续火焰区域周期性灼烧范围内敌人")
+	_check(temp_enemy.hp < hp_before_zone, "持续火焰区域周期性灼烧范围内敌人")
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.skills["fire_talisman"] = {"level": 1, "branch": "", "evolved": ""}
+	temp_enemy.hp = temp_enemy.max_hp
+	splash_enemy.hp = splash_enemy.max_hp
+	main._cast_auto_skill("fire_talisman", temp_enemy)
+	_check(main.projectiles.size() == 1, "火符释放独立火球弹体")
+	if not main.projectiles.is_empty():
+		main.projectiles[0].speed = 10000.0
+		main._tick_projectiles(0.1)
+	_check(temp_enemy.hp < temp_enemy.max_hp, "火球命中主目标并结算直击伤害")
+	_check(splash_enemy.hp < splash_enemy.max_hp, "火球爆炸会对范围内其他敌人造成溅射伤害")
+	_check(main.skill_effects.size() > 0, "火球命中后生成爆燃/蒸汽特效")
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.skills["water_array"] = {"level": 1, "branch": "", "evolved": ""}
+	temp_enemy.hp = temp_enemy.max_hp
+	splash_enemy.hp = splash_enemy.max_hp
+	temp_enemy.wet_timer = 0.0
+	splash_enemy.wet_timer = 0.0
+	main._cast_auto_skill("water_array", temp_enemy)
+	_check(main.projectiles.size() == 1, "寒潮阵先发射水球而非瞬间结算范围伤害")
+	_check(is_equal_approx(temp_enemy.hp, temp_enemy.max_hp), "水球飞行时不会提前造成伤害")
+	if not main.projectiles.is_empty():
+		main.projectiles[0].speed = 10000.0
+		main._tick_projectiles(0.1)
+	_check(temp_enemy.hp < temp_enemy.max_hp and splash_enemy.hp < splash_enemy.max_hp, "水球命中后对周围敌人造成范围伤害")
+	_check(temp_enemy.wet_timer > 0.0 and splash_enemy.wet_timer > 0.0, "水花溅射对范围内敌人施加湿润状态")
+	var saw_water_splash := false
+	for effect in main.skill_effects:
+		if str(effect.get("kind", "")) == "water_splash":
+			saw_water_splash = true
+	_check(saw_water_splash, "水球命中后显示独立水花溅射特效")
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.skills["thunder_talisman"] = {"level": 1, "branch": "chain", "evolved": ""}
+	temp_enemy.hp = temp_enemy.max_hp
+	var projectiles_before_thunder: int = main.projectiles.size()
+	main._cast_auto_skill("thunder_talisman", temp_enemy)
+	_check(main.projectiles.size() == projectiles_before_thunder, "雷符采用瞬时雷击，不生成普通飞行弹体")
+	_check(temp_enemy.hp < temp_enemy.max_hp, "瞬时主雷击命中首个目标并造成伤害")
+	var saw_thunder_arc := false
+	for effect in main.skill_effects:
+		if str(effect.get("kind", "")) == "lightning_chain":
+			saw_thunder_arc = true
+	_check(saw_thunder_arc, "雷符主雷击绘制从施法者连接到实际命中目标的电弧")
 	main._spawn_chain_effect(Vector2.ZERO, Vector2(80.0, 0.0), 0.24)
 	_check(str(main.skill_effects.back().get("kind", "")) == "lightning_chain", "雷符连锁伤害会生成可见的连接闪电")
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
 	main.fire_zones.clear()
 	main.skill_effects.clear()
 	main.skills.clear()
 	main.enemies.erase(temp_enemy)
+	main.enemies.erase(splash_enemy)
 	temp_enemy.queue_free()
-
+	splash_enemy.queue_free()
 
 func _test_combat_and_progression(main: Variant) -> void:
 	var player: Variant = main.player

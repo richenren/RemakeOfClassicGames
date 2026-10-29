@@ -1143,7 +1143,7 @@ func _find_nearest_targets(origin: Vector2, max_distance: float, limit: int) -> 
 	return targets
 
 
-func _spawn_skill_projectile(target, skill_id: String, damage: float) -> void:
+func _spawn_skill_projectile(target, skill_id: String, damage: float):
 	var projectile = PROJECTILE_SCRIPT.new()
 	projectile.setup(target, damage, skill_id)
 	projectile.visible = true
@@ -1155,7 +1155,7 @@ func _spawn_skill_projectile(target, skill_id: String, damage: float) -> void:
 	add_child(projectile)
 	projectiles.append(projectile)
 	player.queue_redraw()
-
+	return projectile
 
 func _tick_combat_skills(delta: float) -> void:
 	for skill_variant in skills.keys():
@@ -1178,20 +1178,21 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 	var definition: Dictionary = AUTO_SKILL_DEFS[skill_id]
 	var damage := _skill_damage(skill_id, float(definition["damage"]))
 	var cooldown := _skill_cooldown(skill_id, float(definition["cooldown"]))
-
 	match skill_id:
 		"fire_talisman":
 			var target_count := 2 if branch == "spread" else 1
 			var targets := _find_nearest_targets(player.position, 700.0, target_count)
 			for i in range(targets.size()):
-				_spawn_skill_projectile(targets[i], skill_id, damage * (0.78 if i > 0 else 1.0))
+				var fireball = _spawn_skill_projectile(targets[i], skill_id, damage * (0.78 if i > 0 else 1.0))
+				fireball.splash_radius = 46.0 + float(skill_level - 1) * 2.0
+				fireball.splash_damage_ratio = 0.38
 			if branch == "spread":
 				cooldown *= 1.12
 		"thunder_talisman":
 			if branch == "heaven":
 				damage *= 1.8
 				cooldown *= 1.38
-			_spawn_skill_projectile(target, skill_id, damage)
+			_cast_thunder_strike(target, damage, branch, evolved)
 		"copper_coin_sword":
 			_spawn_skill_projectile(target, skill_id, damage)
 		"peachwood_sword":
@@ -1215,7 +1216,11 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 			if evolved == "ice_array":
 				water_radius += 12.0
 				slow_duration = 2.25
-			_apply_area_damage(target.position, water_radius, damage, "ice" if evolved == "ice_array" else "water", slow_duration, true, 0.0)
+			var water_orb = _spawn_skill_projectile(target, skill_id, damage)
+			water_orb.splash_radius = water_radius
+			water_orb.slow_duration = slow_duration
+			water_orb.applies_wet = true
+			water_orb.applies_freeze = evolved == "ice_array"
 		"earth_formation":
 			var earth_cultivation := _cultivation_level("earth")
 			var earth_radius := (66.0 + float(skill_level) * 8.0) * (1.0 + 0.06 * float(earth_cultivation))
@@ -1230,9 +1235,51 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 				damage *= 1.25
 				knockback += 12.0
 			_apply_area_damage(target.position, earth_radius, damage, "earth", 0.0, false, knockback)
-
 	skill_cooldowns[skill_id] = cooldown
 
+func _first_enemy_on_segment(start_position: Vector2, end_position: Vector2):
+	var segment := end_position - start_position
+	var segment_length_squared := segment.length_squared()
+	if segment_length_squared < 0.001:
+		return null
+	var first_target = null
+	var first_progress := 2.0
+	for candidate in enemies:
+		if not is_instance_valid(candidate) or candidate.hp <= 0.0:
+			continue
+		var progress := clampf((candidate.position - start_position).dot(segment) / segment_length_squared, 0.0, 1.0)
+		var closest_point: Vector2 = start_position + segment * progress
+		var hit_radius := float(candidate.collision_radius) + 3.0
+		if closest_point.distance_squared_to(candidate.position) <= hit_radius * hit_radius and progress < first_progress:
+			first_target = candidate
+			first_progress = progress
+	return first_target
+
+
+func _cast_thunder_strike(target, damage: float, branch: String, evolved: String) -> void:
+	var strike_target = _first_enemy_on_segment(player.position, target.position)
+	if strike_target == null:
+		strike_target = target
+	if not is_instance_valid(strike_target) or not enemies.has(strike_target):
+		return
+	var was_wet: bool = strike_target.wet_timer > 0.0
+	strike_target.take_damage(damage * (1.35 if was_wet else 1.0))
+	if was_wet:
+		strike_target.wet_timer = 0.0
+	var direction: Vector2 = (strike_target.position - player.position).normalized()
+	_spawn_chain_effect(player.position + direction * 10.0, strike_target.position, 0.16)
+	_spawn_skill_effect("lightning", strike_target.position, 32.0, 0.25)
+	var chain_count := 0
+	if branch == "chain":
+		chain_count = 3
+	if evolved == "five_thunder":
+		chain_count = 4
+	if was_wet:
+		chain_count += 1
+	if branch == "heaven" and evolved != "five_thunder":
+		chain_count = 0
+	var chain_multiplier := 0.58 * (1.0 + 0.1 * float(_cultivation_level("thunder")))
+	_apply_chain_damage(strike_target, damage * chain_multiplier, chain_count)
 
 func _apply_area_damage(center: Vector2, radius: float, damage: float, effect_kind: String, slow_duration: float = 0.0, apply_wet: bool = false, knockback: float = 0.0) -> void:
 	for enemy in enemies:
@@ -1269,37 +1316,40 @@ func _resolve_projectile_hit(projectile) -> void:
 	var skill_data: Dictionary = skills.get(skill_id, {})
 	var branch := str(skill_data.get("branch", ""))
 	var evolved := str(skill_data.get("evolved", ""))
-
 	match skill_id:
 		"fire_talisman":
+			var splash_radius := float(projectile.splash_radius) if float(projectile.splash_radius) > 0.0 else 46.0
 			target.take_damage(damage)
-			if target.wet_timer > 0.0:
+			var target_was_wet: bool = target.wet_timer > 0.0
+			if target_was_wet:
 				target.wet_timer = 0.0
-				_apply_area_damage(target.position, 44.0, damage * 0.35, "steam")
-			elif branch == "flame":
-				target.apply_burn(2.8 + 0.2 * float(_cultivation_level("fire")), 2.8 + float(skill_data.get("level", 1)) * 0.55 + 0.35 * float(_cultivation_level("fire")))
+				_apply_area_damage(target.position, splash_radius, damage * 0.35, "steam")
+				_spawn_skill_effect("steam", target.position, splash_radius, 0.28)
 			else:
-				target.apply_burn(1.35 + 0.15 * float(_cultivation_level("fire")), 1.7 + 0.3 * float(_cultivation_level("fire")))
+				for splash_target in enemies:
+					if not is_instance_valid(splash_target) or splash_target.hp <= 0.0 or splash_target == target:
+						continue
+					if splash_target.position.distance_to(target.position) <= splash_radius:
+						splash_target.take_damage(damage * float(projectile.splash_damage_ratio))
+				_spawn_skill_effect("fire", target.position, splash_radius, 0.3)
+				if branch == "flame":
+					target.apply_burn(2.8 + 0.2 * float(_cultivation_level("fire")), 2.8 + float(skill_data.get("level", 1)) * 0.55 + 0.35 * float(_cultivation_level("fire")))
+				else:
+					target.apply_burn(1.35 + 0.15 * float(_cultivation_level("fire")), 1.7 + 0.3 * float(_cultivation_level("fire")))
 			if evolved == "heavenfire_array":
 				_spawn_fire_zone(target.position, int(skill_data.get("level", 5)), true)
-			_spawn_skill_effect("fire", target.position, 22.0, 0.22)
-		"thunder_talisman":
-			var was_wet: bool = target.wet_timer > 0.0
-			target.take_damage(damage * (1.35 if was_wet else 1.0))
-			if was_wet:
-				target.wet_timer = 0.0
-			var chain_count := 0
-			if branch == "chain":
-				chain_count = 3
-			if evolved == "five_thunder":
-				chain_count = 4
-			if was_wet:
-				chain_count += 1
-			if branch == "heaven" and evolved != "five_thunder":
-				chain_count = 0
-			var chain_multiplier := 0.58 * (1.0 + 0.1 * float(_cultivation_level("thunder")))
-			_apply_chain_damage(target, damage * chain_multiplier, chain_count)
-			_spawn_skill_effect("lightning", target.position, 32.0, 0.25)
+		"water_array":
+			var splash_radius := float(projectile.splash_radius) if float(projectile.splash_radius) > 0.0 else 85.0
+			var slow_duration := float(projectile.slow_duration) if float(projectile.slow_duration) > 0.0 else 1.2
+			var frozen := bool(projectile.applies_freeze)
+			_apply_area_damage(target.position, splash_radius, damage, "water_splash", slow_duration, bool(projectile.applies_wet), 0.0)
+			if frozen:
+				for splash_target in enemies:
+					if not is_instance_valid(splash_target) or splash_target.hp <= 0.0:
+						continue
+					if splash_target.position.distance_to(target.position) <= splash_radius:
+						splash_target.apply_freeze(0.55)
+				_spawn_skill_effect("ice_splash", target.position, splash_radius, 0.38)
 		"copper_coin_sword":
 			target.take_damage(damage)
 			_spawn_skill_effect("slash", target.position, 25.0, 0.18)
@@ -1320,7 +1370,6 @@ func _resolve_projectile_hit(projectile) -> void:
 			target.take_damage(damage)
 			_spawn_skill_effect("hit", target.position, 18.0, 0.16)
 
-
 func _apply_chain_damage(origin_enemy, damage: float, max_targets: int) -> void:
 	if max_targets <= 0 or not is_instance_valid(origin_enemy):
 		return
@@ -1333,7 +1382,6 @@ func _apply_chain_damage(origin_enemy, damage: float, max_targets: int) -> void:
 		hit_targets.append(next_target)
 		_spawn_chain_effect(origin_enemy.position, next_target.position, 0.26)
 		_spawn_skill_effect("lightning", next_target.position, 28.0, 0.24)
-
 
 func _spawn_skill_effect(effect_kind: String, center: Vector2, radius: float, duration: float) -> void:
 	# Cap transient particles so dense late-game combat cannot grow the effect list without bound.
@@ -1429,7 +1477,82 @@ func _tick_skill_effects(delta: float) -> void:
 		queue_redraw()
 
 
-func _draw_skill_effects() -> void:
+func func _draw_skill_effects() -> void:
+	for effect in skill_effects:
+		var center: Vector2 = effect.get("position", Vector2.ZERO)
+		var duration := maxf(0.01, float(effect.get("duration", 0.4)))
+		var life := clampf(float(effect.get("time", 0.0)) / duration, 0.0, 1.0)
+		var progress := 1.0 - life
+		var radius := float(effect.get("radius", 32.0)) * (0.82 + progress * 0.18)
+		var kind := str(effect.get("kind", ""))
+		match kind:
+			"water":
+				_draw_water_formation_effect(center, radius, life, progress, false)
+			"ice":
+				_draw_water_formation_effect(center, radius, life, progress, true)
+			"water_splash":
+				_draw_water_splash(center, radius, life, progress, false)
+			"ice_splash":
+				_draw_water_splash(center, radius, life, progress, true)
+			"earth":
+				draw_arc(center, radius, 0.0, TAU, 48, Color(0.72, 0.61, 0.39, life * 0.8), 3.0)
+				draw_arc(center, radius * 0.58, 0.0, TAU, 40, Color(0.54, 0.48, 0.32, life * 0.55), 2.0)
+				for i in range(8):
+					var angle := TAU * float(i) / 8.0
+					draw_line(center + Vector2(cos(angle), sin(angle)) * radius * 0.76, center + Vector2(cos(angle), sin(angle)) * radius, Color(0.78, 0.68, 0.44, life * 0.7), 2.0)
+			"steam":
+				draw_circle(center, radius * (0.65 + progress * 0.35), Color(0.82, 0.83, 0.76, life * 0.16))
+				draw_arc(center, radius, 0.0, TAU, 40, Color(0.8, 0.82, 0.78, life * 0.4), 1.5)
+			"fire":
+				var burst_radius := radius * (0.25 + progress * 1.0)
+				draw_circle(center, burst_radius * 0.62, Color(0.94, 0.24, 0.06, life * 0.3))
+				draw_arc(center, burst_radius, 0.0, TAU, 36, Color(1.0, 0.48, 0.14, life * 0.78), 2.6)
+				for i in range(7):
+					var angle := TAU * float(i) / 7.0 + progress * 0.42
+					var direction := Vector2(cos(angle), sin(angle))
+					var tangent := Vector2(-direction.y, direction.x)
+					var inner := radius * (0.12 + progress * 0.12)
+					var outer := radius * (0.45 + progress * 0.68)
+					draw_line(center + direction * inner, center + direction * outer, Color(1.0, 0.72, 0.32, life), 2.2, true)
+					var flame_base := center + direction * burst_radius * 0.42
+					var flame_tip := center + direction * (burst_radius * 0.42 + radius * (0.14 + 0.12 * sin(progress * 12.0 + float(i))))
+					draw_colored_polygon(PackedVector2Array([flame_base - tangent * 4.0, flame_tip, flame_base + tangent * 4.0]), Color(1.0, 0.34, 0.06, life * 0.82))
+					draw_line(flame_base, flame_tip, Color(1.0, 0.84, 0.42, life * 0.88), 1.4, true)
+			"slash":
+				draw_line(center + Vector2(-radius * 0.75, radius * 0.55), center + Vector2(radius * 0.72, -radius * 0.55), Color(0.98, 0.86, 0.58, life), 3.2)
+				draw_line(center + Vector2(-radius * 0.38, radius * 0.72), center + Vector2(radius * 0.48, -radius * 0.25), Color(0.78, 0.63, 0.36, life * 0.75), 1.8)
+			"hit":
+				draw_circle(center, radius * (0.25 + progress * 0.45), Color(1.0, 0.88, 0.62, life * 0.35))
+				draw_arc(center, radius * (0.35 + progress * 0.55), 0.0, TAU, 24, Color(1.0, 0.78, 0.45, life * 0.75), 1.6)
+			"boss_slam":
+				var slam_radius := radius * (0.18 + progress * 0.82)
+				draw_circle(center, slam_radius, Color(0.58, 0.08, 0.06, life * 0.16))
+				draw_arc(center, slam_radius, 0.0, TAU, 48, Color(0.92, 0.28, 0.16, life * 0.86), 4.0)
+				for i in range(8):
+					var angle := TAU * float(i) / 8.0
+					draw_line(center + Vector2(cos(angle), sin(angle)) * slam_radius * 0.65, center + Vector2(cos(angle), sin(angle)) * slam_radius, Color(0.92, 0.44, 0.24, life * 0.7), 2.0)
+			"boss_zone":
+				draw_circle(center, radius, Color(0.72, 0.08, 0.07, life * 0.12))
+				draw_arc(center, radius, 0.0, TAU, 48, Color(0.98, 0.22, 0.12, life * 0.9), 3.0)
+			"wood":
+				draw_arc(center, radius, 0.0, TAU, 40, Color(0.7, 0.73, 0.5, life * 0.7), 2.0)
+			"lightning":
+				draw_circle(center, radius * 0.58, Color(0.42, 0.14, 0.86, life * 0.25))
+				draw_arc(center, radius, 0.0, TAU, 36, Color(0.67, 0.36, 1.0, life * 0.86), 2.5)
+				draw_arc(center, radius * 0.56, 0.0, TAU, 28, Color(0.91, 0.78, 1.0, life * 0.82), 1.6)
+				_draw_lightning_bolt(center + Vector2(-radius * 0.28, -radius * 1.15), center + Vector2(-radius * 0.06, radius * 0.12), life, 0.7)
+				_draw_lightning_bolt(center + Vector2(radius * 0.26, -radius * 1.08), center + Vector2(radius * 0.08, radius * 0.12), life, 2.1)
+				_draw_lightning_bolt(center + Vector2(-radius * 0.05, -radius * 0.7), center + Vector2(radius * 0.18, radius * 0.16), life * 0.8, 3.8)
+			"lightning_chain":
+				var chain_start: Vector2 = effect.get("from", center)
+				var chain_end: Vector2 = effect.get("to", center)
+				_draw_lightning_bolt(chain_start, chain_end, life, progress * 4.0)
+				var chain_mid := chain_start.lerp(chain_end, 0.55)
+				var chain_side := Vector2(-(chain_end - chain_start).y, (chain_end - chain_start).x).normalized()
+				_draw_lightning_bolt(chain_mid, chain_mid + chain_side * minf(20.0, radius * 0.12), life * 0.58, progress * 7.0)
+			"control":
+				draw_arc(center, radius, 0.0, TAU, 64, Color(0.92, 0.76, 0.38, life * 0.85), 3.0)
+				draw_arc(center, radius * 0.78, 0.0, TAU, 56, Color(0.74, 0.56, 0.3, life * 0.55), 1.5)() -> void:
 	for effect in skill_effects:
 		var center: Vector2 = effect.get("position", Vector2.ZERO)
 		var duration := maxf(0.01, float(effect.get("duration", 0.4)))
@@ -1501,6 +1624,28 @@ func _draw_skill_effects() -> void:
 			"control":
 				draw_arc(center, radius, 0.0, TAU, 64, Color(0.92, 0.76, 0.38, life * 0.85), 3.0)
 				draw_arc(center, radius * 0.78, 0.0, TAU, 56, Color(0.74, 0.56, 0.3, life * 0.55), 1.5)
+
+
+func _draw_water_splash(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
+	var cyan := Color(0.25, 0.82, 1.0, life * 0.82)
+	var pale := Color(0.84, 0.97, 1.0, life * 0.92)
+	var burst_radius := radius * (0.24 + progress * 0.76)
+	draw_circle(center, burst_radius * 0.38, Color(0.04, 0.27, 0.39, life * 0.18))
+	draw_arc(center, burst_radius * 0.82, 0.0, TAU, 48, cyan, 2.8)
+	draw_arc(center, burst_radius * 0.56, 0.0, TAU, 40, pale, 1.3)
+	for i in range(10):
+		var angle := TAU * float(i) / 10.0 + progress * 0.18
+		var direction := Vector2(cos(angle), sin(angle))
+		var tangent := Vector2(-direction.y, direction.x)
+		var inner := center + direction * burst_radius * 0.42
+		var outer := center + direction * burst_radius * (0.82 + 0.12 * sin(progress * 7.0 + float(i)))
+		draw_line(inner, outer, cyan, 2.0, true)
+		draw_circle(outer, 1.8 if frozen else 1.4, pale)
+		if frozen:
+			var tip := center + direction * burst_radius * (0.98 + 0.04 * sin(elapsed_seconds * 5.0 + float(i)))
+			draw_colored_polygon(PackedVector2Array([outer - tangent * 3.0, tip, outer + tangent * 3.0]), Color(0.69, 0.91, 1.0, life * 0.8))
+			draw_line(outer, tip, pale, 1.2, true)
+
 
 
 func _draw_water_formation_effect(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:

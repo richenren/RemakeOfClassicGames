@@ -8,10 +8,10 @@ const ARMORED_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_armo
 const BOSS_IDLE_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss.svg")
 const BOSS_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss_walk.svg")
 const BOSS_PHASE2_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss_phase2.svg")
-const WALKER_DRAW_SIZE := Vector2(42.0, 56.0)
-const JUMPER_DRAW_SIZE := Vector2(42.0, 48.0)
-const ARMORED_DRAW_SIZE := Vector2(46.0, 60.0)
-const BOSS_DRAW_SIZE := Vector2(76.0, 90.0)
+const WALKER_DRAW_SIZE := Vector2(56.0, 76.0)
+const JUMPER_DRAW_SIZE := Vector2(56.0, 64.0)
+const ARMORED_DRAW_SIZE := Vector2(62.0, 80.0)
+const BOSS_DRAW_SIZE := Vector2(96.0, 116.0)
 
 var kind: String = "walker"
 var max_hp: float = 30.0
@@ -23,6 +23,7 @@ var is_boss: bool = false
 var hit_flash: float = 0.0
 var slow_timer: float = 0.0
 var slow_multiplier: float = 1.0
+var freeze_timer: float = 0.0
 var wet_timer: float = 0.0
 var burn_timer: float = 0.0
 var burn_dps: float = 0.0
@@ -88,6 +89,7 @@ func tick(delta: float, player_position: Vector2, separation: Vector2) -> void:
 		slow_timer = maxf(0.0, slow_timer - delta)
 		if slow_timer <= 0.0:
 			slow_multiplier = 1.0
+	freeze_timer = maxf(0.0, freeze_timer - delta)
 
 	if is_boss:
 		_tick_boss(delta, player_position)
@@ -105,7 +107,7 @@ func tick(delta: float, player_position: Vector2, separation: Vector2) -> void:
 	if separation.length_squared() > 0.001:
 		direction = (direction + separation * 0.75).normalized()
 
-	var desired_velocity := direction * move_speed * slow_multiplier
+	var desired_velocity := Vector2.ZERO if freeze_timer > 0.0 else direction * move_speed * slow_multiplier
 	var acceleration := 300.0 if kind == "armored" else (1050.0 if kind == "jumper" else 560.0)
 	velocity = velocity.move_toward(desired_velocity, acceleration * delta)
 	if velocity.length_squared() < 1.0 and direction == Vector2.ZERO:
@@ -250,6 +252,17 @@ func apply_slow(duration: float, multiplier: float) -> void:
 	queue_redraw()
 
 
+func apply_freeze(duration: float) -> void:
+	if is_boss:
+		# Bosses resist hard crowd control; a freeze application becomes a short slow.
+		apply_slow(minf(0.35, duration * 0.25), 0.82)
+		return
+	freeze_timer = maxf(freeze_timer, duration)
+	velocity *= 0.15
+	queue_redraw()
+
+
+
 func apply_wet(duration: float) -> void:
 	wet_timer = maxf(wet_timer, duration)
 	queue_redraw()
@@ -309,10 +322,15 @@ func _draw() -> void:
 	var flip_x := -1.0 if facing_direction.x < -0.1 else 1.0
 
 	# A separate ground shadow and small body inertia make the sprite sit inside the scene.
-	var shadow_radius := 24.0 if is_boss else (15.0 if kind == "armored" else 11.5)
+	var shadow_radius := 30.0 if is_boss else (21.0 if kind == "armored" else (18.5 if kind == "jumper" else 16.5))
 	var shadow_y := sprite_size.y * 0.40
-	draw_set_transform(Vector2(0.0, shadow_y + absf(bob) * 0.12), 0.0, Vector2(1.35 - hop_height * 0.018, 0.42 - hop_height * 0.006))
-	draw_circle(Vector2.ZERO, shadow_radius, Color(0.01, 0.012, 0.01, 0.46))
+	# Broad soft ground shadow and a smaller contact shadow anchor the larger artwork to the stone floor.
+	draw_set_transform(Vector2(0.0, shadow_y + absf(bob) * 0.12), 0.0, Vector2(1.42 - hop_height * 0.012, 0.34 - hop_height * 0.004))
+	draw_circle(Vector2.ZERO, shadow_radius, Color(0.01, 0.012, 0.01, 0.42))
+	draw_circle(Vector2.ZERO, shadow_radius * 0.66, Color(0.01, 0.012, 0.01, 0.22))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	draw_set_transform(Vector2(0.0, shadow_y + 3.0), 0.0, Vector2(1.4, 0.34))
+	draw_circle(Vector2.ZERO, shadow_radius * 0.65, Color(0.015, 0.014, 0.012, 0.32))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if is_boss:
@@ -341,10 +359,19 @@ func _draw() -> void:
 		draw_arc(Vector2(0.0, 9.0), collision_radius + 6.0, 0.0, TAU, 36, Color(0.45, 0.74, 0.62, 0.72), 1.7)
 	if wet_timer > 0.0:
 		draw_arc(Vector2(0.0, 12.0), collision_radius + 4.0, PI * 0.1, PI * 0.9, 24, Color(0.35, 0.72, 0.88, 0.65), 1.6)
+	if freeze_timer > 0.0:
+		var freeze_alpha := clampf(freeze_timer * 1.8, 0.25, 0.8)
+		draw_arc(Vector2(0.0, 10.0), collision_radius + 7.0, 0.0, TAU, 32, Color(0.65, 0.9, 1.0, freeze_alpha), 2.0)
+		for shard in range(4):
+			var shard_angle := TAU * float(shard) / 4.0 + animation_time * 0.5
+			var shard_direction := Vector2(cos(shard_angle), sin(shard_angle))
+			var shard_center := shard_direction * (collision_radius + 5.0)
+			var shard_tangent := Vector2(-shard_direction.y, shard_direction.x)
+			draw_colored_polygon(PackedVector2Array([shard_center - shard_tangent * 2.5, shard_center + shard_direction * 4.5, shard_center + shard_tangent * 2.5]), Color(0.72, 0.94, 1.0, freeze_alpha))
 	if burn_timer > 0.0:
 		draw_circle(Vector2(0.0, 4.0), collision_radius * 0.72, Color(0.95, 0.36, 0.12, 0.12))
 
-	var tint := Color("#fff0d0") if hit_flash > 0.0 else Color.WHITE
+	var tint := Color("#fff0d0") if hit_flash > 0.0 else Color("#eee5d0")
 	if is_boss and boss_phase == 2 and hit_flash <= 0.0:
 		tint = Color(1.0, 0.84, 0.78, 1.0)
 	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * squash_x, stretch_y))
