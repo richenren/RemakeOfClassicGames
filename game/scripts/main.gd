@@ -1485,9 +1485,9 @@ func _draw_skill_effects() -> void:
 			"wood":
 				draw_arc(center, radius, 0.0, TAU, 40, Color(0.7, 0.73, 0.5, life * 0.7), 2.0)
 			"lightning":
-				draw_circle(center, radius * 0.58, Color(0.32, 0.42, 1.0, life * 0.22))
-				draw_arc(center, radius, 0.0, TAU, 36, Color(0.52, 0.62, 1.0, life * 0.82), 2.2)
-				draw_arc(center, radius * 0.56, 0.0, TAU, 28, Color(0.83, 0.92, 1.0, life * 0.74), 1.5)
+				draw_circle(center, radius * 0.58, Color(0.42, 0.14, 0.86, life * 0.25))
+				draw_arc(center, radius, 0.0, TAU, 36, Color(0.67, 0.36, 1.0, life * 0.86), 2.5)
+				draw_arc(center, radius * 0.56, 0.0, TAU, 28, Color(0.91, 0.78, 1.0, life * 0.82), 1.6)
 				_draw_lightning_bolt(center + Vector2(-radius * 0.28, -radius * 1.15), center + Vector2(-radius * 0.06, radius * 0.12), life, 0.7)
 				_draw_lightning_bolt(center + Vector2(radius * 0.26, -radius * 1.08), center + Vector2(radius * 0.08, radius * 0.12), life, 2.1)
 				_draw_lightning_bolt(center + Vector2(-radius * 0.05, -radius * 0.7), center + Vector2(radius * 0.18, radius * 0.16), life * 0.8, 3.8)
@@ -1556,9 +1556,9 @@ func _draw_lightning_bolt(start_position: Vector2, end_position: Vector2, alpha:
 		points.append(start_position + axis * t + normal * jitter)
 	points.append(end_position)
 	for i in range(points.size() - 1):
-		draw_line(points[i], points[i + 1], Color(0.30, 0.38, 1.0, alpha * 0.56), 6.0, true)
-		draw_line(points[i], points[i + 1], Color(0.58, 0.78, 1.0, alpha * 0.94), 2.7, true)
-		draw_line(points[i], points[i + 1], Color(0.96, 0.99, 1.0, alpha), 1.0, true)
+		draw_line(points[i], points[i + 1], Color(0.34, 0.10, 0.78, alpha * 0.62), 6.0, true)
+		draw_line(points[i], points[i + 1], Color(0.72, 0.46, 1.0, alpha * 0.96), 2.7, true)
+		draw_line(points[i], points[i + 1], Color(0.98, 0.95, 1.0, alpha), 1.1, true)
 
 
 func _draw_fire_zones() -> void:

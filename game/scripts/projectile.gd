@@ -88,35 +88,64 @@ func tick(delta: float, collision_targets: Array = []) -> void:
 	queue_redraw()
 
 
+static func visual_profile_for_skill(attack_skill_id: String) -> Dictionary:
+	match attack_skill_id:
+		"fire_talisman":
+			return {"element": "fire", "primary": Color("#ff542f"), "core": Color("#ffe5a4")}
+		"thunder_talisman", "five_thunder":
+			return {"element": "thunder", "primary": Color("#b56cff"), "core": Color("#f5e8ff")}
+		"copper_coin_sword":
+			return {"element": "metal", "primary": Color("#e9bd58"), "core": Color("#fff0b5")}
+		"peachwood_sword":
+			return {"element": "wood", "primary": Color("#52c982"), "core": Color("#e1ffd5")}
+		_:
+			return {"element": "talisman", "primary": Color("#e9c65d"), "core": Color("#fff0b0")}
+
+
 func _draw() -> void:
+	var profile: Dictionary = visual_profile_for_skill(skill_id)
+	var primary: Color = profile["primary"]
+	var core: Color = profile["core"]
 	match skill_id:
 		"fire_talisman":
+			draw_circle(Vector2.ZERO, 9.0, Color(primary.r, primary.g, primary.b, 0.22))
 			var flame := PackedVector2Array([
-				Vector2(0.0, -10.0), Vector2(5.0, -2.0), Vector2(4.0, 5.0),
-				Vector2(0.0, 9.0), Vector2(-4.0, 4.0), Vector2(-5.0, -2.0)
+				Vector2(0.0, -12.0), Vector2(5.5, -4.0), Vector2(4.5, 4.0),
+				Vector2(0.0, 10.0), Vector2(-4.5, 4.0), Vector2(-5.5, -4.0)
 			])
-			draw_colored_polygon(flame, Color("#e87545"))
-			draw_colored_polygon(PackedVector2Array([Vector2(0.0, -5.0), Vector2(2.0, 1.0), Vector2(0.0, 5.0), Vector2(-2.0, 1.0)]), Color("#ffd27b"))
+			draw_colored_polygon(flame, primary)
+			draw_colored_polygon(PackedVector2Array([Vector2(0.0, -6.0), Vector2(2.4, 1.0), Vector2(0.0, 6.0), Vector2(-2.4, 1.0)]), core)
 		"thunder_talisman", "five_thunder":
+			draw_circle(Vector2.ZERO, 9.0, Color(primary.r, primary.g, primary.b, 0.24))
+			draw_arc(Vector2.ZERO, 8.0, 0.0, TAU, 28, Color(primary.r, primary.g, primary.b, 0.9), 1.6, true)
 			var bolt := PackedVector2Array([
-				Vector2(2.0, -10.0), Vector2(-5.0, 0.0), Vector2(-1.0, 0.0),
-				Vector2(-3.0, 9.0), Vector2(6.0, -2.0), Vector2(2.0, -2.0)
+				Vector2(2.8, -12.0), Vector2(-5.5, -1.0), Vector2(-1.2, -1.0),
+				Vector2(-4.0, 10.0), Vector2(6.2, -3.0), Vector2(1.7, -3.0)
 			])
-			draw_colored_polygon(bolt, Color("#f0d66d"))
-			draw_polyline(PackedVector2Array([Vector2(2.0, -10.0), Vector2(-5.0, 0.0), Vector2(-1.0, 0.0), Vector2(-3.0, 9.0)]), Color("#fff3b0"), 1.2, true)
+			draw_colored_polygon(bolt, primary)
+			draw_polyline(PackedVector2Array([Vector2(2.8, -12.0), Vector2(-5.5, -1.0), Vector2(-1.2, -1.0), Vector2(-4.0, 10.0)]), core, 1.8, true)
+			draw_line(Vector2(-7.0, -6.0), Vector2(-10.0, -9.0), core, 1.0, true)
+			draw_line(Vector2(6.0, 5.0), Vector2(9.0, 8.0), core, 1.0, true)
 		"copper_coin_sword":
-			draw_circle(Vector2.ZERO, 7.0, Color("#c99b4e"))
-			draw_arc(Vector2.ZERO, 7.0, 0.0, TAU, 28, Color("#f4d68b"), 1.5)
-			draw_rect(Rect2(-2.0, -2.0, 4.0, 4.0), Color("#473725"))
+			draw_circle(Vector2.ZERO, 9.0, Color(primary.r, primary.g, primary.b, 0.2))
+			draw_circle(Vector2.ZERO, 7.2, primary)
+			draw_arc(Vector2.ZERO, 7.2, 0.0, TAU, 32, core, 1.7, true)
+			draw_circle(Vector2.ZERO, 4.7, Color("#8d5b2b"))
+			draw_rect(Rect2(-2.1, -2.1, 4.2, 4.2), core)
+			draw_line(Vector2(-10.0, -7.0), Vector2(-7.0, -10.0), core, 1.2, true)
+			draw_line(Vector2(7.0, 10.0), Vector2(10.0, 7.0), core, 1.2, true)
 		"peachwood_sword":
-			draw_colored_polygon(PackedVector2Array([Vector2(0.0, -11.0), Vector2(3.0, -3.0), Vector2(2.0, 7.0), Vector2(-2.0, 7.0), Vector2(-3.0, -3.0)]), Color("#d8c7a1"))
-			draw_line(Vector2(-4.0, 2.0), Vector2(4.0, 2.0), Color("#9d5b42"), 2.0)
-			draw_line(Vector2(0.0, 7.0), Vector2(0.0, 11.0), Color("#7a4c36"), 2.0)
+			draw_circle(Vector2.ZERO, 8.5, Color(primary.r, primary.g, primary.b, 0.18))
+			draw_colored_polygon(PackedVector2Array([Vector2(0.0, -12.0), Vector2(3.2, -3.0), Vector2(2.0, 7.0), Vector2(-2.0, 7.0), Vector2(-3.2, -3.0)]), primary)
+			draw_line(Vector2(0.0, -9.0), Vector2(0.0, 5.0), core, 1.4, true)
+			draw_line(Vector2(-5.0, 2.0), Vector2(5.0, 2.0), Color("#8b5b36"), 2.0, true)
+			draw_line(Vector2(0.0, 7.0), Vector2(0.0, 11.0), Color("#8b5b36"), 2.0, true)
+			draw_colored_polygon(PackedVector2Array([Vector2(-5.0, -3.0), Vector2(-10.0, -5.0), Vector2(-7.0, 0.0)]), Color("#a3e5a0"))
+			draw_colored_polygon(PackedVector2Array([Vector2(5.0, 3.0), Vector2(10.0, 1.0), Vector2(7.0, 6.0)]), Color("#a3e5a0"))
 		_:
-			var talisman := PackedVector2Array([
-				Vector2(0.0, -8.0), Vector2(4.0, 0.0),
-				Vector2(0.0, 8.0), Vector2(-4.0, 0.0)
-			])
-			draw_colored_polygon(talisman, Color("#e9c65d"))
-			draw_line(Vector2(0.0, -5.0), Vector2(0.0, 5.0), Color("#a94a32"), 1.5)
-			draw_circle(Vector2.ZERO, 1.5, Color("#fff0b0"))
+			draw_circle(Vector2.ZERO, 8.0, Color(primary.r, primary.g, primary.b, 0.2))
+			draw_rect(Rect2(-4.0, -8.5, 8.0, 17.0), Color("#f2d8a0"))
+			draw_rect(Rect2(-4.0, -8.5, 8.0, 17.0), primary, false, 1.2)
+			draw_line(Vector2(0.0, -5.5), Vector2(0.0, 5.5), Color("#a6322b"), 1.4, true)
+			draw_line(Vector2(-2.0, -2.0), Vector2(2.0, 1.0), Color("#a6322b"), 1.0, true)
+			draw_circle(Vector2.ZERO, 1.6, core)
