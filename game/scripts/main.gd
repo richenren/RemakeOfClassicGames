@@ -106,6 +106,7 @@ var general_upgrade_levels: Dictionary = {"swift_step": 0, "spirit_gain": 0, "sp
 var active_skill_level: int = 1
 var skill_effects: Array[Dictionary] = []
 var fire_zones: Array[Dictionary] = []
+var pending_area_attacks: Array[Dictionary] = []
 var fire_zone_timer: float = 3.5
 
 var joystick_touch_id: int = -1
@@ -192,6 +193,7 @@ func _process(delta: float) -> void:
 			spawn_enemy("boss")
 
 		_tick_combat_skills(delta)
+		_tick_pending_area_attacks(delta)
 		_tick_fire_zones(delta)
 		_tick_element_cultivation(delta)
 		_tick_enemies(delta)
@@ -1194,15 +1196,26 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 				cooldown *= 1.38
 			_cast_thunder_strike(target, damage, branch, evolved)
 		"copper_coin_sword":
-			_spawn_skill_projectile(target, skill_id, damage)
+			var sword = _spawn_skill_projectile(target, skill_id, damage)
+			if branch == "pierce":
+				sword.behavior = "pierce"
+				sword.pierce_remaining = 2
+				sword.lifetime = 0.8
+			elif branch == "return":
+				sword.behavior = "return"
+				sword.return_damage_multiplier = 0.55
+				sword.lifetime = 1.4
 		"peachwood_sword":
 			if branch == "guardian":
 				var guardian_radius := 52.0 + float(skill_level) * 7.0
 				_apply_area_damage(player.position, guardian_radius, damage * 0.72, "wood", 0.0, false, 20.0)
+				_spawn_skill_effect("wood_guardian", player.position, guardian_radius, 0.34)
 			else:
 				_spawn_skill_projectile(target, skill_id, damage)
 			if evolved == "greenwood_guardian":
-				_apply_area_damage(player.position, 68.0 + float(skill_level) * 3.0, damage * 0.45, "wood", 0.0, false, 18.0)
+				var evolved_guardian_radius := 68.0 + float(skill_level) * 3.0
+				_apply_area_damage(player.position, evolved_guardian_radius, damage * 0.45, "wood", 0.0, false, 18.0)
+				_spawn_skill_effect("wood_guardian", player.position, evolved_guardian_radius, 0.38)
 		"water_array":
 			var water_radius := 76.0 + float(skill_level) * 9.0
 			var slow_duration := 1.2 + float(skill_level - 1) * 0.12
@@ -1234,7 +1247,7 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 				earth_radius += 30.0
 				damage *= 1.25
 				knockback += 12.0
-			_apply_area_damage(target.position, earth_radius, damage, "earth", 0.0, false, knockback)
+			_schedule_area_attack(target.position, earth_radius, damage, knockback, evolved == "earth_seal")
 	skill_cooldowns[skill_id] = cooldown
 
 func _first_enemy_on_segment(start_position: Vector2, end_position: Vector2):
@@ -1281,6 +1294,38 @@ func _cast_thunder_strike(target, damage: float, branch: String, evolved: String
 	var chain_multiplier := 0.58 * (1.0 + 0.1 * float(_cultivation_level("thunder")))
 	_apply_chain_damage(strike_target, damage * chain_multiplier, chain_count)
 
+func _schedule_area_attack(center: Vector2, radius: float, damage: float, knockback: float, evolved: bool = false) -> void:
+	if pending_area_attacks.size() >= 24:
+		pending_area_attacks.remove_at(0)
+	pending_area_attacks.append({
+		"position": center,
+		"radius": radius,
+		"damage": damage,
+		"knockback": knockback,
+		"timer": 0.18,
+		"evolved": evolved
+	})
+	_spawn_skill_effect("earth_telegraph", center, radius, 0.2)
+
+
+func _tick_pending_area_attacks(delta: float) -> void:
+	for i in range(pending_area_attacks.size() - 1, -1, -1):
+		var attack: Dictionary = pending_area_attacks[i]
+		attack["timer"] = float(attack.get("timer", 0.0)) - delta
+		if float(attack["timer"]) <= 0.0:
+			var center: Vector2 = attack.get("position", Vector2.ZERO)
+			var radius := float(attack.get("radius", 70.0))
+			var damage := float(attack.get("damage", 0.0))
+			var knockback := float(attack.get("knockback", 0.0))
+			var evolved := bool(attack.get("evolved", false))
+			_apply_area_damage(center, radius, damage, "earth", 0.0, false, knockback)
+			_spawn_skill_effect("earth_seal" if evolved else "earth_spike", center, radius, 0.38)
+			pending_area_attacks.remove_at(i)
+		else:
+			pending_area_attacks[i] = attack
+
+
+
 func _apply_area_damage(center: Vector2, radius: float, damage: float, effect_kind: String, slow_duration: float = 0.0, apply_wet: bool = false, knockback: float = 0.0) -> void:
 	for enemy in enemies:
 		if not is_instance_valid(enemy) or enemy.hp <= 0.0:
@@ -1316,6 +1361,10 @@ func _resolve_projectile_hit(projectile) -> void:
 	var skill_data: Dictionary = skills.get(skill_id, {})
 	var branch := str(skill_data.get("branch", ""))
 	var evolved := str(skill_data.get("evolved", ""))
+	if skill_id == "copper_coin_sword" and projectile.impact_is_return:
+		target.take_damage(damage * float(projectile.return_damage_multiplier))
+		_spawn_skill_effect("slash", target.position, 24.0, 0.18)
+		return
 	match skill_id:
 		"fire_talisman":
 			var splash_radius := float(projectile.splash_radius) if float(projectile.splash_radius) > 0.0 else 46.0
@@ -1351,26 +1400,31 @@ func _resolve_projectile_hit(projectile) -> void:
 						splash_target.apply_freeze(0.55)
 				_spawn_skill_effect("ice_splash", target.position, splash_radius, 0.38)
 		"copper_coin_sword":
-			target.take_damage(damage)
+			var hit_damage := damage
+			if branch == "pierce" and int(projectile.pierce_hit_count) > 1:
+				hit_damage *= float(projectile.pierce_damage_multiplier)
+			target.take_damage(hit_damage)
 			_spawn_skill_effect("slash", target.position, 25.0, 0.18)
-			if branch == "pierce":
-				_apply_chain_damage(target, damage * 0.52, 2)
-			elif branch == "return":
-				target.take_damage(damage * 0.55)
-				_spawn_skill_effect("wood", target.position, 25.0, 0.22)
+			if branch == "return":
+				projectile.begin_return(player)
 			if evolved == "golden_sword_array":
-				_apply_chain_damage(target, damage * 0.42, 2)
-				_spawn_skill_effect("slash", target.position, 38.0, 0.24)
+				_apply_chain_damage(target, damage * 0.42, 2, "metal")
+				_spawn_skill_effect("golden_sword_array", target.position, 38.0, 0.28)
 		"peachwood_sword":
 			target.take_damage(damage)
-			if branch == "chase":
-				_apply_chain_damage(target, damage * 0.52, 1)
+			if branch == "chase" and bool(projectile.allow_secondary_chase):
+				var chase_target = _find_nearest_enemy(target.position, 240.0, [target])
+				if chase_target != null:
+					var chase_projectile = _spawn_skill_projectile(chase_target, skill_id, damage * 0.52)
+					chase_projectile.allow_secondary_chase = false
+					chase_projectile.is_secondary = true
+					chase_projectile.speed = 520.0
 			_spawn_skill_effect("wood", target.position, 18.0, 0.2)
 		_:
 			target.take_damage(damage)
 			_spawn_skill_effect("hit", target.position, 18.0, 0.16)
 
-func _apply_chain_damage(origin_enemy, damage: float, max_targets: int) -> void:
+func _apply_chain_damage(origin_enemy, damage: float, max_targets: int, chain_style: String = "lightning") -> void:
 	if max_targets <= 0 or not is_instance_valid(origin_enemy):
 		return
 	var hit_targets: Array = [origin_enemy]
@@ -1380,8 +1434,15 @@ func _apply_chain_damage(origin_enemy, damage: float, max_targets: int) -> void:
 			break
 		next_target.take_damage(damage)
 		hit_targets.append(next_target)
-		_spawn_chain_effect(origin_enemy.position, next_target.position, 0.26)
-		_spawn_skill_effect("lightning", next_target.position, 28.0, 0.24)
+		if chain_style == "metal":
+			_spawn_chain_effect(origin_enemy.position, next_target.position, 0.2, "metal_chain")
+			_spawn_skill_effect("slash", next_target.position, 26.0, 0.18)
+		elif chain_style == "wood":
+			_spawn_chain_effect(origin_enemy.position, next_target.position, 0.22, "wood_chain")
+			_spawn_skill_effect("wood", next_target.position, 22.0, 0.2)
+		else:
+			_spawn_chain_effect(origin_enemy.position, next_target.position, 0.26)
+			_spawn_skill_effect("lightning", next_target.position, 28.0, 0.24)
 
 func _spawn_skill_effect(effect_kind: String, center: Vector2, radius: float, duration: float) -> void:
 	# Cap transient particles so dense late-game combat cannot grow the effect list without bound.
@@ -1391,11 +1452,11 @@ func _spawn_skill_effect(effect_kind: String, center: Vector2, radius: float, du
 	queue_redraw()
 
 
-func _spawn_chain_effect(start_position: Vector2, end_position: Vector2, duration: float = 0.26) -> void:
+func _spawn_chain_effect(start_position: Vector2, end_position: Vector2, duration: float = 0.26, effect_kind: String = "lightning_chain") -> void:
 	if skill_effects.size() >= 80:
 		skill_effects.remove_at(0)
 	skill_effects.append({
-		"kind": "lightning_chain",
+		"kind": effect_kind,
 		"position": start_position,
 		"from": start_position,
 		"to": end_position,
@@ -1404,7 +1465,6 @@ func _spawn_chain_effect(start_position: Vector2, end_position: Vector2, duratio
 		"duration": duration
 	})
 	queue_redraw()
-
 
 func _tick_fire_zones(delta: float) -> void:
 	if skills.has("fire_talisman"):
@@ -1500,6 +1560,32 @@ func _draw_skill_effects() -> void:
 				for i in range(8):
 					var angle := TAU * float(i) / 8.0
 					draw_line(center + Vector2(cos(angle), sin(angle)) * radius * 0.76, center + Vector2(cos(angle), sin(angle)) * radius, Color(0.78, 0.68, 0.44, life * 0.7), 2.0)
+			"earth_telegraph":
+				draw_circle(center, radius * 0.58, Color(0.05, 0.045, 0.035, life * 0.24))
+				draw_arc(center, radius * (0.82 + progress * 0.08), 0.0, TAU, 48, Color(0.82, 0.68, 0.42, life * 0.82), 2.4)
+				for i in range(7):
+					var angle := TAU * float(i) / 7.0
+					var direction := Vector2(cos(angle), sin(angle))
+					var crack_start := center + direction * radius * 0.18
+					var crack_end := center + direction * radius * 0.78
+					draw_line(crack_start, crack_end, Color(0.66, 0.54, 0.35, life * 0.82), 2.0, true)
+					draw_line(crack_start.lerp(crack_end, 0.55), crack_start.lerp(crack_end, 0.55) + Vector2(-direction.y, direction.x) * radius * 0.12, Color(0.52, 0.45, 0.32, life * 0.72), 1.3, true)
+			"earth_spike", "earth_seal":
+				draw_circle(center, radius * 0.42, Color(0.04, 0.035, 0.028, life * 0.22))
+				draw_arc(center, radius * 0.86, 0.0, TAU, 48, Color(0.72, 0.59, 0.37, life * 0.72), 2.0)
+				var spike_count := 9 if kind == "earth_seal" else 7
+				for i in range(spike_count):
+					var angle := TAU * float(i) / float(spike_count) + (0.08 if kind == "earth_seal" else 0.0)
+					var direction := Vector2(cos(angle), sin(angle))
+					var tangent := Vector2(-direction.y, direction.x)
+					var base := center + direction * radius * 0.27
+					var width := radius * (0.07 if kind == "earth_seal" else 0.085)
+					var left := base - tangent * width
+					var right := base + tangent * width
+					var tip := center + direction * radius * (0.55 + 0.08 * sin(float(i) * 2.3 + progress * 5.0))
+					draw_colored_polygon(PackedVector2Array([left, tip, right]), Color(0.23, 0.22, 0.18, life * 0.95))
+					draw_line(left, tip, Color(0.76, 0.63, 0.41, life * 0.82), 1.7, true)
+					draw_line(tip, right, Color(0.10, 0.11, 0.10, life * 0.9), 1.7, true)
 			"steam":
 				draw_circle(center, radius * (0.65 + progress * 0.35), Color(0.82, 0.83, 0.76, life * 0.16))
 				draw_arc(center, radius, 0.0, TAU, 40, Color(0.8, 0.82, 0.78, life * 0.4), 1.5)
@@ -1518,9 +1604,11 @@ func _draw_skill_effects() -> void:
 					var flame_tip := center + direction * (burst_radius * 0.42 + radius * (0.14 + 0.12 * sin(progress * 12.0 + float(i))))
 					draw_colored_polygon(PackedVector2Array([flame_base - tangent * 4.0, flame_tip, flame_base + tangent * 4.0]), Color(1.0, 0.34, 0.06, life * 0.82))
 					draw_line(flame_base, flame_tip, Color(1.0, 0.84, 0.42, life * 0.88), 1.4, true)
-			"slash":
+			"slash", "golden_sword_array":
 				draw_line(center + Vector2(-radius * 0.75, radius * 0.55), center + Vector2(radius * 0.72, -radius * 0.55), Color(0.98, 0.86, 0.58, life), 3.2)
 				draw_line(center + Vector2(-radius * 0.38, radius * 0.72), center + Vector2(radius * 0.48, -radius * 0.25), Color(0.78, 0.63, 0.36, life * 0.75), 1.8)
+				if kind == "golden_sword_array":
+					draw_line(center + Vector2(-radius * 0.65, -radius * 0.4), center + Vector2(radius * 0.58, radius * 0.35), Color(0.98, 0.78, 0.35, life * 0.9), 2.8)
 			"hit":
 				draw_circle(center, radius * (0.25 + progress * 0.45), Color(1.0, 0.88, 0.62, life * 0.35))
 				draw_arc(center, radius * (0.35 + progress * 0.55), 0.0, TAU, 24, Color(1.0, 0.78, 0.45, life * 0.75), 1.6)
@@ -1536,6 +1624,16 @@ func _draw_skill_effects() -> void:
 				draw_arc(center, radius, 0.0, TAU, 48, Color(0.98, 0.22, 0.12, life * 0.9), 3.0)
 			"wood":
 				draw_arc(center, radius, 0.0, TAU, 40, Color(0.7, 0.73, 0.5, life * 0.7), 2.0)
+			"wood_guardian":
+				for i in range(3):
+					var angle := elapsed_seconds * 2.8 + TAU * float(i) / 3.0
+					var direction := Vector2(cos(angle), sin(angle))
+					var tangent := Vector2(-direction.y, direction.x)
+					var sword_base := center + direction * radius * 0.48
+					var sword_tip := center + direction * radius * 0.9
+					draw_line(sword_base, sword_tip, Color(0.2, 0.75, 0.43, life * 0.8), 5.0, true)
+					draw_line(sword_base, sword_tip, Color(0.8, 1.0, 0.74, life * 0.9), 1.6, true)
+					draw_line(sword_base + tangent * 4.0, sword_base - tangent * 4.0, Color(0.62, 0.43, 0.24, life * 0.8), 1.8, true)
 			"lightning":
 				draw_circle(center, radius * 0.58, Color(0.42, 0.14, 0.86, life * 0.25))
 				draw_arc(center, radius, 0.0, TAU, 36, Color(0.67, 0.36, 1.0, life * 0.86), 2.5)
@@ -1543,13 +1641,20 @@ func _draw_skill_effects() -> void:
 				_draw_lightning_bolt(center + Vector2(-radius * 0.28, -radius * 1.15), center + Vector2(-radius * 0.06, radius * 0.12), life, 0.7)
 				_draw_lightning_bolt(center + Vector2(radius * 0.26, -radius * 1.08), center + Vector2(radius * 0.08, radius * 0.12), life, 2.1)
 				_draw_lightning_bolt(center + Vector2(-radius * 0.05, -radius * 0.7), center + Vector2(radius * 0.18, radius * 0.16), life * 0.8, 3.8)
-			"lightning_chain":
+			"lightning_chain", "metal_chain", "wood_chain":
 				var chain_start: Vector2 = effect.get("from", center)
 				var chain_end: Vector2 = effect.get("to", center)
-				_draw_lightning_bolt(chain_start, chain_end, life, progress * 4.0)
-				var chain_mid := chain_start.lerp(chain_end, 0.55)
-				var chain_side := Vector2(-(chain_end - chain_start).y, (chain_end - chain_start).x).normalized()
-				_draw_lightning_bolt(chain_mid, chain_mid + chain_side * minf(20.0, radius * 0.12), life * 0.58, progress * 7.0)
+				if kind == "metal_chain":
+					draw_line(chain_start, chain_end, Color(0.82, 0.56, 0.19, life * 0.8), 5.0, true)
+					draw_line(chain_start, chain_end, Color(1.0, 0.88, 0.53, life), 1.8, true)
+				elif kind == "wood_chain":
+					draw_line(chain_start, chain_end, Color(0.14, 0.52, 0.29, life * 0.78), 4.0, true)
+					draw_line(chain_start, chain_end, Color(0.72, 0.96, 0.61, life), 1.4, true)
+				else:
+					_draw_lightning_bolt(chain_start, chain_end, life, progress * 4.0)
+					var chain_mid := chain_start.lerp(chain_end, 0.55)
+					var chain_side := Vector2(-(chain_end - chain_start).y, (chain_end - chain_start).x).normalized()
+					_draw_lightning_bolt(chain_mid, chain_mid + chain_side * minf(20.0, radius * 0.12), life * 0.58, progress * 7.0)
 			"control":
 				draw_arc(center, radius, 0.0, TAU, 64, Color(0.92, 0.76, 0.38, life * 0.85), 3.0)
 				draw_arc(center, radius * 0.78, 0.0, TAU, 56, Color(0.74, 0.56, 0.3, life * 0.55), 1.5)

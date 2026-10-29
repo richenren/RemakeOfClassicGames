@@ -339,6 +339,8 @@ func _test_skill_build_system(main: Variant) -> void:
 			var projectile_count: int = int(main.projectiles.size())
 			var hp_before: float = target.hp
 			main._cast_auto_skill(skill_id, target)
+			if skill_id == "earth_formation":
+				main._tick_pending_area_attacks(0.22)
 			if skill_id in projectile_skills:
 				_check(main.projectiles.size() > projectile_count, "%s 会发射独立技能投射物" % str(main.AUTO_SKILL_DEFS[skill_id]["name"]))
 			else:
@@ -628,12 +630,87 @@ func _test_combat_visuals(main: Variant) -> void:
 		if str(effect.get("kind", "")) == "lightning_chain":
 			saw_thunder_arc = true
 	_check(saw_thunder_arc, "雷符主雷击绘制从施法者连接到实际命中目标的电弧")
+
+	# Metal's pierce branch must physically pass through a second enemy, not jump to a nearby target.
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.skills["copper_coin_sword"] = {"level": 3, "branch": "pierce", "evolved": ""}
+	temp_enemy.position = main.player.position + Vector2(50.0, 0.0)
+	splash_enemy.position = main.player.position + Vector2(80.0, 0.0)
+	temp_enemy.hp = temp_enemy.max_hp
+	splash_enemy.hp = splash_enemy.max_hp
+	main._cast_auto_skill("copper_coin_sword", temp_enemy)
+	_check(main.projectiles.size() == 1 and main.projectiles[0].behavior == "pierce", "铜钱剑贯穿分支启用直线穿透行为")
+	if not main.projectiles.is_empty():
+		main._tick_projectiles(0.1)
+		_check(temp_enemy.hp < temp_enemy.max_hp, "铜钱剑贯穿首个目标")
+		main._tick_projectiles(0.1)
+	_check(splash_enemy.hp < splash_enemy.max_hp, "铜钱剑沿原始直线穿透并命中第二个目标")
+
+	# Returning sword follows a shallow arc back to the player and can strike a different enemy.
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.skills["copper_coin_sword"] = {"level": 3, "branch": "return", "evolved": ""}
+	temp_enemy.position = main.player.position + Vector2(50.0, 0.0)
+	splash_enemy.position = main.player.position + Vector2(25.0, -25.0)
+	temp_enemy.hp = temp_enemy.max_hp
+	splash_enemy.hp = splash_enemy.max_hp
+	main._cast_auto_skill("copper_coin_sword", temp_enemy)
+	if not main.projectiles.is_empty():
+		main._tick_projectiles(0.1)
+		_check(main.projectiles.size() == 1 and main.projectiles[0].is_returning, "铜钱剑命中后进入回旋返程")
+		main._tick_projectiles(0.1)
+	_check(splash_enemy.hp < splash_enemy.max_hp, "回旋返程沿弧线命中另一名敌人")
+
+	# Wood's chase branch launches a bounded second tracking sword after the first hit.
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.skills["peachwood_sword"] = {"level": 3, "branch": "chase", "evolved": ""}
+	temp_enemy.position = main.player.position + Vector2(50.0, 0.0)
+	splash_enemy.position = main.player.position + Vector2(80.0, 0.0)
+	temp_enemy.hp = temp_enemy.max_hp
+	splash_enemy.hp = splash_enemy.max_hp
+	main._cast_auto_skill("peachwood_sword", temp_enemy)
+	if not main.projectiles.is_empty():
+		main.projectiles[0].speed = 10000.0
+		main._tick_projectiles(0.1)
+		_check(main.projectiles.size() == 1 and not main.projectiles[0].allow_secondary_chase, "桃木剑追邪命中后只追加一把追击剑")
+		main._tick_projectiles(0.2)
+	_check(splash_enemy.hp < splash_enemy.max_hp, "桃木追击剑独立追踪第二个敌人")
+
+	# Earth first shows a ground warning; damage is applied only after the short wind-up.
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	main.skills.clear()
+	main.skills["earth_formation"] = {"level": 1, "branch": "", "evolved": ""}
+	temp_enemy.position = main.player.position + Vector2(50.0, 0.0)
+	splash_enemy.position = main.player.position + Vector2(80.0, 0.0)
+	temp_enemy.hp = temp_enemy.max_hp
+	main.pending_area_attacks.clear()
+	main._cast_auto_skill("earth_formation", temp_enemy)
+	_check(main.pending_area_attacks.size() == 1 and is_equal_approx(temp_enemy.hp, temp_enemy.max_hp), "地脉阵先显示地面预兆，不立即扣血")
+	main._tick_pending_area_attacks(0.22)
+	_check(temp_enemy.hp < temp_enemy.max_hp, "地脉阵预兆结束后岩刺爆发并结算伤害")
+	var saw_earth_spike := false
+	for effect in main.skill_effects:
+		if str(effect.get("kind", "")) == "earth_spike":
+			saw_earth_spike = true
+	_check(saw_earth_spike, "地脉阵爆发时显示独立岩刺与碎石特效")
+
 	main._spawn_chain_effect(Vector2.ZERO, Vector2(80.0, 0.0), 0.24)
 	_check(str(main.skill_effects.back().get("kind", "")) == "lightning_chain", "雷符连锁伤害会生成可见的连接闪电")
 	for old_projectile in main.projectiles:
 		old_projectile.queue_free()
 	main.projectiles.clear()
 	main.fire_zones.clear()
+	main.pending_area_attacks.clear()
 	main.skill_effects.clear()
 	main.skills.clear()
 	main.enemies.erase(temp_enemy)
