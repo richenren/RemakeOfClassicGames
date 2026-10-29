@@ -5,6 +5,38 @@ const WORLD_MAX := Vector2(2352.0, 1552.0)
 const PLAYER_IDLE_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist.svg")
 const PLAYER_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_walk.svg")
 const PLAYER_DRAW_SIZE := Vector2(76.0, 96.0)
+const PLAYER_DEATH_DRAW_SIZE := Vector2(115.2, 96.0)
+const PLAYER_IDLE_FRAMES = [
+	preload("res://assets/sprites/player_frames/player_idle_01.svg"),
+	preload("res://assets/sprites/player_frames/player_idle_02.svg"),
+	preload("res://assets/sprites/player_frames/player_idle_03.svg"),
+	preload("res://assets/sprites/player_frames/player_idle_04.svg")
+]
+const PLAYER_WALK_FRAMES = [
+	preload("res://assets/sprites/player_frames/player_walk_01.svg"),
+	preload("res://assets/sprites/player_frames/player_walk_02.svg"),
+	preload("res://assets/sprites/player_frames/player_walk_03.svg"),
+	preload("res://assets/sprites/player_frames/player_walk_04.svg")
+]
+const PLAYER_ATTACK_FRAMES = [
+	preload("res://assets/sprites/player_frames/player_attack_01.svg"),
+	preload("res://assets/sprites/player_frames/player_attack_02.svg"),
+	preload("res://assets/sprites/player_frames/player_attack_03.svg"),
+	preload("res://assets/sprites/player_frames/player_attack_04.svg")
+]
+const PLAYER_HIT_FRAMES = [
+	preload("res://assets/sprites/player_frames/player_hit_01.svg"),
+	preload("res://assets/sprites/player_frames/player_hit_02.svg"),
+	preload("res://assets/sprites/player_frames/player_hit_03.svg")
+]
+const PLAYER_DEATH_FRAMES = [
+	preload("res://assets/sprites/player_frames/player_death_01.svg"),
+	preload("res://assets/sprites/player_frames/player_death_02.svg"),
+	preload("res://assets/sprites/player_frames/player_death_03.svg"),
+	preload("res://assets/sprites/player_frames/player_death_04.svg"),
+	preload("res://assets/sprites/player_frames/player_death_05.svg"),
+	preload("res://assets/sprites/player_frames/player_death_06.svg")
+]
 const MOVE_ACCELERATION := 1500.0
 const MOVE_DECELERATION := 1900.0
 
@@ -33,6 +65,11 @@ var footstep_flash: float = 0.0
 var footstep_side: float = 1.0
 var attack_pulse: float = 0.0
 var attack_direction: Vector2 = Vector2.RIGHT
+var animation_state: String = "idle"
+var animation_frame_index: int = 0
+var animation_frame_elapsed: float = 0.0
+var attack_animation_timer: float = 0.0
+var hit_animation_timer: float = 0.0
 
 
 func tick(delta: float) -> void:
@@ -41,6 +78,8 @@ func tick(delta: float) -> void:
 	hit_flash = maxf(0.0, hit_flash - delta)
 	footstep_flash = maxf(0.0, footstep_flash - delta)
 	attack_pulse = maxf(0.0, attack_pulse - delta)
+	attack_animation_timer = maxf(0.0, attack_animation_timer - delta)
+	hit_animation_timer = maxf(0.0, hit_animation_timer - delta)
 
 	var keyboard_move := Vector2.ZERO
 	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
@@ -77,6 +116,7 @@ func tick(delta: float) -> void:
 
 	position.x = clampf(position.x, WORLD_MIN.x, WORLD_MAX.x)
 	position.y = clampf(position.y, WORLD_MIN.y, WORLD_MAX.y)
+	_update_animation(delta)
 	queue_redraw()
 
 
@@ -85,11 +125,76 @@ func trigger_attack(direction: Vector2) -> void:
 		attack_direction = direction.normalized()
 		facing = attack_direction
 	attack_pulse = 0.18
+	attack_animation_timer = 0.30
 	queue_redraw()
 
 
 func _player_sprite_texture() -> Texture2D:
 	return PLAYER_WALK_TEXTURE if is_moving else PLAYER_IDLE_TEXTURE
+
+
+func _animation_frames_for_state(state: String) -> Array:
+	match state:
+		"walk":
+			return PLAYER_WALK_FRAMES
+		"attack":
+			return PLAYER_ATTACK_FRAMES
+		"hit":
+			return PLAYER_HIT_FRAMES
+		"death":
+			return PLAYER_DEATH_FRAMES
+		_:
+			return PLAYER_IDLE_FRAMES
+
+
+func _animation_frame_duration(state: String) -> float:
+	match state:
+		"walk":
+			return 0.095
+		"attack":
+			return 0.065
+		"hit":
+			return 0.075
+		"death":
+			return 0.09
+		_:
+			return 0.18
+
+
+func _current_animation_texture() -> Texture2D:
+	var frames: Array = _animation_frames_for_state(animation_state)
+	return frames[clampi(animation_frame_index, 0, frames.size() - 1)] as Texture2D
+
+
+func _update_animation(delta: float) -> void:
+	var next_state := "idle"
+	if hp <= 0.0:
+		next_state = "death"
+	elif hit_animation_timer > 0.0:
+		next_state = "hit"
+	elif attack_animation_timer > 0.0:
+		next_state = "attack"
+	elif is_moving:
+		next_state = "walk"
+
+	if next_state != animation_state:
+		animation_state = next_state
+		animation_frame_index = 0
+		animation_frame_elapsed = 0.0
+
+	var frames: Array = _animation_frames_for_state(animation_state)
+	if frames.is_empty() or (animation_state == "death" and animation_frame_index >= frames.size() - 1):
+		return
+	animation_frame_elapsed += delta
+	var frame_duration := _animation_frame_duration(animation_state)
+	while animation_frame_elapsed >= frame_duration:
+		animation_frame_elapsed -= frame_duration
+		if animation_state == "death":
+			animation_frame_index = mini(animation_frame_index + 1, frames.size() - 1)
+			if animation_frame_index >= frames.size() - 1:
+				break
+		else:
+			animation_frame_index = (animation_frame_index + 1) % frames.size()
 
 
 func take_damage(amount: float) -> void:
@@ -98,6 +203,7 @@ func take_damage(amount: float) -> void:
 	hp = maxf(0.0, hp - amount)
 	invuln_time = 0.82
 	hit_flash = 0.16
+	hit_animation_timer = 0.22
 	queue_redraw()
 
 
@@ -117,13 +223,16 @@ func _draw() -> void:
 	var gait := absf(sin(gait_phase))
 	var speed_ratio := clampf(velocity.length() / maxf(1.0, move_speed), 0.0, 1.0)
 	var bob := sin(gait_phase * 2.0) * 1.45 * speed_ratio if is_moving else sin(animation_time * 2.1) * 0.55
+	if animation_state == "death":
+		bob = 0.0
 	var squash_x := 1.0 + (gait * 0.028 * speed_ratio if is_moving else 0.0)
 	var stretch_y := 1.0 - (gait * 0.018 * speed_ratio if is_moving else 0.0)
 	var gait_lean := sin(gait_phase) * 0.035 * speed_ratio if is_moving else 0.0
 	var sprite_tilt := clampf(facing.x * 0.075, -0.075, 0.075) + gait_lean if is_moving else sin(animation_time * 0.8) * 0.01
 	var attack_ratio := clampf(attack_pulse / 0.18, 0.0, 1.0)
-	var attack_offset := attack_direction * attack_ratio * 2.4
-	var sprite_rect := Rect2(-PLAYER_DRAW_SIZE * 0.5, PLAYER_DRAW_SIZE)
+	var attack_offset := attack_direction * attack_ratio * 2.4 if animation_state == "attack" else Vector2.ZERO
+	var sprite_size := PLAYER_DEATH_DRAW_SIZE if animation_state == "death" else PLAYER_DRAW_SIZE
+	var sprite_rect := Rect2(-sprite_size * 0.5, sprite_size)
 	var tint := Color("#eee5d0")
 	if hit_flash > 0.0:
 		tint = Color("#fff0d0")
@@ -150,7 +259,7 @@ func _draw() -> void:
 
 	var flip_x := -1.0 if facing.x < -0.1 else 1.0
 	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * squash_x, stretch_y))
-	draw_texture_rect(_player_sprite_texture(), sprite_rect, false, tint)
+	draw_texture_rect(_current_animation_texture(), sprite_rect, false, tint)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if attack_ratio > 0.0:

@@ -18,6 +18,7 @@ func _initialize() -> void:
 func _run_tests() -> void:
 	print("=== 镇邪录 Godot 原型自动化测试 ===")
 	_test_player()
+	_test_player_animation_frames()
 	_test_enemy_variants()
 	_test_xp_orb()
 	_test_end_screen_layout()
@@ -501,6 +502,38 @@ func _test_player() -> void:
 	_check(is_equal_approx(player.hp, 80.0), "受击无敌窗口阻止连续伤害")
 	player.heal(50.0)
 	_check(is_equal_approx(player.hp, 100.0), "治疗不会超过最大生命")
+	player.queue_free()
+
+
+func _test_player_animation_frames() -> void:
+	var player: Variant = PLAYER_SCRIPT.new()
+	root.add_child(player)
+	_check(player.PLAYER_IDLE_FRAMES.size() == 4, "主角待机动画包含 4 个独立矢量帧")
+	_check(player.PLAYER_WALK_FRAMES.size() == 4, "主角移动动画包含 4 个独立矢量帧")
+	_check(player.PLAYER_ATTACK_FRAMES.size() == 4, "主角符箓攻击动画包含 4 个独立矢量帧")
+	_check(player.PLAYER_HIT_FRAMES.size() == 3, "主角受击动画包含 3 个独立矢量帧")
+	_check(player.PLAYER_DEATH_FRAMES.size() == 6, "主角倒地动画包含 6 个独立矢量帧")
+	var all_frames_load := true
+	for frames in [player.PLAYER_IDLE_FRAMES, player.PLAYER_WALK_FRAMES, player.PLAYER_ATTACK_FRAMES, player.PLAYER_HIT_FRAMES, player.PLAYER_DEATH_FRAMES]:
+		for texture in frames:
+			if texture == null or texture.get_width() <= 0 or texture.get_height() <= 0:
+				all_frames_load = false
+	_check(all_frames_load, "主角全部逐帧 SVG 资源均可加载")
+	player.is_moving = true
+	player._update_animation(0.01)
+	_check(player.animation_state == "walk", "移动输入切换到逐帧行走动画")
+	player.trigger_attack(Vector2.RIGHT)
+	player._update_animation(0.01)
+	_check(player.animation_state == "attack", "自动攻击触发独立符箓攻击动画")
+	player.invuln_time = 0.0
+	player.take_damage(1.0)
+	player._update_animation(0.01)
+	_check(player.animation_state == "hit", "受到伤害后播放独立受击动画")
+	player.hp = 0.0
+	player._update_animation(0.01)
+	_check(player.animation_state == "death", "生命归零后切换到一次性倒地动画")
+	player._update_animation(1.0)
+	_check(player.animation_frame_index == player.PLAYER_DEATH_FRAMES.size() - 1, "倒地动画结束后停留在最后一帧")
 	player.queue_free()
 
 
