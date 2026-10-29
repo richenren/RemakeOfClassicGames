@@ -110,48 +110,56 @@ func _draw_compact_hud(view: Vector2, layout: Dictionary) -> void:
 	var objective_rect: Rect2 = layout["objective"]
 	var build_rect: Rect2 = layout["build"]
 	var controls_rect: Rect2 = layout["controls"]
+	var ultra_compact := bool(layout.get("ultra_compact", false))
+
 	_draw_ornate_panel(status_rect, Color("#c6a566"))
-	var portrait_size := 34.0
-	var portrait_center := Vector2(status_rect.position.x + 25.0, status_rect.position.y + 30.0)
-	draw_circle(portrait_center, 18.5, Color("#0b0e10"))
-	draw_arc(portrait_center, 18.5, 0.0, TAU, 36, Color("#d5ad61"), 1.5)
+	var portrait_size := 29.0 if ultra_compact else 34.0
+	var portrait_center := Vector2(status_rect.position.x + (22.0 if ultra_compact else 25.0), status_rect.position.y + status_rect.size.y * 0.5)
+	draw_circle(portrait_center, portrait_size * 0.55, Color("#0b0e10"))
+	draw_arc(portrait_center, portrait_size * 0.56, 0.0, TAU, 36, Color("#d5ad61"), 1.5)
 	draw_texture_rect(PLAYER_PORTRAIT_TEXTURE, Rect2(portrait_center - Vector2.ONE * portrait_size * 0.5, Vector2.ONE * portrait_size), false)
-	var info_x := status_rect.position.x + 47.0
-	_text(Vector2(info_x, status_rect.position.y + 17.0), "镇邪录", 11, Color("#e7cf98"))
-	_text(Vector2(info_x, status_rect.position.y + 31.0), "生命 %d/%d" % [roundi(player.hp), roundi(player.max_hp)], 9, TEXT_COLOR)
-	var hp_width := maxf(32.0, status_rect.end.x - info_x - 8.0)
-	_bar(Rect2(info_x, status_rect.position.y + 36.0, hp_width, 4.0), player.hp / maxf(1.0, player.max_hp), Color("#c54e42"), true)
-	_text(Vector2(info_x, status_rect.position.y + 53.0), "Lv%d · 击杀%d" % [player.level, main_ref.kills], 9, MUTED_COLOR)
+	var info_x := status_rect.position.x + (42.0 if ultra_compact else 47.0)
+	_text(Vector2(info_x, status_rect.position.y + (14.0 if ultra_compact else 17.0)), "镇邪录", 10 if ultra_compact else 11, Color("#e7cf98"))
+	_text(Vector2(info_x, status_rect.position.y + (26.0 if ultra_compact else 31.0)), "生命 %d/%d" % [roundi(player.hp), roundi(player.max_hp)], 8 if ultra_compact else 9, TEXT_COLOR)
+	var hp_width := maxf(28.0, status_rect.end.x - info_x - 8.0)
+	_bar(Rect2(info_x, status_rect.position.y + (30.0 if ultra_compact else 36.0), hp_width, 3.5 if ultra_compact else 4.0), player.hp / maxf(1.0, player.max_hp), Color("#c54e42"), true)
+	_text(Vector2(info_x, status_rect.position.y + (43.0 if ultra_compact else 53.0)), "Lv%d · 击杀%d" % [player.level, main_ref.kills], 8 if ultra_compact else 9, MUTED_COLOR)
+
 	_draw_ornate_panel(time_rect, Color("#b69a62"))
-	_text(Vector2(time_rect.position.x + 9.0, time_rect.position.y + 17.0), "生存 " + _format_time(main_ref.elapsed_seconds), 11, TEXT_COLOR)
+	_text(Vector2(time_rect.position.x + 9.0, time_rect.position.y + (14.0 if ultra_compact else 17.0)), "生存 " + _format_time(main_ref.elapsed_seconds), 10 if ultra_compact else 11, TEXT_COLOR)
 	if _is_mobile():
-		_text(Vector2(time_rect.end.x - 20.0, time_rect.position.y + 17.0), "Ⅱ", 12, Color("#e8c86c"))
-	_text(Vector2(time_rect.position.x + 9.0, time_rect.position.y + 32.0), "灵气 %d/%d" % [player.xp, player.xp_to_next], 9, MUTED_COLOR)
-	_bar(Rect2(time_rect.position.x + 8.0, time_rect.position.y + 37.0, time_rect.size.x - 16.0, 3.0), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#6ebba0"))
+		_text(Vector2(time_rect.end.x - 18.0, time_rect.position.y + (14.0 if ultra_compact else 17.0)), "Ⅱ", 11 if ultra_compact else 12, Color("#e8c86c"))
+	_text(Vector2(time_rect.position.x + 9.0, time_rect.position.y + (26.0 if ultra_compact else 32.0)), "灵气 %d/%d" % [player.xp, player.xp_to_next], 8 if ultra_compact else 9, MUTED_COLOR)
+	_bar(Rect2(time_rect.position.x + 8.0, time_rect.position.y + (31.0 if ultra_compact else 37.0), time_rect.size.x - 16.0, 2.5 if ultra_compact else 3.0), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#6ebba0"))
+
 	_draw_ornate_panel(skill_rect, Color("#c6a566"))
 	var skill_ready: bool = main_ref.active_skill_cooldown <= 0.0
 	var skill_color := Color("#e8c86c") if skill_ready else Color("#9e8b6a")
-	_text(Vector2(skill_rect.position.x + 8.0, skill_rect.position.y + 17.0), "镇尸诀 Lv%d" % main_ref.active_skill_level, 10, skill_color)
-	_text(Vector2(skill_rect.position.x + 8.0, skill_rect.position.y + 31.0), "就绪" if skill_ready else "冷却 %ds" % ceili(main_ref.active_skill_cooldown), 9, TEXT_COLOR)
+	_text(Vector2(skill_rect.position.x + 8.0, skill_rect.position.y + (14.0 if ultra_compact else 17.0)), "镇尸诀 Lv%d" % main_ref.active_skill_level, 9 if ultra_compact else 10, skill_color)
+	_text(Vector2(skill_rect.position.x + 8.0, skill_rect.position.y + (26.0 if ultra_compact else 31.0)), "就绪" if skill_ready else "冷却 %ds" % ceili(main_ref.active_skill_cooldown), 8 if ultra_compact else 9, TEXT_COLOR)
 	var skill_ratio := 1.0 if skill_ready else 1.0 - clampf(main_ref.active_skill_cooldown / maxf(0.1, main_ref.active_skill_base_cooldown), 0.0, 1.0)
-	_bar(Rect2(skill_rect.position.x + 8.0, skill_rect.position.y + 36.0, skill_rect.size.x - 16.0, 4.0), skill_ratio, Color("#d1a84e"))
-	_text(Vector2(skill_rect.position.x + 8.0, skill_rect.position.y + 52.0), "治疗 %d/2 · 伤害%d" % [main_ref.heal_charges, roundi(player.damage)], 9, MUTED_COLOR)
+	_bar(Rect2(skill_rect.position.x + 8.0, skill_rect.position.y + (31.0 if ultra_compact else 36.0), skill_rect.size.x - 16.0, 2.5 if ultra_compact else 4.0), skill_ratio, Color("#d1a84e"))
+	_text(Vector2(skill_rect.position.x + 8.0, skill_rect.position.y + (43.0 if ultra_compact else 52.0)), "治疗 %d/2 · 伤害%d" % [main_ref.heal_charges, roundi(player.damage)], 8 if ultra_compact else 9, MUTED_COLOR)
+
 	if main_ref.state != "game_over" and main_ref.state != "victory":
 		_draw_ornate_panel(objective_rect, Color("#c9a65b") if main_ref.boss_spawned else Color("#8fba9b"))
 		var objective := objective_data()
-		_text(Vector2(objective_rect.position.x + 8.0, objective_rect.position.y + 12.0), str(objective.get("title", "当前目标")), 9, Color("#e7cf98"))
-		_text(Vector2(objective_rect.position.x + 8.0, objective_rect.position.y + 23.0), str(objective.get("detail", "")), 9, TEXT_COLOR)
-		_bar(Rect2(objective_rect.position.x + 8.0, objective_rect.end.y - 4.0, objective_rect.size.x - 16.0, 2.0), float(objective.get("progress", 0.0)), Color("#c9a65b"))
+		_text(Vector2(objective_rect.position.x + 8.0, objective_rect.position.y + (9.0 if ultra_compact else 12.0)), str(objective.get("title", "当前目标")), 8 if ultra_compact else 9, Color("#e7cf98"))
+		_text(Vector2(objective_rect.position.x + 8.0, objective_rect.position.y + (19.0 if ultra_compact else 23.0)), str(objective.get("detail", "")), 8 if ultra_compact else 9, TEXT_COLOR)
+		if not ultra_compact:
+			_bar(Rect2(objective_rect.position.x + 8.0, objective_rect.end.y - 4.0, objective_rect.size.x - 16.0, 2.0), float(objective.get("progress", 0.0)), Color("#c9a65b"))
+
 	var boss = main_ref.get_boss()
 	if boss != null:
 		var boss_rect: Rect2 = layout["boss"]
 		_draw_ornate_panel(boss_rect, Color("#a84b3c"))
-		_text(Vector2(boss_rect.position.x + 8.0, boss_rect.position.y + 17.0), "尸王" + (" · 暴走" if boss.hp / boss.max_hp <= 0.5 else ""), 10, Color("#e7c88a"))
-		_bar(Rect2(boss_rect.position.x + 72.0, boss_rect.position.y + 11.0, boss_rect.size.x - 82.0, 5.0), boss.hp / maxf(1.0, boss.max_hp), Color("#a44439"), true)
+		_text(Vector2(boss_rect.position.x + 8.0, boss_rect.position.y + (14.0 if ultra_compact else 17.0)), "尸王" + (" · 暴走" if boss.hp / boss.max_hp <= 0.5 else ""), 9 if ultra_compact else 10, Color("#e7c88a"))
+		_bar(Rect2(boss_rect.position.x + 72.0, boss_rect.position.y + (8.0 if ultra_compact else 11.0), boss_rect.size.x - 82.0, 4.0 if ultra_compact else 5.0), boss.hp / maxf(1.0, boss.max_hp), Color("#a44439"), true)
+
+	# One-row build strip: four skill slots and three artifact slots, with no overlapping labels.
 	_draw_ornate_panel(build_rect, Color("#8b7758"))
-	_text(Vector2(build_rect.position.x + 7.0, build_rect.position.y + 14.0), "构筑", 9, Color("#e7cf98"))
 	var primary_text := "待立道" if main_ref.primary_element.is_empty() else "主修%s" % main_ref._element_name(main_ref.primary_element)
-	_text(Vector2(build_rect.position.x + 5.0, build_rect.position.y + 28.0), primary_text, 9, MUTED_COLOR)
+	_text(Vector2(build_rect.position.x + 8.0, build_rect.position.y + (10.0 if ultra_compact else 12.0)), "构筑 · " + primary_text, 8 if ultra_compact else 9, Color("#e7cf98"))
 	var owned_skill_ids: Array = []
 	for skill_variant in main_ref.AUTO_SKILL_DEFS.keys():
 		var skill_id := str(skill_variant)
@@ -162,36 +170,39 @@ func _draw_compact_hud(view: Vector2, layout: Dictionary) -> void:
 		var artifact_id := str(artifact_variant)
 		if main_ref.artifacts.has(artifact_id):
 			artifact_ids.append(artifact_id)
-	var slot_start_x := build_rect.position.x + 59.0
-	var slot_width := maxf(24.0, (build_rect.size.x - 65.0) / 7.0)
+	var slot_width := (build_rect.size.x - 20.0) / 7.0
+	var icon_radius := minf(9.0 if ultra_compact else 10.0, slot_width * 0.22)
+	var icon_y := build_rect.position.y + (23.0 if ultra_compact else 29.0)
 	for i in range(7):
-		var center := Vector2(slot_start_x + (float(i) + 0.5) * slot_width, build_rect.position.y + 13.0)
-		var label := "—"
-		if i < 4:
-			if i < owned_skill_ids.size():
-				var skill_id := str(owned_skill_ids[i])
-				var skill_data: Dictionary = main_ref.skills[skill_id]
-				var shown_id := str(skill_data.get("evolved", "")) if not str(skill_data.get("evolved", "")).is_empty() else skill_id
-				_draw_card_art(center, shown_id, _upgrade_color(shown_id), 9.0)
-				_text(center + Vector2(7.0, 3.0), str(skill_data.get("level", 1)), 9, TEXT_COLOR)
-				label = _short_skill_label(skill_id, shown_id)
+		var center := Vector2(build_rect.position.x + 10.0 + (float(i) + 0.5) * slot_width, icon_y)
+		var has_item := false
+		var shown_id := ""
+		var item_level := 0
+		if i < 4 and i < owned_skill_ids.size():
+			var owned_skill_id := str(owned_skill_ids[i])
+			var skill_data: Dictionary = main_ref.skills[owned_skill_id]
+			shown_id = str(skill_data.get("evolved", "")) if not str(skill_data.get("evolved", "")).is_empty() else owned_skill_id
+			item_level = int(skill_data.get("level", 1))
+			has_item = true
+		elif i >= 4 and i - 4 < artifact_ids.size():
+			var owned_artifact_id := str(artifact_ids[i - 4])
+			var artifact_data: Dictionary = main_ref.artifacts[owned_artifact_id]
+			shown_id = owned_artifact_id
+			item_level = int(artifact_data.get("level", 1))
+			has_item = true
+		if has_item:
+			_draw_card_art(center, shown_id, _upgrade_color(shown_id), icon_radius)
+			if not ultra_compact:
+				_text(center + Vector2(icon_radius * 0.72, -icon_radius * 0.58), str(item_level), 7, TEXT_COLOR)
 		else:
-			var artifact_index := i - 4
-			if artifact_index < artifact_ids.size():
-				var artifact_id := str(artifact_ids[artifact_index])
-				var artifact_data: Dictionary = main_ref.artifacts[artifact_id]
-				_draw_card_art(center, artifact_id, _upgrade_color(artifact_id), 9.0)
-				_text(center + Vector2(7.0, 3.0), str(artifact_data.get("level", 1)), 9, TEXT_COLOR)
-				label = _compact_artifact_label(artifact_id)
-		if label == "—":
-			draw_circle(center, 8.0, Color(0.08, 0.075, 0.065, 0.82))
-			draw_arc(center, 8.0, 0.0, TAU, 20, Color(0.55, 0.49, 0.38, 0.35), 1.0)
-		_center_text(Rect2(center.x - slot_width * 0.5, build_rect.position.y + 22.0, slot_width, 12.0), label, 9, MUTED_COLOR)
+			draw_circle(center, icon_radius * 0.78, Color(0.08, 0.075, 0.065, 0.82))
+			draw_arc(center, icon_radius * 0.78, 0.0, TAU, 20, Color(0.55, 0.49, 0.38, 0.35), 0.8)
+
 	_draw_ornate_panel(controls_rect, Color("#8f805d"))
 	if not _is_mobile():
-		_center_text(controls_rect, "WASD 移动 · SPACE 镇尸诀 · E 治疗 · ESC 暂停", 9, MUTED_COLOR)
+		_center_text(controls_rect, "WASD 移动 · SPACE 镇尸诀 · E 治疗 · ESC 暂停", 7 if ultra_compact else 9, MUTED_COLOR)
 	else:
-		_center_text(controls_rect, "左侧移动 · 右侧道术 / 治疗", 9, MUTED_COLOR)
+		_center_text(controls_rect, "左侧移动 · 右侧道术 / 治疗", 7 if ultra_compact else 9, MUTED_COLOR)
 
 
 func _compact_artifact_label(artifact_id: String) -> String:
@@ -409,25 +420,28 @@ func _short_skill_label(skill_id: String, shown_id: String) -> String:
 
 
 func _hud_layout(view: Vector2) -> Dictionary:
-	var compact := view.x <= 900.0 or view.y <= 520.0
+	var compact := view.x <= 1120.0 or view.y <= 640.0
 	if compact:
-		var scale := clampf(minf(view.x / 1280.0, view.y / 720.0), 0.62, 0.85)
+		var ultra_compact := view.y <= 400.0
+		var scale := clampf(minf(view.x / 1280.0, view.y / 720.0), 0.56 if ultra_compact else 0.62, 0.85)
 		var margin := 8.0
-		var left_width := minf(194.0, view.x * 0.30)
-		var right_width := minf(160.0, view.x * 0.25)
-		var time_width := minf(170.0, view.x * 0.28)
-		var status_rect := Rect2(margin, margin, left_width, 60.0)
-		var skill_rect := Rect2(view.x - margin - right_width, margin, right_width, 60.0)
-		var time_rect := Rect2((view.x - time_width) * 0.5, margin, time_width, 44.0)
-		var objective_width := minf(230.0, maxf(180.0, view.x - left_width - right_width - margin * 2.0 - 16.0))
-		var objective_rect := Rect2((view.x - objective_width) * 0.5, margin + 52.0, objective_width, 30.0)
-		var boss_width := minf(340.0, view.x * 0.56)
-		var boss_rect := Rect2((view.x - boss_width) * 0.5, objective_rect.end.y + 4.0, boss_width, 27.0)
+		var left_width := minf(184.0 if ultra_compact else 194.0, view.x * 0.30)
+		var right_width := minf(148.0 if ultra_compact else 160.0, view.x * 0.25)
+		var time_width := minf(150.0 if ultra_compact else 170.0, view.x * 0.28)
+		var status_rect := Rect2(margin, margin, left_width, 50.0 if ultra_compact else 60.0)
+		var skill_rect := Rect2(view.x - margin - right_width, margin, right_width, 50.0 if ultra_compact else 60.0)
+		var time_rect := Rect2((view.x - time_width) * 0.5, margin, time_width, 38.0 if ultra_compact else 44.0)
+		var objective_width := minf(220.0, maxf(165.0, view.x - left_width - right_width - margin * 2.0 - 16.0))
+		var objective_rect := Rect2((view.x - objective_width) * 0.5, margin + (43.0 if ultra_compact else 52.0), objective_width, 24.0 if ultra_compact else 30.0)
+		var boss_width := minf(300.0 if ultra_compact else 340.0, view.x * 0.56)
+		var boss_rect := Rect2((view.x - boss_width) * 0.5, objective_rect.end.y + 3.0, boss_width, 22.0 if ultra_compact else 27.0)
 		var controls_width := minf(320.0, minf(view.x - margin * 2.0, view.x * 0.52))
-		var controls_rect := Rect2((view.x - controls_width) * 0.5, view.y - 76.0, controls_width, 20.0)
-		var build_width := minf(420.0, minf(view.x - margin * 2.0, view.x * 0.58))
-		var build_rect := Rect2((view.x - build_width) * 0.5, view.y - 46.0, build_width, 38.0)
-		return {"scale": scale, "compact": true, "status": status_rect, "objective": objective_rect, "time": time_rect, "skill": skill_rect, "build": build_rect, "controls": controls_rect, "boss": boss_rect}
+		var controls_height := 16.0 if ultra_compact else 20.0
+		var controls_rect := Rect2((view.x - controls_width) * 0.5, view.y - (56.0 if ultra_compact else 76.0), controls_width, controls_height)
+		var build_width := minf(380.0 if ultra_compact else 420.0, minf(view.x - margin * 2.0, view.x * (0.78 if ultra_compact else 0.58)))
+		var build_height := 32.0 if ultra_compact else 42.0
+		var build_rect := Rect2((view.x - build_width) * 0.5, view.y - (36.0 if ultra_compact else 48.0), build_width, build_height)
+		return {"scale": scale, "compact": true, "ultra_compact": ultra_compact, "status": status_rect, "objective": objective_rect, "time": time_rect, "skill": skill_rect, "build": build_rect, "controls": controls_rect, "boss": boss_rect}
 	var scale := clampf(minf(view.x / 1280.0, view.y / 720.0), 0.72, 1.0)
 	var margin := maxf(10.0, 18.0 * scale)
 	var left_width := minf(330.0 * scale, view.x * 0.285)
