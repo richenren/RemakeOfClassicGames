@@ -4,7 +4,7 @@ const SKILL_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_art_atlas
 const SKILL_CARD_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_card_art_atlas.svg")
 const WATER_COLD_TIDE_CARD_TEXTURE: Texture2D = preload("res://assets/sprites/water_cold_tide_card.svg")
 const ELEMENT_CULTIVATION_ATLAS: Texture2D = preload("res://assets/sprites/element_cultivation_atlas.svg")
-const PLAYER_PORTRAIT_TEXTURE: Texture2D = preload("res://assets/sprites/player_portrait.svg")
+const PLAYER_PORTRAIT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_portrait.tres")
 
 var main_ref
 const TEXT_COLOR := Color("#efe6d2")

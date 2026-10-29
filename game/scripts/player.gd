@@ -2,33 +2,21 @@ extends Node2D
 
 const WORLD_MIN := Vector2(48.0, 48.0)
 const WORLD_MAX := Vector2(2352.0, 1552.0)
-const PLAYER_IDLE_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist.svg")
-const PLAYER_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_walk.svg")
-const PLAYER_DRAW_SIZE := Vector2(76.0, 96.0)
+const PLAYER_FRONT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_front.tres")
+const PLAYER_SIDE_LEFT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_side_left.tres")
+const PLAYER_BACK_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_back.tres")
+const PLAYER_SIDE_RIGHT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_side_right.tres")
+const PLAYER_IDLE_TEXTURE: Texture2D = PLAYER_FRONT_TEXTURE
+const PLAYER_WALK_TEXTURE: Texture2D = PLAYER_SIDE_RIGHT_TEXTURE
+const PLAYER_DRAW_SIZE := Vector2(60.0, 112.0)
 const PLAYER_DEATH_DRAW_SIZE := Vector2(115.2, 96.0)
-const PLAYER_IDLE_FRAMES = [
-	preload("res://assets/sprites/player_frames/player_idle_01.svg"),
-	preload("res://assets/sprites/player_frames/player_idle_02.svg"),
-	preload("res://assets/sprites/player_frames/player_idle_03.svg"),
-	preload("res://assets/sprites/player_frames/player_idle_04.svg")
-]
-const PLAYER_WALK_FRAMES = [
-	preload("res://assets/sprites/player_frames/player_walk_01.svg"),
-	preload("res://assets/sprites/player_frames/player_walk_02.svg"),
-	preload("res://assets/sprites/player_frames/player_walk_03.svg"),
-	preload("res://assets/sprites/player_frames/player_walk_04.svg")
-]
-const PLAYER_ATTACK_FRAMES = [
-	preload("res://assets/sprites/player_frames/player_attack_01.svg"),
-	preload("res://assets/sprites/player_frames/player_attack_02.svg"),
-	preload("res://assets/sprites/player_frames/player_attack_03.svg"),
-	preload("res://assets/sprites/player_frames/player_attack_04.svg")
-]
-const PLAYER_HIT_FRAMES = [
-	preload("res://assets/sprites/player_frames/player_hit_01.svg"),
-	preload("res://assets/sprites/player_frames/player_hit_02.svg"),
-	preload("res://assets/sprites/player_frames/player_hit_03.svg")
-]
+
+# First integration pass: approved static four-direction artwork.
+# State timing and movement feedback remain; matched action poses will be authored next.
+const PLAYER_IDLE_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
+const PLAYER_WALK_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
+const PLAYER_ATTACK_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
+const PLAYER_HIT_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
 const PLAYER_DEATH_FRAMES = [
 	preload("res://assets/sprites/player_frames/player_death_01.svg"),
 	preload("res://assets/sprites/player_frames/player_death_02.svg"),
@@ -37,6 +25,7 @@ const PLAYER_DEATH_FRAMES = [
 	preload("res://assets/sprites/player_frames/player_death_05.svg"),
 	preload("res://assets/sprites/player_frames/player_death_06.svg")
 ]
+
 const MOVE_ACCELERATION := 1500.0
 const MOVE_DECELERATION := 1900.0
 
@@ -130,7 +119,14 @@ func trigger_attack(direction: Vector2) -> void:
 
 
 func _player_sprite_texture() -> Texture2D:
-	return PLAYER_WALK_TEXTURE if is_moving else PLAYER_IDLE_TEXTURE
+	return _directional_texture()
+
+
+func _directional_texture() -> Texture2D:
+	# Vertical movement uses front/back views; horizontal movement uses the matching profile.
+	if absf(facing.y) >= absf(facing.x) * 1.15:
+		return PLAYER_BACK_TEXTURE if facing.y < 0.0 else PLAYER_FRONT_TEXTURE
+	return PLAYER_SIDE_LEFT_TEXTURE if facing.x < 0.0 else PLAYER_SIDE_RIGHT_TEXTURE
 
 
 func _animation_frames_for_state(state: String) -> Array:
@@ -162,8 +158,9 @@ func _animation_frame_duration(state: String) -> float:
 
 
 func _current_animation_texture() -> Texture2D:
-	var frames: Array = _animation_frames_for_state(animation_state)
-	return frames[clampi(animation_frame_index, 0, frames.size() - 1)] as Texture2D
+	if animation_state == "death":
+		return PLAYER_DEATH_FRAMES[clampi(animation_frame_index, 0, PLAYER_DEATH_FRAMES.size() - 1)] as Texture2D
+	return _directional_texture()
 
 
 func _update_animation(delta: float) -> void:
@@ -257,8 +254,8 @@ func _draw() -> void:
 		draw_circle(Vector2(-10.0 * footstep_side, 43.0), 3.2, Color(0.70, 0.62, 0.43, dust_alpha))
 		draw_circle(Vector2(-13.0 * footstep_side, 45.0), 2.0, Color(0.70, 0.62, 0.43, dust_alpha * 0.7))
 
-	var flip_x := -1.0 if facing.x < -0.1 else 1.0
-	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * squash_x, stretch_y))
+	# Directional artwork is already oriented; never mirror the sword onto the wrong shoulder.
+	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2(squash_x, stretch_y))
 	draw_texture_rect(_current_animation_texture(), sprite_rect, false, tint)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 

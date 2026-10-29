@@ -92,21 +92,30 @@ func _test_hud_presentation(main: Variant) -> void:
 
 func _test_sprite_assets(main: Variant) -> void:
 	var background := load("res://assets/sprites/graveyard_background.svg") as Texture2D
-	var portrait := load("res://assets/sprites/player_portrait.svg") as Texture2D
+	var atlas := load("res://assets/sprites/player_taoist_views_atlas.png") as Texture2D
+	var portrait := load("res://assets/sprites/player_taoist_portrait.tres") as Texture2D
+	var front := load("res://assets/sprites/player_taoist_front.tres") as Texture2D
+	var side_left := load("res://assets/sprites/player_taoist_side_left.tres") as Texture2D
+	var back := load("res://assets/sprites/player_taoist_back.tres") as Texture2D
+	var side_right := load("res://assets/sprites/player_taoist_side_right.tres") as Texture2D
 	_check(background != null and background.get_size() == Vector2(2400.0, 1600.0), "义庄背景以 2400×1600 原生画布加载，避免放大模糊")
 	var background_source := FileAccess.get_file_as_string("res://assets/sprites/graveyard_background.svg")
-	var portrait_source := FileAccess.get_file_as_string("res://assets/sprites/player_portrait.svg")
 	_check(background_source.contains("id=\"ruined-yizhuang-hall\"") and background_source.contains("id=\"ground-ritual-marks\""), "义庄背景包含灵堂建筑与低对比地面符纹细节")
-	_check(portrait != null and portrait.get_size() == Vector2(256.0, 256.0), "新版 256×256 道士近景头像可加载")
-	_check(portrait_source.contains("portraitClip") and portrait_source.contains("url(#gold)") and portrait_source.contains("url(#skin)"), "道士头像具备圆形裁切、鎏金边框和多层肤色明暗")
-	_check(main.player.PLAYER_IDLE_TEXTURE != null and main.player.PLAYER_WALK_TEXTURE != null, "玩家引用独立待机/行走全身 SVG")
-	_check(main.player.PLAYER_IDLE_TEXTURE.get_size() == Vector2(128.0, 160.0), "主角使用完整 128×160 画布，避免图集裁切缺脚")
-	_check(main.player.PLAYER_DRAW_SIZE.x >= 72.0 and main.player.PLAYER_DRAW_SIZE.y >= 90.0, "主角恢复足够大的全身绘制比例，避免缩小成贴纸")
-	main.player.is_moving = false
-	_check(main.player._player_sprite_texture() == main.player.PLAYER_IDLE_TEXTURE, "主角静止时使用完整待机姿态")
-	main.player.is_moving = true
-	_check(main.player._player_sprite_texture() == main.player.PLAYER_WALK_TEXTURE, "主角移动时切换真实行走姿态")
-	main.player.is_moving = false
+	_check(atlas != null and atlas.get_size() == Vector2(320.0, 184.0), "背剑主角图集包含四向视图和 HUD 头像区域")
+	_check(portrait != null and portrait.get_size() == Vector2(64.0, 64.0), "背剑主角 64×64 HUD 头像可加载")
+	_check(front != null and side_left != null and back != null and side_right != null, "主角四向背剑 AtlasTexture 资源全部可加载")
+	_check(front.get_size() == Vector2(64.0, 120.0) and side_left.get_size() == Vector2(64.0, 120.0) and back.get_size() == Vector2(64.0, 120.0) and side_right.get_size() == Vector2(64.0, 120.0), "主角四向视图使用统一 64×120 区域")
+	_check(main.player.PLAYER_IDLE_TEXTURE == front and main.player.PLAYER_WALK_TEXTURE == side_right, "主角运行时引用新背剑视图，而非旧 SVG")
+	_check(main.player.PLAYER_DRAW_SIZE.x >= 56.0 and main.player.PLAYER_DRAW_SIZE.y >= 100.0, "新主角绘制比例适配细长全身原型")
+	main.player.facing = Vector2.DOWN
+	_check(main.player._player_sprite_texture() == front, "向下朝向选择主角正面")
+	main.player.facing = Vector2.LEFT
+	_check(main.player._player_sprite_texture() == side_left, "向左朝向选择左侧面且不镜像剑柄")
+	main.player.facing = Vector2.UP
+	_check(main.player._player_sprite_texture() == back, "向上朝向选择主角背面")
+	main.player.facing = Vector2.RIGHT
+	_check(main.player._player_sprite_texture() == side_right, "向右朝向选择右侧面")
+	main.player.facing = Vector2.DOWN
 	var walker: Variant = ENEMY_SCRIPT.new()
 	root.add_child(walker)
 	walker.setup("walker")
@@ -508,17 +517,17 @@ func _test_player() -> void:
 func _test_player_animation_frames() -> void:
 	var player: Variant = PLAYER_SCRIPT.new()
 	root.add_child(player)
-	_check(player.PLAYER_IDLE_FRAMES.size() == 4, "主角待机动画包含 4 个独立矢量帧")
-	_check(player.PLAYER_WALK_FRAMES.size() == 4, "主角移动动画包含 4 个独立矢量帧")
-	_check(player.PLAYER_ATTACK_FRAMES.size() == 4, "主角符箓攻击动画包含 4 个独立矢量帧")
-	_check(player.PLAYER_HIT_FRAMES.size() == 3, "主角受击动画包含 3 个独立矢量帧")
-	_check(player.PLAYER_DEATH_FRAMES.size() == 6, "主角倒地动画包含 6 个独立矢量帧")
+	_check(player.PLAYER_IDLE_FRAMES.size() == 4, "主角待机状态保留 4 帧节奏槽，画面由四向视图决定")
+	_check(player.PLAYER_WALK_FRAMES.size() == 4, "主角移动状态保留 4 帧节奏槽，匹配动作帧待制作")
+	_check(player.PLAYER_ATTACK_FRAMES.size() == 4, "主角符箓攻击状态保留 4 帧节奏槽，匹配动作帧待制作")
+	_check(player.PLAYER_HIT_FRAMES.size() == 3, "主角受击状态保留 3 帧节奏槽，匹配动作帧待制作")
+	_check(player.PLAYER_DEATH_FRAMES.size() == 6, "主角临时保留 6 帧旧倒地动画")
 	var all_frames_load := true
 	for frames in [player.PLAYER_IDLE_FRAMES, player.PLAYER_WALK_FRAMES, player.PLAYER_ATTACK_FRAMES, player.PLAYER_HIT_FRAMES, player.PLAYER_DEATH_FRAMES]:
 		for texture in frames:
 			if texture == null or texture.get_width() <= 0 or texture.get_height() <= 0:
 				all_frames_load = false
-	_check(all_frames_load, "主角全部逐帧 SVG 资源均可加载")
+	_check(all_frames_load, "主角四向视图占位与旧倒地帧资源均可加载")
 	player.is_moving = true
 	player._update_animation(0.01)
 	_check(player.animation_state == "walk", "移动输入切换到逐帧行走动画")
