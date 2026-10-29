@@ -443,8 +443,8 @@ func _resolve_boss_attack(boss, attack_kind: String) -> void:
 func _tick_projectiles(delta: float) -> void:
 	for i in range(projectiles.size() - 1, -1, -1):
 		var projectile = projectiles[i]
-		projectile.tick(delta)
-		if projectile.impacted and is_instance_valid(projectile.target) and enemies.has(projectile.target):
+		projectile.tick(delta, enemies)
+		if projectile.impacted and is_instance_valid(projectile.impact_target) and enemies.has(projectile.impact_target):
 			_resolve_projectile_hit(projectile)
 		if not projectile.alive:
 			projectiles.remove_at(i)
@@ -1261,8 +1261,8 @@ func _apply_area_damage(center: Vector2, radius: float, damage: float, effect_ki
 
 
 func _resolve_projectile_hit(projectile) -> void:
-	var target = projectile.target
-	if not is_instance_valid(target):
+	var target = projectile.impact_target
+	if not is_instance_valid(target) or not enemies.has(target):
 		return
 	var skill_id := str(projectile.skill_id)
 	var damage := float(projectile.damage)

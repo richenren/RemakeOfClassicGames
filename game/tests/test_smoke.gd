@@ -640,6 +640,34 @@ func _test_combat_and_progression(main: Variant) -> void:
 	main.add_child(nearby_mob)
 	main.enemies.append(nearby_mob)
 	_check(main._find_combat_target(player.position, 620.0) == boss, "尸王进入攻击范围后优先成为自动攻击目标")
+
+	# Boss targeting remains, but a projectile must stop at the first enemy on its path.
+	var saved_enemy_refs: Array = []
+	var saved_enemy_positions: Array[Vector2] = []
+	for enemy in main.enemies:
+		if enemy == boss or enemy == nearby_mob:
+			continue
+		saved_enemy_refs.append(enemy)
+		saved_enemy_positions.append(enemy.position)
+		enemy.position = player.position + Vector2(0.0, 500.0 + float(saved_enemy_positions.size()) * 70.0)
+	for old_projectile in main.projectiles:
+		old_projectile.queue_free()
+	main.projectiles.clear()
+	boss.hp = boss.max_hp
+	nearby_mob.hp = nearby_mob.max_hp
+	var boss_hp_before_blocked_shot: float = boss.hp
+	var mob_hp_before_blocked_shot: float = nearby_mob.hp
+	main._auto_attack()
+	_check(main.projectiles.size() == 1 and main.projectiles[0].target == boss, "尸王仍可作为基础攻击的优先锁定目标")
+	if not main.projectiles.is_empty():
+		main.projectiles[0].speed = 10000.0
+		main._tick_projectiles(0.1)
+	_check(nearby_mob.hp < mob_hp_before_blocked_shot, "尸王前方的小怪会优先承受弹道伤害")
+	_check(is_equal_approx(boss.hp, boss_hp_before_blocked_shot), "弹道命中挡路小怪时不会同时伤害尸王")
+	_check(main.projectiles.is_empty(), "弹道命中第一个碰撞目标后销毁")
+	for i in range(saved_enemy_refs.size()):
+		saved_enemy_refs[i].position = saved_enemy_positions[i]
+
 	main.enemies.erase(nearby_mob)
 	nearby_mob.queue_free()
 	boss.hp = 0.0
