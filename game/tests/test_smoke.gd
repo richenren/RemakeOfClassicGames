@@ -325,9 +325,13 @@ func _test_skill_art_assets() -> void:
 	var atlas := load("res://assets/sprites/skill_art_atlas.svg") as Texture2D
 	var cultivation_atlas := load("res://assets/sprites/element_cultivation_atlas.svg") as Texture2D
 	var card_atlas := load("res://assets/sprites/skill_card_art_atlas.svg") as Texture2D
+	var water_card_art := load("res://assets/sprites/water_cold_tide_card.svg") as Texture2D
 	_check(atlas != null, "国风技能插画图集可加载")
 	_check(cultivation_atlas != null, "六大元素修炼专属插画图集可加载")
 	_check(card_atlas != null, "横向高细节技能卡插画图集可加载")
+	_check(water_card_art != null, "寒潮阵专属高细节水冰漩涡插画可加载")
+	if water_card_art != null:
+		_check(water_card_art.get_size() == Vector2(640.0, 416.0), "寒潮阵插画使用 640×416 横向构图")
 	if atlas != null:
 		_check(atlas.get_size() == Vector2(768.0, 128.0), "六种技能插画共享 768×128 图集")
 	if cultivation_atlas != null:
@@ -336,6 +340,10 @@ func _test_skill_art_assets() -> void:
 		_check(card_atlas.get_size() == Vector2(3840.0, 208.0), "十二种技能/修炼卡插画使用 3840×208 横向图集")
 	var hud: Variant = HUD_SCRIPT.new()
 	root.add_child(hud)
+	_check(hud._uses_water_formation_card_art("water_array"), "寒潮阵升级卡使用独立水系主视觉")
+	_check(hud._uses_water_formation_card_art("ice_array"), "冰魄阵进化卡复用水冰主视觉")
+	_check(hud._uses_water_formation_card_art("cold_relic"), "寒魄法器卡复用水冰主视觉")
+	_check(not hud._uses_water_formation_card_art("fire_talisman"), "火符卡保持火系独立主视觉")
 	_check(hud._skill_art_region("fire_talisman").position.x == 0.0, "火符使用专属插画帧")
 	_check(hud._skill_art_region("thunder_talisman").position.x == 128.0, "雷符使用专属插画帧")
 	_check(hud._skill_art_region("copper_coin_sword").position.x == 256.0, "铜钱剑使用独立武器插画帧")

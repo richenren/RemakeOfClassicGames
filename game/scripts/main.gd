@@ -36,7 +36,7 @@ const AUTO_SKILL_DEFS := {
 	"thunder_talisman": {"name": "雷符", "desc": "雷符爆发，可对附近尸群传导", "upgrade_desc": "雷符伤害提升，传导更强", "damage": 22.0, "cooldown": 2.15},
 	"copper_coin_sword": {"name": "铜钱剑", "desc": "御使铜钱剑追击敌人，强化贯穿或回旋", "upgrade_desc": "铜钱剑伤害与出手频率提升", "damage": 17.0, "cooldown": 1.8},
 	"peachwood_sword": {"name": "桃木剑", "desc": "御剑驱邪，可追击或环身护主", "upgrade_desc": "桃木剑伤害与护身范围提升", "damage": 16.0, "cooldown": 1.9},
-	"water_array": {"name": "水阵", "desc": "在敌群脚下展开水阵，造成伤害并施加湿润", "upgrade_desc": "水阵范围、伤害与控制提升", "damage": 10.0, "cooldown": 3.0},
+	"water_array": {"name": "寒潮阵", "desc": "寒潮席卷指定区域，造成伤害并持续减速", "upgrade_desc": "扩大寒潮阵范围，强化冰霜伤害与减速", "damage": 10.0, "cooldown": 3.0},
 	"earth_formation": {"name": "地脉阵", "desc": "震动地脉压制一片区域，适合群体清场", "upgrade_desc": "地脉阵范围与伤害提升", "damage": 21.0, "cooldown": 2.8}
 }
 
@@ -1311,13 +1311,9 @@ func _draw_skill_effects() -> void:
 		var kind := str(effect.get("kind", ""))
 		match kind:
 			"water":
-				draw_arc(center, radius, 0.0, TAU, 56, Color(0.34, 0.72, 0.82, life * 0.72), 3.0)
-				draw_arc(center, radius * 0.68, 0.0, TAU, 48, Color(0.45, 0.82, 0.88, life * 0.48), 2.0)
+				_draw_water_formation_effect(center, radius, life, progress, false)
 			"ice":
-				draw_arc(center, radius, 0.0, TAU, 56, Color(0.56, 0.82, 0.94, life * 0.86), 3.0)
-				for i in range(6):
-					var angle := TAU * float(i) / 6.0
-					draw_line(center + Vector2(cos(angle), sin(angle)) * radius * 0.72, center + Vector2(cos(angle), sin(angle)) * radius, Color(0.72, 0.9, 1.0, life * 0.8), 2.0)
+				_draw_water_formation_effect(center, radius, life, progress, true)
 			"earth":
 				draw_arc(center, radius, 0.0, TAU, 48, Color(0.72, 0.61, 0.39, life * 0.8), 3.0)
 				draw_arc(center, radius * 0.58, 0.0, TAU, 40, Color(0.54, 0.48, 0.32, life * 0.55), 2.0)
@@ -1377,6 +1373,47 @@ func _draw_skill_effects() -> void:
 			"control":
 				draw_arc(center, radius, 0.0, TAU, 64, Color(0.92, 0.76, 0.38, life * 0.85), 3.0)
 				draw_arc(center, radius * 0.78, 0.0, TAU, 56, Color(0.74, 0.56, 0.3, life * 0.55), 1.5)
+
+
+func _draw_water_formation_effect(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
+	var cyan := Color(0.32, 0.82, 1.0, life * 0.82)
+	var pale := Color(0.78, 0.95, 1.0, life * 0.92)
+	var deep := Color(0.04, 0.22, 0.38, life * 0.2)
+	var spin := elapsed_seconds * (-1.15 if frozen else 0.9)
+	draw_circle(center, radius * (0.68 + progress * 0.08), deep)
+	for ring_index in range(3):
+		var ring_radius := radius * (0.96 - float(ring_index) * 0.22)
+		var ring_spin := spin * (1.0 if ring_index % 2 == 0 else -0.72)
+		draw_arc(center, ring_radius, ring_spin, ring_spin + TAU * 0.86, 72, cyan if ring_index == 0 else Color(0.48, 0.82, 1.0, life * 0.56), 2.8 if ring_index == 0 else 1.5)
+	for i in range(12):
+		var angle := TAU * float(i) / 12.0 + spin * 0.42
+		var direction := Vector2(cos(angle), sin(angle))
+		draw_line(center + direction * radius * 0.76, center + direction * radius * (0.93 if frozen else 0.88), pale, 1.7 if frozen else 1.2, true)
+		draw_circle(center + direction * radius * 0.95, 1.6 if frozen else 1.2, cyan)
+	for arm in range(2):
+		var points := PackedVector2Array()
+		for step in range(28):
+			var t := float(step) / 27.0
+			var angle := spin + float(arm) * PI + t * TAU * 1.55
+			var spiral_radius := radius * (0.12 + t * 0.64)
+			points.append(center + Vector2(cos(angle), sin(angle)) * spiral_radius)
+		draw_polyline(points, Color(0.48, 0.84, 1.0, life * 0.72), 2.4 if frozen else 1.8, true)
+	if frozen:
+		for i in range(8):
+			var angle := TAU * float(i) / 8.0 + progress * 0.24
+			var direction := Vector2(cos(angle), sin(angle))
+			var tangent := Vector2(-direction.y, direction.x)
+			var base := center + direction * radius * 0.78
+			var tip := center + direction * radius * (1.02 + 0.04 * sin(elapsed_seconds * 4.0 + float(i)))
+			draw_colored_polygon(PackedVector2Array([base - tangent * 4.0, tip, base + tangent * 4.0]), Color(0.66, 0.9, 1.0, life * 0.8))
+			draw_line(base, tip, pale, 1.2, true)
+	var core_radius := maxf(5.0, radius * 0.12)
+	draw_circle(center, core_radius, Color(0.04, 0.13, 0.23, life * 0.92))
+	draw_arc(center, core_radius, 0.0, TAU, 36, pale, 1.5)
+	draw_circle(center + Vector2(0.0, -core_radius * 0.42), core_radius * 0.42, pale)
+	draw_circle(center + Vector2(0.0, core_radius * 0.42), core_radius * 0.42, Color(0.04, 0.13, 0.23, life * 0.95))
+	draw_circle(center + Vector2(0.0, -core_radius * 0.42), core_radius * 0.12, Color(0.04, 0.13, 0.23, life))
+	draw_circle(center + Vector2(0.0, core_radius * 0.42), core_radius * 0.12, pale)
 
 
 func _draw_lightning_bolt(start_position: Vector2, end_position: Vector2, alpha: float, seed_offset: float = 0.0) -> void:

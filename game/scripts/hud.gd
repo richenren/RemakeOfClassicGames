@@ -2,6 +2,7 @@ extends Node2D
 
 const SKILL_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_art_atlas.svg")
 const SKILL_CARD_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_card_art_atlas.svg")
+const WATER_COLD_TIDE_CARD_TEXTURE: Texture2D = preload("res://assets/sprites/water_cold_tide_card.svg")
 const ELEMENT_CULTIVATION_ATLAS: Texture2D = preload("res://assets/sprites/element_cultivation_atlas.svg")
 const PLAYER_PORTRAIT_TEXTURE: Texture2D = preload("res://assets/sprites/player_portrait.svg")
 
@@ -395,7 +396,7 @@ func _short_skill_label(skill_id: String, shown_id: String) -> String:
 		"peachwood_sword":
 			return "桃剑"
 		"water_array":
-			return "水阵"
+			return "寒潮"
 		"earth_formation":
 			return "地脉"
 	return "术法"
@@ -554,22 +555,31 @@ func _draw_skill_emblem(center: Vector2, ready: bool, color: Color) -> void:
 func _draw_skill_card_illustration(art_rect: Rect2, icon_id: String, accent: Color) -> void:
 	var unit := clampf(minf(art_rect.size.x / 320.0, art_rect.size.y / 208.0), 0.42, 1.0)
 	draw_rect(art_rect, Color("#080d12"))
-	var art_region := _skill_card_art_region(icon_id)
-	if art_region.size.x > 0.0:
-		var inset := 4.0 * unit
-		var image_rect := Rect2(art_rect.position + Vector2(inset, inset), art_rect.size - Vector2(inset * 2.0, inset * 2.0))
-		draw_texture_rect_region(SKILL_CARD_ART_ATLAS, image_rect, art_region, Color.WHITE, false)
-		draw_rect(image_rect, Color(0.015, 0.02, 0.025, 0.08))
+	var inset := 4.0 * unit
+	var image_rect := Rect2(art_rect.position + Vector2(inset, inset), art_rect.size - Vector2(inset * 2.0, inset * 2.0))
+	if _uses_water_formation_card_art(icon_id):
+		# The water skill uses a dedicated high-detail vortex illustration; the card frame stays live UI.
+		draw_texture_rect(WATER_COLD_TIDE_CARD_TEXTURE, image_rect, false)
+		draw_rect(image_rect, Color(0.015, 0.02, 0.025, 0.025))
 	else:
-		draw_rect(art_rect, Color(accent.r, accent.g, accent.b, 0.12))
-		draw_circle(art_rect.get_center(), minf(art_rect.size.y * 0.38, art_rect.size.x * 0.22), Color(accent.r, accent.g, accent.b, 0.12))
-		_draw_card_art(art_rect.get_center(), icon_id, accent, minf(54.0 * unit, art_rect.size.y * 0.3))
-		draw_rect(art_rect.grow(-4.0 * unit), Color(accent.r, accent.g, accent.b, 0.1), false, 1.0 * unit)
+		var art_region := _skill_card_art_region(icon_id)
+		if art_region.size.x > 0.0:
+			draw_texture_rect_region(SKILL_CARD_ART_ATLAS, image_rect, art_region, Color.WHITE, false)
+			draw_rect(image_rect, Color(0.015, 0.02, 0.025, 0.08))
+		else:
+			draw_rect(art_rect, Color(accent.r, accent.g, accent.b, 0.12))
+			draw_circle(art_rect.get_center(), minf(art_rect.size.y * 0.38, art_rect.size.x * 0.22), Color(accent.r, accent.g, accent.b, 0.12))
+			_draw_card_art(art_rect.get_center(), icon_id, accent, minf(54.0 * unit, art_rect.size.y * 0.3))
+			draw_rect(art_rect.grow(-4.0 * unit), Color(accent.r, accent.g, accent.b, 0.1), false, 1.0 * unit)
 	draw_rect(art_rect, Color(accent.r, accent.g, accent.b, 0.52), false, 1.0 * unit)
 	draw_line(art_rect.position + Vector2(7.0 * unit, 7.0 * unit), art_rect.position + Vector2(27.0 * unit, 7.0 * unit), Color("#e5c579", 0.92), 1.2 * unit)
 	draw_line(art_rect.position + Vector2(7.0 * unit, 7.0 * unit), art_rect.position + Vector2(7.0 * unit, 27.0 * unit), Color("#e5c579", 0.92), 1.2 * unit)
 	draw_line(Vector2(art_rect.end.x - 7.0 * unit, art_rect.end.y - 7.0 * unit), Vector2(art_rect.end.x - 27.0 * unit, art_rect.end.y - 7.0 * unit), Color("#e5c579", 0.92), 1.2 * unit)
 	draw_line(Vector2(art_rect.end.x - 7.0 * unit, art_rect.end.y - 7.0 * unit), Vector2(art_rect.end.x - 7.0 * unit, art_rect.end.y - 27.0 * unit), Color("#e5c579", 0.92), 1.2 * unit)
+
+
+func _uses_water_formation_card_art(icon_id: String) -> bool:
+	return icon_id in ["water_array", "ice_array", "cold_relic"]
 
 func _center_text(rect: Rect2, value: String, size: int, color: Color) -> void:
 	draw_string(ThemeDB.fallback_font, Vector2(rect.position.x, rect.position.y + size), value, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, color)
