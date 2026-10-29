@@ -101,10 +101,10 @@ func _test_sprite_assets(main: Variant) -> void:
 	_check(background != null and background.get_size() == Vector2(2400.0, 1600.0), "义庄背景以 2400×1600 原生画布加载，避免放大模糊")
 	var background_source := FileAccess.get_file_as_string("res://assets/sprites/graveyard_background.svg")
 	_check(background_source.contains("id=\"ruined-yizhuang-hall\"") and background_source.contains("id=\"ground-ritual-marks\""), "义庄背景包含灵堂建筑与低对比地面符纹细节")
-	_check(atlas != null and atlas.get_size() == Vector2(320.0, 184.0), "背剑主角图集包含四向视图和 HUD 头像区域")
-	_check(portrait != null and portrait.get_size() == Vector2(64.0, 64.0), "背剑主角 64×64 HUD 头像可加载")
+	_check(atlas != null and atlas.get_size() == Vector2(240.0, 138.0), "背剑主角图集包含四向视图和 HUD 头像区域")
+	_check(portrait != null and portrait.get_size() == Vector2(48.0, 48.0), "背剑主角 64×64 HUD 头像可加载")
 	_check(front != null and side_left != null and back != null and side_right != null, "主角四向背剑 AtlasTexture 资源全部可加载")
-	_check(front.get_size() == Vector2(64.0, 120.0) and side_left.get_size() == Vector2(64.0, 120.0) and back.get_size() == Vector2(64.0, 120.0) and side_right.get_size() == Vector2(64.0, 120.0), "主角四向视图使用统一 64×120 区域")
+	_check(front.get_size() == Vector2(48.0, 90.0) and side_left.get_size() == Vector2(48.0, 90.0) and back.get_size() == Vector2(48.0, 90.0) and side_right.get_size() == Vector2(48.0, 90.0), "主角四向视图使用统一 48×90 区域")
 	_check(main.player.PLAYER_IDLE_TEXTURE == front and main.player.PLAYER_WALK_TEXTURE == side_right, "主角运行时引用新背剑视图，而非旧 SVG")
 	_check(main.player.PLAYER_DRAW_SIZE.x >= 56.0 and main.player.PLAYER_DRAW_SIZE.y >= 100.0, "新主角绘制比例适配细长全身原型")
 	main.player.facing = Vector2.DOWN

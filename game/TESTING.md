@@ -77,6 +77,6 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 ## 2026-10-29：主角背剑四向视图运行时接入
 
 - 新增 `player_taoist_views_atlas.png` 与四向 `AtlasTexture` 资源，`player.gd` 根据朝向选择正面/左侧面/背面/右侧面；不水平镜像，避免剑柄与太极图换边。
-- HUD 头像切换为同一角色图集内的 64×64 头像区域。
+- HUD 头像切换为同一角色图集内的 48×48 头像区域。
 - 自动化测试新增图集尺寸、AtlasTexture 区域、四向朝向选择与新主角绘制尺寸检查。
 - 当前属于第一阶段静态四向原型接入：普通状态的匹配动作帧和新人物死亡帧仍待制作；Headless 通过不代表 Windows 实际观感已验收。

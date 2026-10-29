@@ -6,12 +6,12 @@
 
 | 文件 | 角色/动作 | 画布 | 用途 |
 | --- | --- | ---: | --- |
-| `player_taoist_views_atlas.png` | 主角四向背剑原型 + 头像区域 | 320×184 | 透明 PNG 图集；四个 64×120 全身视图与一个 64×64 HUD 头像区域 |
-| `player_taoist_front.tres` | 正面视图 | 64×120 | 朝下/默认朝向；角色自身右肩在画面左侧 |
-| `player_taoist_side_left.tres` | 左侧面视图 | 64×120 | 朝左时使用，不水平镜像，避免剑柄与装备锚点换边 |
-| `player_taoist_back.tres` | 背面视图 | 64×120 | 朝上时使用；剑柄/太极图位于角色自身右肩附近 |
-| `player_taoist_side_right.tres` | 右侧面视图 | 64×120 | 朝右时使用，不水平镜像 |
-| `player_taoist_portrait.tres` | HUD 道士头像 | 64×64 | 从同一背剑原型提取，替代旧卡通头像 |
+| `player_taoist_views_atlas.png` | 主角四向背剑原型 + 头像区域 | 240×138 | 透明 PNG 图集；四个 48×90 全身视图与一个 48×48 HUD 头像区域 |
+| `player_taoist_front.tres` | 正面视图 | 48×90 | 朝下/默认朝向；角色自身右肩在画面左侧 |
+| `player_taoist_side_left.tres` | 左侧面视图 | 48×90 | 朝左时使用，不水平镜像，避免剑柄与装备锚点换边 |
+| `player_taoist_back.tres` | 背面视图 | 48×90 | 朝上时使用；剑柄/太极图位于角色自身右肩附近 |
+| `player_taoist_side_right.tres` | 右侧面视图 | 48×90 | 朝右时使用，不水平镜像 |
+| `player_taoist_portrait.tres` | HUD 道士头像 | 48×48 | 从同一背剑原型提取，替代旧卡通头像 |
 | `player_taoist.svg` / `player_taoist_walk.svg` | 旧版主角 SVG | 128×160 | 保留作回滚参考，当前运行时不再引用 |
 | `enemy_walker.svg` | 清朝僵尸待机 | 96×128 | 清代官帽、红顶饰、辫发、额头符纸、靛蓝官袍与金线补子，保持志怪辨识度 |
 | `enemy_walker_walk.svg` | 清朝僵尸行走 | 96×128 | 与待机帧统一帽饰/官袍/脸型，手臂与腿部姿态略有变化 |
