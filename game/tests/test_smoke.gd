@@ -96,11 +96,11 @@ func _test_sprite_assets(main: Variant) -> void:
 	var background_source := FileAccess.get_file_as_string("res://assets/sprites/graveyard_background.svg")
 	_check(background_source.contains("id=\"ruined-yizhuang-hall\"") and background_source.contains("id=\"ground-ritual-marks\""), "义庄背景包含灵堂建筑与低对比地面符纹细节")
 	_check(portrait != null and portrait.get_size().x >= 96.0, "道士专属头像可加载")
-	_check(creatures_atlas != null and creatures_atlas.get_size() == Vector2(352.0, 256.0), "最新国风角色/怪物透明图集可加载")
+	_check(creatures_atlas != null and creatures_atlas.get_size() == Vector2(384.0, 256.0), "最新国风角色/怪物透明图集可加载")
 	_check(main.player.CREATURES_ATLAS != null, "玩家脚本实际引用最新角色图集，而非旧版 SVG")
 	_check(main.player.PLAYER_DRAW_SIZE.x <= 56.0 and main.player.PLAYER_DRAW_SIZE.y <= 102.0, "主角采用更修长的 54×100 世界像素比例")
 	var player_source: Rect2 = main.player._player_source_rect()
-	_check(player_source.position.x >= 0.0 and player_source.position.y >= 0.0 and player_source.end.x <= 352.0 and player_source.end.y <= 256.0, "主角方向姿态裁切区域不越出图集")
+	_check(player_source.position.x >= 0.0 and player_source.position.y >= 0.0 and player_source.end.x <= 384.0 and player_source.end.y <= 256.0, "主角方向姿态裁切区域不越出图集")
 	var walker: Variant = ENEMY_SCRIPT.new()
 	root.add_child(walker)
 	walker.setup("walker")
@@ -109,7 +109,7 @@ func _test_sprite_assets(main: Variant) -> void:
 	_check(walker._sprite_draw_size_for_kind("armored").y <= 84.0, "铁甲尸绘制比例独立控制")
 	_check(walker._sprite_draw_size_for_kind("boss").y > walker._sprite_draw_size_for_kind("walker").y, "尸王仍保持独立的精英体型")
 	var walker_source: Rect2 = walker._sprite_source_rect_for_kind("walker")
-	_check(walker_source.position.x >= 0.0 and walker_source.position.y >= 0.0 and walker_source.end.x <= 352.0 and walker_source.end.y <= 256.0, "普通敌人图集裁切区域不越界")
+	_check(walker_source.position.x >= 0.0 and walker_source.position.y >= 0.0 and walker_source.end.x <= 384.0 and walker_source.end.y <= 256.0, "普通敌人图集裁切区域不越界")
 	walker.queue_free()
 
 

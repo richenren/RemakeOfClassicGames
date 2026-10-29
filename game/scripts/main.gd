@@ -174,7 +174,7 @@ func _process(delta: float) -> void:
 		elapsed_seconds += delta
 		active_skill_cooldown = maxf(0.0, active_skill_cooldown - delta)
 		player.tick(delta)
-		player.z_index = 10 + roundi(clampf(player.position.y / WORLD_SIZE.y, 0.0, 1.0) * 14.0)
+		player.z_index = 20 + roundi(clampf(player.position.y / WORLD_SIZE.y, 0.0, 1.0) * 8.0)
 
 		attack_timer -= delta
 		if attack_timer <= 0.0:
@@ -394,7 +394,7 @@ func _tick_enemies(delta: float) -> void:
 			continue
 		var separation := _get_separation(enemy)
 		enemy.tick(delta, player.position, separation)
-		enemy.z_index = 10 + roundi(clampf(enemy.position.y / WORLD_SIZE.y, 0.0, 1.0) * 14.0) + (1 if enemy.is_boss else 0)
+		enemy.z_index = 20 + roundi(clampf(enemy.position.y / WORLD_SIZE.y, 0.0, 1.0) * 8.0) + (1 if enemy.is_boss else 0)
 		if enemy.is_boss and not str(enemy.boss_attack_event).is_empty():
 			_resolve_boss_attack(enemy, str(enemy.boss_attack_event))
 			enemy.boss_attack_event = ""
@@ -858,7 +858,7 @@ func _fill_level_cards(core: Array[Dictionary], general: Array[Dictionary], desi
 			for card in general:
 				candidates.append(card)
 		if candidates.is_empty():
-			if not acquisitions.is_empty() and not _has_new_skill_acquisition():
+			if not acquisitions.is_empty() and _count_skill_acquisition_cards() < 2:
 				_append_card_if_new(acquisitions.pop_back())
 				continue
 			break
@@ -878,6 +878,14 @@ func _fill_level_cards(core: Array[Dictionary], general: Array[Dictionary], desi
 					preferred.remove_at(i)
 					break
 		_append_card_if_new(selected)
+
+
+func _count_skill_acquisition_cards() -> int:
+	var count := 0
+	for card in level_cards:
+		if str(card.get("kind", "")) == "skill_acquire":
+			count += 1
+	return count
 
 
 func _has_new_skill_acquisition() -> bool:
