@@ -186,7 +186,7 @@ func begin_return(owner_node) -> void:
 	target = owner_node
 	return_start_position = position
 	return_age = 0.0
-	var to_owner := (owner_node.position - position).normalized()
+	var to_owner: Vector2 = (owner_node.position - position).normalized()
 	var return_normal := Vector2(-to_owner.y, to_owner.x)
 	return_control_offset = return_normal * 48.0
 	alive = true
