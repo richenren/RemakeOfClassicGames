@@ -1416,6 +1416,11 @@ func _resolve_projectile_hit(projectile) -> void:
 				var chase_target = _find_nearest_enemy(target.position, 240.0, [target])
 				if chase_target != null:
 					var chase_projectile = _spawn_skill_projectile(chase_target, skill_id, damage * 0.52)
+					chase_projectile.position = target.position
+					chase_projectile.hit_targets.append(target)
+					var chase_direction: Vector2 = (chase_target.position - target.position).normalized()
+					if chase_direction.length_squared() > 0.001:
+						chase_projectile.rotation = chase_direction.angle() + PI * 0.5
 					chase_projectile.allow_secondary_chase = false
 					chase_projectile.is_secondary = true
 					chase_projectile.speed = 520.0
