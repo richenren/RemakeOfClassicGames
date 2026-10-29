@@ -1477,7 +1477,7 @@ func _tick_skill_effects(delta: float) -> void:
 		queue_redraw()
 
 
-func func _draw_skill_effects() -> void:
+func _draw_skill_effects() -> void:
 	for effect in skill_effects:
 		var center: Vector2 = effect.get("position", Vector2.ZERO)
 		var duration := maxf(0.01, float(effect.get("duration", 0.4)))
