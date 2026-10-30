@@ -5,13 +5,13 @@
  <radialGradient id="gWater"><stop stop-color="#a8f3ff" stop-opacity=".46"/><stop offset=".58" stop-color="#2e9bc0" stop-opacity=".18"/><stop offset="1" stop-color="#123c5e" stop-opacity="0"/></radialGradient>
  <radialGradient id="gFire"><stop stop-color="#ffe2a0" stop-opacity=".48"/><stop offset=".55" stop-color="#ef5b24" stop-opacity=".22"/><stop offset="1" stop-color="#641c16" stop-opacity="0"/></radialGradient>
  <radialGradient id="gEarth"><stop stop-color="#e7cb86" stop-opacity=".38"/><stop offset=".58" stop-color="#8c6a36" stop-opacity=".18"/><stop offset="1" stop-color="#33271b" stop-opacity="0"/></radialGradient>
- <radialGradient id="gThunder"><stop stop-color="#b9d9ff" stop-opacity=".5"/><stop offset=".55" stop-color="#5965ff" stop-opacity=".22"/><stop offset="1" stop-color="#151b58" stop-opacity="0"/></radialGradient>
+ <radialGradient id="gThunder"><stop stop-color="#f4fbff" stop-opacity=".58"/><stop offset=".55" stop-color="#b9d0df" stop-opacity=".24"/><stop offset="1" stop-color="#263b49" stop-opacity="0"/></radialGradient>
  <linearGradient id="goldBlade" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3c1"/><stop offset=".4" stop-color="#e7c16a"/><stop offset="1" stop-color="#8d5c28"/></linearGradient>
  <linearGradient id="jade" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c2f0b4"/><stop offset=".5" stop-color="#4e9c68"/><stop offset="1" stop-color="#24513c"/></linearGradient>
  <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#e1fbff"/><stop offset=".5" stop-color="#75d9ee"/><stop offset="1" stop-color="#277cbd"/></linearGradient>
  <linearGradient id="fire" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff0a8"/><stop offset=".48" stop-color="#ffad42"/><stop offset="1" stop-color="#d53d1f"/></linearGradient>
  <linearGradient id="stone" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e4d3a2"/><stop offset=".45" stop-color="#a58a57"/><stop offset="1" stop-color="#55452e"/></linearGradient>
- <linearGradient id="thunder" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f0fbff"/><stop offset=".45" stop-color="#9cc9ff"/><stop offset="1" stop-color="#596aff"/></linearGradient>
+ <linearGradient id="thunder" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset=".45" stop-color="#dcefff"/><stop offset="1" stop-color="#718b9b"/></linearGradient>
 </defs>
 <!-- METAL: sword intent -->
 <g transform="translate(64 64)">
@@ -85,14 +85,14 @@
 <!-- THUNDER: charged seal -->
 <g transform="translate(704 64)">
  <circle r="61" fill="url(#gThunder)"/>
- <circle r="48" fill="#11142a" fill-opacity=".94" stroke="#6679d7" stroke-width="1.3"/>
- <circle r="40" fill="none" stroke="#a4c9ff" stroke-opacity=".6" stroke-width="1"/>
- <circle r="32" fill="none" stroke="#697cff" stroke-dasharray="2 5" stroke-width="1.2"/>
+ <circle r="48" fill="#11142a" fill-opacity=".94" stroke="#b2c6d4" stroke-width="1.3"/>
+ <circle r="40" fill="none" stroke="#e7f4fb" stroke-opacity=".6" stroke-width="1"/>
+ <circle r="32" fill="none" stroke="#c5dce9" stroke-dasharray="2 5" stroke-width="1.2"/>
  <path d="M-25 -31 L19 -34 L25 31 L-29 34Z" fill="#d7c58f" stroke="#f5e7b8" stroke-width="1.6" transform="rotate(5)"/>
  <path d="M-18 -24 L12 -26 M-19 24 L14 22" stroke="#9a7a45" stroke-width="1.1" transform="rotate(5)"/>
  <path d="M5 -27 L-10 -2 L1 -2 L-7 22 L18 -9 L5 -8Z" fill="url(#thunder)" stroke="#f1fbff" stroke-width="1.6" stroke-linejoin="round"/>
- <path d="M-29 -15 L-37 -6 L-29 -2 M27 9 L36 0 L29 -5" fill="none" stroke="#6d8dff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
- <path d="M-16 -39 L-11 -33 M18 37 L12 31 M-39 18 L-32 14 M39 -20 L32 -15" stroke="#d6e5ff" stroke-width="1.8" stroke-linecap="round"/>
- <circle cx="-31" cy="30" r="2" fill="#a6ceff"/><circle cx="31" cy="-30" r="2" fill="#a6ceff"/>
+ <path d="M-29 -15 L-37 -6 L-29 -2 M27 9 L36 0 L29 -5" fill="none" stroke="#d1e5f0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+ <path d="M-16 -39 L-11 -33 M18 37 L12 31 M-39 18 L-32 14 M39 -20 L32 -15" stroke="#f6fbff" stroke-width="1.8" stroke-linecap="round"/>
+ <circle cx="-31" cy="30" r="2" fill="#e9f6ff"/><circle cx="31" cy="-30" r="2" fill="#e9f6ff"/>
 </g>
 </svg>
