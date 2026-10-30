@@ -270,7 +270,7 @@ func _draw() -> void:
 	# Directional artwork is already oriented; never mirror the sword onto the wrong shoulder.
 	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2.ONE)
 	if animation_state == "walk":
-		draw_texture_rect_region(PLAYER_WALK_ATLAS, sprite_rect, _walk_frame_region(), false, tint)
+		draw_texture_rect_region(PLAYER_WALK_ATLAS, sprite_rect, _walk_frame_region(), tint, false)
 	else:
 		draw_texture_rect(_current_animation_texture(), sprite_rect, false, tint)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
