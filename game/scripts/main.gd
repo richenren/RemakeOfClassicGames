@@ -1784,16 +1784,8 @@ func _draw_skill_effects() -> void:
 					var chain_progress := smoothstep(0.0, 0.82, progress)
 					var visible_end := chain_start.lerp(chain_end, chain_progress)
 					if visible_end.distance_squared_to(chain_start) > 4.0:
+						# One continuous jagged trunk only. Do not draw lateral branches on the primary bolt.
 						_draw_lightning_bolt(chain_start, visible_end, chain_alpha, progress * 5.0)
-						var chain_axis := visible_end - chain_start
-						var chain_side := Vector2(-chain_axis.y, chain_axis.x).normalized()
-						for branch_index in range(2):
-							var branch_t := 0.34 if branch_index == 0 else 0.72
-							var branch_start := chain_start.lerp(visible_end, branch_t)
-							var branch_sign := -1.0 if branch_index == 0 else 1.0
-							var branch_length := minf(28.0, radius * 0.14)
-							var branch_end := branch_start + chain_side * branch_sign * branch_length
-							_draw_lightning_bolt(branch_start, branch_end, chain_alpha * 0.66, progress * 7.0 + float(branch_index) * 2.3)
 						draw_circle(visible_end, 3.6, Color("#a978ff", chain_alpha * 0.82))
 						draw_circle(visible_end, 1.6, Color("#f4edff", chain_alpha))
 			"talisman_seal", "thunder_seal", "sword_manual", "body_jade", "cold_relic", "formation_seal":
