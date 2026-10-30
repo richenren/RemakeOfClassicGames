@@ -147,7 +147,7 @@ func _test_sprite_assets(main: Variant) -> void:
 	var metal_profile: Dictionary = PROJECTILE_SCRIPT.visual_profile_for_skill("copper_coin_sword")
 	var wood_profile: Dictionary = PROJECTILE_SCRIPT.visual_profile_for_skill("peachwood_sword")
 	_check(fire_profile["primary"] != thunder_profile["primary"], "火符和雷符投射物采用不同主色")
-	_check(thunder_profile["primary"] == Color("#b56cff"), "雷符使用高辨识度紫色闪电")
+	_check(thunder_profile["primary"] == Color("#dcefff") and thunder_profile["core"] == Color("#ffffff"), "雷符统一使用银白主色与纯白核心")
 	_check(metal_profile["primary"] != wood_profile["primary"] and metal_profile["primary"] != fire_profile["primary"], "金系剑气与木系桃木剑具备独立颜色")
 	var water_profile: Dictionary = PROJECTILE_SCRIPT.visual_profile_for_skill("water_array")
 	_check(water_profile["primary"] != fire_profile["primary"] and water_profile["element"] == "water", "水系投射物拥有独立的水球视觉配置")
