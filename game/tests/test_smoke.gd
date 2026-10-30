@@ -703,8 +703,20 @@ func _test_combat_visuals(main: Variant) -> void:
 		var normalized_radius := Vector2(fire_point.x / 82.0, fire_point.y / 60.0).length()
 		fire_radius_min = minf(fire_radius_min, normalized_radius)
 		fire_radius_max = maxf(fire_radius_max, normalized_radius)
+	var fire_band: PackedVector2Array = main._fire_flame_band(Vector2.ZERO, 72.0, 8.0, 40.0, 0.0)
+	var fire_top_min := 1.0e20
+	var fire_top_max := -1.0e20
+	for fire_point_index in range(41, fire_band.size()):
+		fire_top_min = minf(fire_top_min, fire_band[fire_point_index].y)
+		fire_top_max = maxf(fire_top_max, fire_band[fire_point_index].y)
 	var water_cells: PackedVector2Array = main._ground_effect_cells("water")
-	var water_outline: PackedVector2Array = main._water_field_outline(Vector2.ZERO, Vector2(112.0, 56.0), 0.0)
+	var water_outline: PackedVector2Array = main._water_field_outline(Vector2.ZERO, Vector2(112.0, 48.0), 0.0)
+	var water_radius_min := 1.0e20
+	var water_radius_max := -1.0e20
+	for water_point in water_outline:
+		var normalized_radius := Vector2(water_point.x / 112.0, water_point.y / 48.0).length()
+		water_radius_min = minf(water_radius_min, normalized_radius)
+		water_radius_max = maxf(water_radius_max, normalized_radius)
 	var water_min_x := 1.0e20
 	var water_max_x := -1.0e20
 	var water_min_y := 1.0e20
@@ -718,7 +730,8 @@ func _test_combat_visuals(main: Variant) -> void:
 	var water_height := water_max_y - water_min_y
 	var earth_cells: PackedVector2Array = main._ground_effect_cells("earth")
 	_check(fire_cells.is_empty() and fire_outline.size() == 64 and fire_radius_max - fire_radius_min > 0.04, "火场使用单一不规则连续燃烧轮廓，不再依赖七格布局")
-	_check(water_cells.is_empty() and water_outline.size() == 64 and water_width > water_height * 1.8, "水域使用无格线的横向长方形连续水面")
+	_check(fire_band.size() == 82 and fire_top_max - fire_top_min > 8.0, "火焰主体由连续宽幅起伏轮廓构成，不再绘制分离的小火苗")
+	_check(water_cells.is_empty() and water_outline.size() == 64 and water_width > water_height * 1.8 and water_radius_max - water_radius_min > 0.06, "水域使用横向舒展的自然不规则水面轮廓")
 	_check(earth_cells.size() == 5, "土系地刺以敌人脚下为中心生成五格突刺布局")
 	_check(main.AUTO_SKILL_DEFS.has("earth_formation") and main.AUTO_SKILL_DEFS["earth_formation"].get("name", "") == "地刺", "土系保留内部技能 ID 并将显示名称调整为地刺")
 	_check(main.has_method("_draw_support_array"), "通用辅助阵拥有独立的金色几何阵纹绘制器")

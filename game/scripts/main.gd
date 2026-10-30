@@ -1852,112 +1852,129 @@ func _draw_cultivation_feedback(center: Vector2, radius: float, life: float, ele
 
 
 func _draw_water_splash(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
-	# Water spreads as a low, flattened pool with broken wave fronts rather than a radial rune.
-	var cyan := Color(0.22, 0.78, 1.0, life * 0.82)
+	# A low, connected splash spreads unevenly; avoid a perfect ring and evenly spaced droplets.
 	var pale := Color(0.84, 0.97, 1.0, life * 0.92)
-	var burst_radius := radius * (0.24 + progress * 0.76)
+	var burst_radius := radius * (0.22 + progress * 0.78)
 	var pool_outline := PackedVector2Array()
 	for point_index in range(49):
 		var angle := TAU * float(point_index) / 48.0
-		var wobble := 1.0 + 0.035 * sin(angle * 5.0 + progress * 4.0)
-		pool_outline.append(center + Vector2(cos(angle) * burst_radius * 0.72 * wobble, sin(angle) * burst_radius * 0.46 * wobble))
+		var edge_wave := 1.0 + 0.052 * sin(angle * 3.0 + progress * 3.2) + 0.026 * sin(angle * 6.0 - progress * 2.1)
+		var x_scale := 1.0 + 0.018 * sin(angle * 2.0 + progress)
+		var y_scale := 1.0 + 0.025 * cos(angle * 4.0 - progress * 1.3)
+		pool_outline.append(center + Vector2(cos(angle) * burst_radius * 0.78 * edge_wave * x_scale, sin(angle) * burst_radius * 0.43 * edge_wave * y_scale))
 	pool_outline.append(pool_outline[0])
-	draw_colored_polygon(pool_outline, Color(0.04, 0.3, 0.43, life * 0.18))
-	draw_polyline(pool_outline, cyan, 2.4, true)
-	for wave_index in range(3):
-		var wave_progress := clampf(progress * 1.25 + float(wave_index) * 0.24, 0.0, 1.0)
-		var wave_radius := burst_radius * (0.18 + wave_progress * 0.56)
-		var wave_points := PackedVector2Array()
-		for step in range(33):
-			var t := float(step) / 32.0
-			var angle := -PI * 0.78 + t * PI * 1.56 + progress * 0.3
-			var wave_offset := sin(angle * 2.0 + elapsed_seconds * 2.4 + float(wave_index)) * 1.8
-			wave_points.append(center + Vector2(cos(angle) * (wave_radius + wave_offset), sin(angle) * (wave_radius * 0.52 + wave_offset * 0.5)))
-		draw_polyline(wave_points, Color(0.48, 0.88, 1.0, life * (0.66 - float(wave_index) * 0.12)), 1.7, true)
-	for i in range(7):
-		var angle := TAU * float(i) / 7.0 + progress * 0.18
-		var direction := Vector2(cos(angle), sin(angle))
-		var droplet_distance := burst_radius * (0.72 + 0.12 * sin(elapsed_seconds * 5.0 + float(i)))
-		var drop_position := center + Vector2(direction.x * droplet_distance, direction.y * droplet_distance * 0.52)
-		draw_circle(drop_position, 1.6 if frozen else 1.35, pale)
-		if frozen:
-			var tangent := Vector2(-direction.y, direction.x)
-			var tip := drop_position + direction * 6.0
-			draw_colored_polygon(PackedVector2Array([drop_position - tangent * 2.6, tip, drop_position + tangent * 2.6]), Color(0.65, 0.9, 1.0, life * 0.78))
-			draw_line(drop_position, tip, pale, 1.2, true)
+	var inner_outline := PackedVector2Array()
+	for point in pool_outline:
+		inner_outline.append(center + (point - center) * 0.78 + Vector2(-2.0, -1.0))
+	draw_colored_polygon(pool_outline, Color(0.012, 0.15, 0.23, life * 0.3))
+	draw_colored_polygon(inner_outline, Color(0.045, 0.38, 0.52, life * 0.24))
 
+	# Broken, offset wave fronts spread in different directions instead of forming concentric rings.
+	var wave_centers := PackedVector2Array([Vector2(-0.2, -0.08), Vector2(0.24, 0.18)])
+	for wave_index in range(wave_centers.size()):
+		var wave_center := center + Vector2(wave_centers[wave_index].x * burst_radius * 0.62, wave_centers[wave_index].y * burst_radius * 0.42)
+		var wave_radius := burst_radius * (0.22 + progress * 0.24 + float(wave_index) * 0.12)
+		var start_angle := -PI * (0.58 if wave_index == 0 else 0.18) + progress * 0.22
+		var arc_span := PI * (0.72 if wave_index == 0 else 0.94)
+		var wave_points := PackedVector2Array()
+		for step in range(23):
+			var t := float(step) / 22.0
+			var angle := start_angle + t * arc_span
+			var wobble := sin(angle * 2.7 + elapsed_seconds * 2.0 + float(wave_index)) * 1.5
+			wave_points.append(wave_center + Vector2(cos(angle) * (wave_radius + wobble), sin(angle) * (wave_radius * 0.42 + wobble * 0.34)))
+		draw_polyline(wave_points, Color(0.52, 0.88, 1.0, life * (0.42 if wave_index == 0 else 0.28)), 1.45 if wave_index == 0 else 1.0, true)
+
+	# Splash droplets are deliberately irregular in position and size, not placed on a circular clock face.
+	var drop_offsets := PackedVector2Array([
+		Vector2(-0.82, -0.28), Vector2(-0.48, 0.52), Vector2(-0.08, -0.76),
+		Vector2(0.36, 0.58), Vector2(0.78, -0.12), Vector2(0.28, -0.48)
+	])
+	for drop_index in range(drop_offsets.size()):
+		var offset := drop_offsets[drop_index]
+		var drift := sin(elapsed_seconds * 3.8 + float(drop_index) * 1.9) * 0.035
+		var drop_position := center + Vector2((offset.x + drift) * burst_radius * 0.86, offset.y * burst_radius * 0.48)
+		var drop_alpha := life * (0.7 + 0.2 * sin(elapsed_seconds * 4.0 + float(drop_index)))
+		draw_circle(drop_position, 1.0 + float(drop_index % 3) * 0.28, Color(pale.r, pale.g, pale.b, drop_alpha))
+		if frozen and drop_index % 2 == 0:
+			var direction := offset.normalized()
+			var tangent := Vector2(-direction.y, direction.x)
+			var tip := drop_position + direction * 5.5
+			draw_colored_polygon(PackedVector2Array([drop_position - tangent * 2.2, tip, drop_position + tangent * 2.2]), Color(0.65, 0.9, 1.0, life * 0.72))
+			draw_line(drop_position, tip, pale, 1.0, true)
 
 func _water_field_outline(center: Vector2, half_extents: Vector2, phase: float, inset: float = 0.0) -> PackedVector2Array:
-	# A soft superellipse keeps the pool broadly rectangular while its edge drifts like real water.
+	# An asymmetric, softly undulating pond edge; no rounded-rectangle corners or regular tile geometry.
 	var points := PackedVector2Array()
-	var safe_extents := Vector2(maxf(2.0, half_extents.x - inset), maxf(2.0, half_extents.y - inset * 0.52))
+	var safe_extents := Vector2(maxf(2.0, half_extents.x - inset), maxf(2.0, half_extents.y - inset * 0.72))
 	for point_index in range(64):
 		var angle := TAU * float(point_index) / 64.0
-		var cosine := cos(angle)
-		var sine := sin(angle)
-		var sign_x := -1.0 if cosine < 0.0 else 1.0
-		var sign_y := -1.0 if sine < 0.0 else 1.0
-		var shape_x := sign_x * pow(absf(cosine), 0.58)
-		var shape_y := sign_y * pow(absf(sine), 0.58)
-		var edge_wave := 1.0 + 0.018 * sin(angle * 5.0 + phase) + 0.011 * sin(angle * 9.0 - phase * 0.7)
-		var height_wave := 1.0 + 0.014 * sin(angle * 4.0 - phase * 0.55)
-		points.append(center + Vector2(shape_x * safe_extents.x * edge_wave, shape_y * safe_extents.y * edge_wave * height_wave))
+		var radial_wave := 1.0 + 0.048 * sin(angle * 3.0 + phase * 0.38) + 0.028 * sin(angle * 5.0 - phase * 0.26) + 0.014 * sin(angle * 8.0 + phase * 0.22)
+		var asym_x := 1.0 + 0.018 * sin(angle * 2.0 + phase * 0.17)
+		var asym_y := 1.0 + 0.018 * cos(angle * 3.0 - phase * 0.19)
+		points.append(center + Vector2(cos(angle) * safe_extents.x * radial_wave * asym_x, sin(angle) * safe_extents.y * radial_wave * asym_y))
 	return points
 
-
 func _draw_water_field(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
-	# One shallow, horizontally stretched pool: blended surface layers replace visible floor-cell borders.
+	# A shallow organic pool with blended depth, broken currents and partial ripples.
 	var fade := clampf(life * 1.4, 0.0, 1.0)
-	var phase := elapsed_seconds * 0.62 + progress * 0.32
-	var half_extents := Vector2(clampf(radius * 1.34, 96.0, 126.0), clampf(radius * 0.66, 48.0, 64.0))
-	var shadow := _water_field_outline(center + Vector2(0.0, 5.0), half_extents + Vector2(9.0, 6.0), phase)
-	draw_colored_polygon(shadow, Color(0.004, 0.035, 0.055, fade * 0.38))
-	var outer_water := _water_field_outline(center, half_extents + Vector2(4.0, 3.0), phase + 0.12)
-	draw_colored_polygon(outer_water, Color(0.012, 0.16, 0.25, fade * 0.5))
+	var phase := elapsed_seconds * 0.58 + progress * 0.32
+	var half_extents := Vector2(clampf(radius * 1.34, 96.0, 126.0), clampf(radius * 0.58, 44.0, 56.0))
+	var shadow := _water_field_outline(center + Vector2(0.0, 4.0), half_extents + Vector2(8.0, 6.0), phase)
+	draw_colored_polygon(shadow, Color(0.003, 0.022, 0.034, fade * 0.34))
+	var outer_water := _water_field_outline(center, half_extents + Vector2(3.0, 2.0), phase + 0.12)
+	draw_colored_polygon(outer_water, Color(0.008, 0.12, 0.19, fade * 0.48))
 	var pool := _water_field_outline(center + Vector2(0.0, -1.0), half_extents, phase + 0.28)
-	draw_colored_polygon(pool, Color(0.035, 0.31, 0.44, fade * 0.56))
-	var inner_surface := _water_field_outline(center + Vector2(-2.0, -2.0), half_extents * 0.86, phase + 0.72, 2.0)
-	draw_colored_polygon(inner_surface, Color(0.075, 0.46, 0.58, fade * 0.3))
-	var soft_highlight := _water_field_outline(center + Vector2(-7.0, -5.0), half_extents * 0.58, phase + 1.05, 1.5)
-	draw_colored_polygon(soft_highlight, Color(0.19, 0.64, 0.74, fade * 0.13))
-	var edge := _water_field_outline(center, half_extents, phase + 0.28)
-	edge.append(edge[0])
-	draw_polyline(edge, Color(0.32, 0.78, 0.93, fade * 0.46), 1.35, true)
+	draw_colored_polygon(pool, Color(0.025, 0.27, 0.38, fade * 0.56))
+	var inner_surface := _water_field_outline(center + Vector2(-3.0, -3.0), Vector2(half_extents.x * 0.82, half_extents.y * 0.76), phase + 0.72, 1.5)
+	draw_colored_polygon(inner_surface, Color(0.075, 0.42, 0.52, fade * 0.3))
+	var soft_highlight := _water_field_outline(center + Vector2(-9.0, -5.0), Vector2(half_extents.x * 0.54, half_extents.y * 0.48), phase + 1.05, 1.0)
+	draw_colored_polygon(soft_highlight, Color(0.19, 0.62, 0.7, fade * 0.1))
 
-	# Long, broken surface currents merge the whole patch instead of outlining individual cells.
-	for flow_index in range(4):
-		var flow_points := PackedVector2Array()
-		var flow_y := (float(flow_index) - 1.5) * half_extents.y * 0.31
-		for step in range(31):
-			var t := float(step) / 30.0
-			var x := lerpf(-half_extents.x * 0.78, half_extents.x * 0.78, t)
-			var y := flow_y + sin(t * TAU * 1.1 + phase + float(flow_index) * 0.74) * 3.2 + sin(t * TAU * 2.0 - phase) * 1.25
-			flow_points.append(center + Vector2(x, y))
-		draw_polyline(flow_points, Color(0.35, 0.8, 0.94, fade * 0.24), 1.25, true)
+	# Three curved currents of different lengths and directions make the surface feel connected and flowing.
+	var current_paths := [
+		PackedVector2Array([Vector2(-0.82, -0.12), Vector2(-0.48, -0.42), Vector2(-0.12, 0.2), Vector2(0.2, 0.02)]),
+		PackedVector2Array([Vector2(-0.54, 0.48), Vector2(-0.2, 0.18), Vector2(0.18, 0.62), Vector2(0.58, 0.26)]),
+		PackedVector2Array([Vector2(0.12, -0.58), Vector2(0.36, -0.24), Vector2(0.62, -0.58), Vector2(0.84, -0.22)])
+	]
+	for path_index in range(current_paths.size()):
+		var controls: PackedVector2Array = current_paths[path_index]
+		var current_points := PackedVector2Array()
+		for step in range(27):
+			var t := float(step) / 26.0
+			var inverse_t := 1.0 - t
+			var local_point := controls[0] * (inverse_t * inverse_t * inverse_t) + controls[1] * (3.0 * inverse_t * inverse_t * t) + controls[2] * (3.0 * inverse_t * t * t) + controls[3] * (t * t * t)
+			local_point.y += sin(t * TAU + phase + float(path_index) * 1.4) * 0.018
+			current_points.append(center + Vector2(local_point.x * half_extents.x, local_point.y * half_extents.y))
+		draw_polyline(current_points, Color(0.42, 0.82, 0.92, fade * 0.2), 1.0, true)
 
-	# Three staggered ripple sources give the water motion without recreating a tiled pattern.
-	var ripple_centers := PackedVector2Array([Vector2(-0.48, -0.08), Vector2(0.04, 0.16), Vector2(0.49, -0.04)])
+	# Partial, offset ripples replace repeated concentric ellipses.
+	var ripple_centers := PackedVector2Array([Vector2(-0.48, -0.1), Vector2(0.14, 0.34), Vector2(0.56, -0.26), Vector2(-0.12, -0.48)])
 	for ripple_index in range(ripple_centers.size()):
 		var ripple_center := center + Vector2(ripple_centers[ripple_index].x * half_extents.x, ripple_centers[ripple_index].y * half_extents.y)
-		var pulse := sin(elapsed_seconds * 2.1 + float(ripple_index) * 1.7 + progress)
-		for ring_index in range(2):
-			var ripple_x := 9.0 + float(ring_index) * 6.5 + pulse * 1.4
-			var ripple_y := ripple_x * 0.44
-			var ripple_points := PackedVector2Array()
-			for step in range(27):
-				var t := float(step) / 26.0
-				var angle := -PI * 0.88 + t * PI * 1.76 + phase * 0.08
-				var wobble := sin(angle * 3.0 + phase + float(ripple_index)) * 0.8
-				ripple_points.append(ripple_center + Vector2(cos(angle) * (ripple_x + wobble), sin(angle) * (ripple_y + wobble * 0.32)))
-			draw_polyline(ripple_points, Color(0.62, 0.92, 1.0, fade * (0.44 if ring_index == 0 else 0.24)), 1.35 if ring_index == 0 else 0.95, true)
+		var pulse := sin(elapsed_seconds * 1.8 + float(ripple_index) * 1.63 + progress)
+		var ripple_radius := 7.0 + float(ripple_index % 3) * 2.2 + pulse * 1.2
+		var start_angle := -PI * 0.42 + float(ripple_index) * 0.71
+		var arc_span := PI * (0.62 + 0.12 * sin(float(ripple_index) + phase))
+		var ripple_points := PackedVector2Array()
+		for step in range(17):
+			var t := float(step) / 16.0
+			var angle := start_angle + t * arc_span
+			var wobble := sin(angle * 2.2 + phase + float(ripple_index)) * 0.9
+			ripple_points.append(ripple_center + Vector2(cos(angle) * (ripple_radius + wobble), sin(angle) * (ripple_radius * 0.42 + wobble * 0.3)))
+		draw_polyline(ripple_points, Color(0.65, 0.92, 1.0, fade * 0.28), 1.0, true)
 
-	# Small moving glints sit on the shared surface; they are not independent tile markers.
-	for glint_index in range(7):
-		var glint_phase := elapsed_seconds * 1.6 + float(glint_index) * 1.91
-		var glint_position := center + Vector2(sin(glint_phase * 0.63) * half_extents.x * 0.76, cos(glint_phase * 0.87) * half_extents.y * 0.54)
-		var glint_alpha := fade * (0.34 + 0.18 * sin(glint_phase))
-		draw_line(glint_position + Vector2(-2.2, 0.0), glint_position + Vector2(2.2, 0.0), Color(0.7, 0.96, 1.0, glint_alpha), 1.0, true)
-		draw_circle(glint_position, 1.0, Color(0.86, 0.98, 1.0, glint_alpha))
+	# Short moving glints catch the light without looking like regularly spaced beads.
+	var glint_offsets := PackedVector2Array([Vector2(-0.34, -0.3), Vector2(0.22, -0.12), Vector2(0.52, 0.22), Vector2(-0.12, 0.52), Vector2(-0.62, 0.2)])
+	for glint_index in range(glint_offsets.size()):
+		var glint_phase := elapsed_seconds * 1.25 + float(glint_index) * 1.77
+		var glint_center := center + Vector2(glint_offsets[glint_index].x * half_extents.x, glint_offsets[glint_index].y * half_extents.y)
+		var glint_points := PackedVector2Array()
+		for step in range(5):
+			var t := float(step) / 4.0
+			var x := (t - 0.5) * (4.0 + 2.0 * (0.5 + 0.5 * sin(glint_phase)))
+			var y := sin(t * PI) * 0.8 + sin(glint_phase) * 0.25
+			glint_points.append(glint_center + Vector2(x, y))
+		draw_polyline(glint_points, Color(0.78, 0.96, 1.0, fade * 0.36), 0.9, true)
 
 	if frozen:
 		var ice_offsets := PackedVector2Array([Vector2(-0.82, -0.34), Vector2(-0.36, 0.76), Vector2(0.42, -0.74), Vector2(0.84, 0.2)])
@@ -1970,7 +1987,6 @@ func _draw_water_field(center: Vector2, radius: float, life: float, progress: fl
 			var crystal := PackedVector2Array([crystal_base - tangent * 3.2, crystal_tip, crystal_base + tangent * 3.2])
 			draw_colored_polygon(crystal, Color(0.68, 0.9, 1.0, fade * 0.7))
 			draw_line(crystal_base, crystal_tip, Color(0.92, 0.98, 1.0, fade * 0.88), 1.15, true)
-
 
 func _draw_water_formation_effect(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
 	var cyan := Color(0.32, 0.82, 1.0, life * 0.82)
@@ -2149,34 +2165,23 @@ func _fire_field_outline(center: Vector2, half_extents: Vector2, phase: float, i
 		points.append(center + Vector2(cos(angle) * safe_extents.x * radius_wave, sin(angle) * safe_extents.y * radius_wave * height_wave))
 	return points
 
-
-func _draw_fire_tongue(base: Vector2, flame_width: float, flame_height: float, phase: float, alpha: float) -> void:
-	# Layered, bent flame tongues are deliberately soft and uneven rather than repeated triangular markers.
-	var sway := sin(phase) * flame_width * 0.46
-	var tip := base + Vector2(sway, -flame_height)
-	var outer := PackedVector2Array([
-		base + Vector2(-flame_width, 2.0),
-		base + Vector2(-flame_width * 0.76, -flame_height * 0.28),
-		tip + Vector2(-flame_width * 0.2, flame_height * 0.16),
-		tip,
-		tip + Vector2(flame_width * 0.2, flame_height * 0.2),
-		base + Vector2(flame_width * 0.68, -flame_height * 0.34),
-		base + Vector2(flame_width, 2.0)
-	])
-	draw_colored_polygon(outer, Color(1.0, 0.19, 0.018, alpha * 0.82))
-	var core_width := flame_width * 0.43
-	var core_height := flame_height * 0.62
-	var core_tip := base + Vector2(sway * 0.72, -core_height)
-	var core := PackedVector2Array([
-		base + Vector2(-core_width, 1.0),
-		base + Vector2(-core_width * 0.52, -core_height * 0.28),
-		core_tip + Vector2(-0.7, 1.0),
-		core_tip + Vector2(0.8, 1.4),
-		base + Vector2(core_width, 1.0)
-	])
-	draw_colored_polygon(core, Color(1.0, 0.64, 0.13, alpha * 0.88))
-	draw_line(base + Vector2(0.0, 0.0), core_tip.lerp(base, 0.22), Color(1.0, 0.91, 0.48, alpha * 0.72), 0.9, true)
-
+func _fire_flame_band(center: Vector2, half_width: float, base_y: float, max_height: float, phase: float, width_scale: float = 1.0, height_scale: float = 1.0) -> PackedVector2Array:
+	# A single continuous flame sheet with a soft, changing crest instead of isolated pointed tongues.
+	var points := PackedVector2Array()
+	var segments := 40
+	for step in range(segments + 1):
+		var t := float(step) / float(segments)
+		var x := lerpf(-half_width * width_scale, half_width * width_scale, t)
+		var bottom_wave := sin(t * TAU * 1.4 + phase * 0.42) * 1.15
+		points.append(center + Vector2(x, base_y + bottom_wave))
+	for step in range(segments, -1, -1):
+		var t := float(step) / float(segments)
+		var x := lerpf(-half_width * width_scale, half_width * width_scale, t)
+		var envelope := pow(maxf(0.0, sin(t * PI)), 0.62)
+		var crest := 0.67 + 0.15 * sin(t * PI * 3.0 + phase * 0.72) + 0.1 * sin(t * PI * 6.0 - phase * 0.51) + 0.05 * sin(t * PI * 9.0 + phase * 0.39)
+		var flame_height := max_height * height_scale * envelope * clampf(crest, 0.3, 0.96)
+		points.append(center + Vector2(x, base_y - flame_height))
+	return points
 
 func _draw_fire_zones() -> void:
 	for zone in fire_zones:
@@ -2185,62 +2190,51 @@ func _draw_fire_zones() -> void:
 		var duration := maxf(0.01, float(zone.get("duration", 3.0)))
 		var life := clampf(float(zone.get("time", 0.0)) / duration, 0.0, 1.0)
 		var fade := clampf(life * 1.35, 0.0, 1.0)
-		var phase := elapsed_seconds * 0.48
+		var phase := elapsed_seconds * 2.35
 		var half_extents := Vector2(clampf(radius * 1.08, 76.0, 96.0), clampf(radius * 0.78, 54.0, 68.0))
 
-		# A continuous scorched patch with soft overlapping layers replaces the old seven-cell cross.
-		var shadow := _fire_field_outline(center + Vector2(0.0, 4.0), half_extents + Vector2(9.0, 7.0), phase * 0.7)
-		draw_colored_polygon(shadow, Color(0.012, 0.006, 0.004, fade * 0.52))
-		var scorch := _fire_field_outline(center, half_extents, phase)
-		draw_colored_polygon(scorch, Color(0.055, 0.018, 0.008, fade * 0.86))
-		var hot_ground := _fire_field_outline(center + Vector2(-2.0, 1.0), half_extents * 0.78, phase + 0.42, 2.0)
-		draw_colored_polygon(hot_ground, Color(0.23, 0.038, 0.008, fade * 0.5))
-		var heat_core := _fire_field_outline(center + Vector2(-4.0, -2.0), half_extents * 0.48, phase + 0.9, 1.5)
-		draw_colored_polygon(heat_core, Color(0.48, 0.075, 0.008, fade * 0.2))
+		# Keep the scorched ground connected beneath the fire; its dark rim should read as burning terrain.
+		var shadow := _fire_field_outline(center + Vector2(0.0, 4.0), half_extents + Vector2(9.0, 7.0), phase * 0.28)
+		draw_colored_polygon(shadow, Color(0.012, 0.006, 0.004, fade * 0.48))
+		var scorch := _fire_field_outline(center, half_extents, phase * 0.32)
+		draw_colored_polygon(scorch, Color(0.055, 0.018, 0.008, fade * 0.82))
+		var hot_ground := _fire_field_outline(center + Vector2(-2.0, 1.0), half_extents * 0.78, phase * 0.38 + 0.42, 2.0)
+		draw_colored_polygon(hot_ground, Color(0.23, 0.038, 0.008, fade * 0.42))
 
-		# Irregular ember cracks branch through the same ground patch instead of repeating per tile.
+		# Faint branching cracks remain embedded in the scorched floor, beneath the continuous flame body.
 		var crack_paths := [
 			PackedVector2Array([Vector2(-0.82, -0.08), Vector2(-0.55, -0.02), Vector2(-0.34, -0.24), Vector2(-0.12, -0.18)]),
 			PackedVector2Array([Vector2(-0.38, 0.62), Vector2(-0.22, 0.32), Vector2(0.02, 0.22), Vector2(0.2, -0.02)]),
 			PackedVector2Array([Vector2(0.08, -0.68), Vector2(0.02, -0.42), Vector2(0.24, -0.22), Vector2(0.56, -0.18)]),
-			PackedVector2Array([Vector2(0.78, 0.18), Vector2(0.52, 0.12), Vector2(0.36, 0.34), Vector2(0.12, 0.42)]),
-			PackedVector2Array([Vector2(-0.72, -0.48), Vector2(-0.48, -0.34), Vector2(-0.42, -0.1)])
+			PackedVector2Array([Vector2(0.78, 0.18), Vector2(0.52, 0.12), Vector2(0.36, 0.34), Vector2(0.12, 0.42)])
 		]
 		for crack_index in range(crack_paths.size()):
 			var crack_points := PackedVector2Array()
 			for local_point in crack_paths[crack_index]:
 				crack_points.append(center + Vector2(local_point.x * half_extents.x, local_point.y * half_extents.y))
-			draw_polyline(crack_points, Color(0.025, 0.008, 0.003, fade * 0.9), 2.0, true)
-			draw_polyline(crack_points, Color(0.92, 0.19, 0.018, fade * (0.36 + 0.12 * sin(elapsed_seconds * 4.0 + float(crack_index)))), 0.8, true)
+			draw_polyline(crack_points, Color(0.025, 0.008, 0.003, fade * 0.66), 1.5, true)
+			draw_polyline(crack_points, Color(0.92, 0.19, 0.018, fade * 0.2), 0.8, true)
 
-		# Several staggered flame clusters create a continuous burning bed, not a checkerboard.
-		var flame_positions := PackedVector2Array([
-			Vector2(-0.78, -0.12), Vector2(-0.62, 0.38), Vector2(-0.48, -0.48),
-			Vector2(-0.28, 0.02), Vector2(-0.12, -0.62), Vector2(0.08, 0.32),
-			Vector2(0.3, -0.24), Vector2(0.48, 0.48), Vector2(0.64, -0.42),
-			Vector2(0.8, 0.08), Vector2(0.02, 0.68)
-		])
-		for flame_index in range(flame_positions.size()):
-			var offset := flame_positions[flame_index]
-			var base := center + Vector2(offset.x * half_extents.x * 0.86, offset.y * half_extents.y * 0.76)
-			var flame_phase := elapsed_seconds * 7.2 + float(flame_index) * 1.47
-			var flame_height := 12.0 + 7.0 * (0.5 + 0.5 * sin(flame_phase))
-			var flame_width := 4.2 + 1.4 * (0.5 + 0.5 * sin(flame_phase * 0.73 + 0.8))
-			_draw_fire_tongue(base, flame_width, flame_height, flame_phase, fade)
-			if flame_index % 3 == 1:
-				var small_base := base + Vector2(6.0 * sin(flame_phase), 2.0)
-				_draw_fire_tongue(small_base, flame_width * 0.56, flame_height * 0.64, flame_phase + 1.1, fade * 0.78)
+		# Four nested, overlapping flame sheets form one broad mass; there are no detached fire cones.
+		var flame_base_y := center.y + half_extents.y * 0.18
+		var outer_flame := _fire_flame_band(center, half_extents.x * 0.94, flame_base_y, half_extents.y * 0.82, phase, 1.0, 1.0)
+		draw_colored_polygon(outer_flame, Color(0.94, 0.09, 0.008, fade * 0.88))
+		var main_flame := _fire_flame_band(center + Vector2(-1.5, 1.0), half_extents.x * 0.86, flame_base_y + 1.5, half_extents.y * 0.7, phase + 0.64, 1.0, 0.78)
+		draw_colored_polygon(main_flame, Color(1.0, 0.29, 0.018, fade * 0.9))
+		var inner_flame := _fire_flame_band(center + Vector2(1.0, 2.0), half_extents.x * 0.69, flame_base_y + 2.5, half_extents.y * 0.48, phase + 1.18, 1.0, 0.7)
+		draw_colored_polygon(inner_flame, Color(1.0, 0.58, 0.075, fade * 0.76))
+		var hot_core := _fire_flame_band(center + Vector2(-2.0, 4.0), half_extents.x * 0.43, flame_base_y + 3.5, half_extents.y * 0.25, phase + 1.72, 1.0, 0.62)
+		draw_colored_polygon(hot_core, Color(1.0, 0.82, 0.24, fade * 0.52))
 
-		# Embers rise and fade across the whole patch; their positions are independent of any cell layout.
-		for ember_index in range(10):
-			var ember_phase := fposmod(elapsed_seconds * (0.52 + float(ember_index % 3) * 0.08) + float(ember_index) * 0.173, 1.0)
-			var ember_x := sin(elapsed_seconds * 0.63 + float(ember_index) * 2.17) * half_extents.x * 0.78
-			var ember_y := cos(float(ember_index) * 1.71) * half_extents.y * 0.5 - ember_phase * 17.0
-			var ember_position := center + Vector2(ember_x, ember_y)
-			var ember_alpha := fade * (1.0 - ember_phase) * 0.78
-			draw_circle(ember_position, 2.1, Color(1.0, 0.28, 0.025, ember_alpha * 0.22))
-			draw_circle(ember_position, 0.9 + (1.0 - ember_phase) * 0.55, Color(1.0, 0.72, 0.24, ember_alpha))
-
+		# A few embers rise from the shared fire mass rather than from separate floor cells.
+		for ember_index in range(7):
+			var ember_phase := fposmod(elapsed_seconds * (0.5 + float(ember_index % 3) * 0.08) + float(ember_index) * 0.173, 1.0)
+			var ember_x := sin(elapsed_seconds * 0.63 + float(ember_index) * 2.17) * half_extents.x * 0.7
+			var ember_y := flame_base_y - ember_phase * (half_extents.y * 0.92)
+			var ember_position := Vector2(center.x + ember_x, ember_y)
+			var ember_alpha := fade * (1.0 - ember_phase) * 0.62
+			draw_circle(ember_position, 1.8, Color(1.0, 0.28, 0.025, ember_alpha * 0.22))
+			draw_circle(ember_position, 0.8 + (1.0 - ember_phase) * 0.5, Color(1.0, 0.72, 0.24, ember_alpha))
 
 func cast_active_skill() -> void:
 	if state != "playing" or active_skill_cooldown > 0.0:
