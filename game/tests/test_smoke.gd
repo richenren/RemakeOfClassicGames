@@ -749,17 +749,18 @@ func _test_combat_visuals(main: Variant) -> void:
 	_check(main.player.cast_element == "lightning", "雷系瞬时攻击也触发通用施法动作")
 	_check(temp_enemy.hp < temp_enemy.max_hp, "瞬时主雷击命中首个目标并造成伤害")
 	var saw_thunder_arc := false
-	var thunder_arc_effect: Dictionary = {}
-	for effect in main.skill_effects:
-		if str(effect.get("kind", "")) == "lightning_chain":
-			saw_thunder_arc = true
-			thunder_arc_effect = effect
-	_check(saw_thunder_arc, "雷符主雷击绘制从施法者连接到实际命中目标的电弧")
+	var saw_primary_thunder_arc := false
 	var expected_hand_origin: Vector2 = main.player.cast_hand_world_position((temp_enemy.position - main.player.position).normalized())
-	var actual_thunder_origin: Vector2 = thunder_arc_effect.get("from", Vector2.ZERO)
-	var actual_thunder_target: Vector2 = thunder_arc_effect.get("to", Vector2.ZERO)
-	_check(actual_thunder_origin.distance_to(expected_hand_origin) < 0.1, "雷符主电弧从人物手持符纸位置起始，而不是人物中心")
-	_check(actual_thunder_target.distance_to(temp_enemy.position) < 0.1, "雷符主电弧准确连接到主雷击目标")
+	for effect in main.skill_effects:
+		if str(effect.get("kind", "")) != "lightning_chain":
+			continue
+		saw_thunder_arc = true
+		var arc_origin: Vector2 = effect.get("from", Vector2.ZERO)
+		var arc_target: Vector2 = effect.get("to", Vector2.ZERO)
+		if arc_origin.distance_to(expected_hand_origin) < 0.1 and arc_target.distance_to(temp_enemy.position) < 0.1:
+			saw_primary_thunder_arc = true
+	_check(saw_thunder_arc, "雷符主雷击绘制从施法者连接到实际命中目标的电弧")
+	_check(saw_primary_thunder_arc, "雷符主电弧从手持符纸位置起始并准确连接主雷击目标")
 	_check(main.player.cast_element == "lightning", "雷符触发主角通用施法动作并使用雷系聚气表现")
 
 	# Metal's pierce branch must physically pass through a second enemy, not jump to a nearby target.
