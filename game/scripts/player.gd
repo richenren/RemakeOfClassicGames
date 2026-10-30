@@ -8,13 +8,16 @@ const PLAYER_BACK_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoi
 const PLAYER_SIDE_RIGHT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_side_right.tres")
 const PLAYER_IDLE_TEXTURE: Texture2D = PLAYER_FRONT_TEXTURE
 const PLAYER_WALK_TEXTURE: Texture2D = PLAYER_SIDE_RIGHT_TEXTURE
+const PLAYER_WALK_ATLAS: Texture2D = preload("res://assets/sprites/player_taoist_walk_cycle.png")
+const PLAYER_WALK_FRAME_SIZE := Vector2(96.0, 92.0)
+const PLAYER_WALK_DRAW_SIZE := Vector2(178.0, 171.0)
 const PLAYER_DRAW_SIZE := Vector2(96.0, 171.0)
 const PLAYER_DEATH_DRAW_SIZE := Vector2(115.2, 96.0)
 
-# First integration pass: approved static four-direction artwork.
-# State timing and movement feedback remain; matched action poses will be authored next.
+# Idle/attack/hit currently use the approved directional stills. Walking uses a dedicated
+# 4-row x 4-column atlas: front, left, back, right; each row is one four-frame gait cycle.
 const PLAYER_IDLE_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
-const PLAYER_WALK_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
+const PLAYER_WALK_FRAMES = [0, 1, 2, 3]
 const PLAYER_ATTACK_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
 const PLAYER_HIT_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
 const PLAYER_DEATH_FRAMES = [
@@ -129,6 +132,18 @@ func _directional_texture() -> Texture2D:
 	return PLAYER_SIDE_LEFT_TEXTURE if facing.x < 0.0 else PLAYER_SIDE_RIGHT_TEXTURE
 
 
+func _walk_direction_row() -> int:
+	if absf(facing.y) >= absf(facing.x) * 1.15:
+		return 2 if facing.y < 0.0 else 0
+	return 1 if facing.x < 0.0 else 3
+
+
+func _walk_frame_region() -> Rect2:
+	var frame_index := clampi(animation_frame_index, 0, PLAYER_WALK_FRAMES.size() - 1)
+	var row_index := _walk_direction_row()
+	return Rect2(float(frame_index) * PLAYER_WALK_FRAME_SIZE.x, float(row_index) * PLAYER_WALK_FRAME_SIZE.y, PLAYER_WALK_FRAME_SIZE.x, PLAYER_WALK_FRAME_SIZE.y)
+
+
 func _animation_frames_for_state(state: String) -> Array:
 	match state:
 		"walk":
@@ -146,7 +161,7 @@ func _animation_frames_for_state(state: String) -> Array:
 func _animation_frame_duration(state: String) -> float:
 	match state:
 		"walk":
-			return 0.095
+			return 0.11
 		"attack":
 			return 0.065
 		"hit":
@@ -218,17 +233,15 @@ func gain_xp(amount: int) -> void:
 
 func _draw() -> void:
 	var gait := absf(sin(gait_phase))
-	var speed_ratio := clampf(velocity.length() / maxf(1.0, move_speed), 0.0, 1.0)
-	var bob := sin(gait_phase * 2.0) * 1.45 * speed_ratio if is_moving else sin(animation_time * 2.1) * 0.55
+	# Walking is driven by real leg/robe frames. Keep the torso at a stable height instead
+	# of adding the old sine-wave bob, squash and lean that made the character look airborne.
+	var bob := 0.0 if is_moving else sin(animation_time * 2.1) * 0.28
 	if animation_state == "death":
 		bob = 0.0
-	var squash_x := 1.0 + (gait * 0.028 * speed_ratio if is_moving else 0.0)
-	var stretch_y := 1.0 - (gait * 0.018 * speed_ratio if is_moving else 0.0)
-	var gait_lean := sin(gait_phase) * 0.035 * speed_ratio if is_moving else 0.0
-	var sprite_tilt := clampf(facing.x * 0.075, -0.075, 0.075) + gait_lean if is_moving else sin(animation_time * 0.8) * 0.01
+	var sprite_tilt := 0.0 if is_moving else sin(animation_time * 0.8) * 0.004
 	var attack_ratio := clampf(attack_pulse / 0.18, 0.0, 1.0)
 	var attack_offset := attack_direction * attack_ratio * 2.4 if animation_state == "attack" else Vector2.ZERO
-	var sprite_size := PLAYER_DEATH_DRAW_SIZE if animation_state == "death" else PLAYER_DRAW_SIZE
+	var sprite_size := PLAYER_DEATH_DRAW_SIZE if animation_state == "death" else (PLAYER_WALK_DRAW_SIZE if animation_state == "walk" else PLAYER_DRAW_SIZE)
 	var sprite_rect := Rect2(-sprite_size * 0.5, sprite_size)
 	var tint := Color("#eee5d0")
 	if hit_flash > 0.0:
@@ -255,8 +268,11 @@ func _draw() -> void:
 		draw_circle(Vector2(-13.0 * footstep_side, PLAYER_DRAW_SIZE.y * 0.42), 2.0, Color(0.70, 0.62, 0.43, dust_alpha * 0.7))
 
 	# Directional artwork is already oriented; never mirror the sword onto the wrong shoulder.
-	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2(squash_x, stretch_y))
-	draw_texture_rect(_current_animation_texture(), sprite_rect, false, tint)
+	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2.ONE)
+	if animation_state == "walk":
+		draw_texture_rect_region(PLAYER_WALK_ATLAS, sprite_rect, _walk_frame_region(), false, tint)
+	else:
+		draw_texture_rect(_current_animation_texture(), sprite_rect, false, tint)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if attack_ratio > 0.0:

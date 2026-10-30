@@ -1,6 +1,9 @@
 extends Node2D
 
 const PROJECTILE_HIT_RADIUS := 4.0
+const PROJECTILE_VISUAL_SCALE := 1.45
+const MAX_TRAIL_POINTS := 6
+const TRAIL_SAMPLE_DISTANCE := 4.5
 
 var target
 var impact_target
@@ -32,6 +35,7 @@ var return_age: float = 0.0
 var return_duration: float = 0.42
 var allow_secondary_chase: bool = true
 var is_secondary: bool = false
+var trail_history: Array[Vector2] = []
 
 
 func setup(target_node, hit_damage: float, attack_skill_id: String = "basic_talisman") -> void:
@@ -63,6 +67,7 @@ func setup(target_node, hit_damage: float, attack_skill_id: String = "basic_tali
 	return_duration = 0.42
 	allow_secondary_chase = true
 	is_secondary = false
+	trail_history.clear()
 	match skill_id:
 		"thunder_talisman", "five_thunder":
 			speed = 560.0
@@ -129,6 +134,8 @@ func tick(delta: float, collision_targets: Array = []) -> void:
 
 	var segment := end_position - start_position
 	var segment_length_squared := segment.length_squared()
+	if segment_length_squared > 0.001:
+		_record_trail_point(start_position)
 	var candidates: Array = collision_targets.duplicate()
 	if is_instance_valid(target) and not candidates.has(target) and not is_returning:
 		candidates.append(target)
@@ -178,6 +185,13 @@ func tick(delta: float, collision_targets: Array = []) -> void:
 	queue_redraw()
 
 
+func _record_trail_point(sample_position: Vector2) -> void:
+	if trail_history.is_empty() or trail_history[trail_history.size() - 1].distance_to(sample_position) >= TRAIL_SAMPLE_DISTANCE:
+		trail_history.append(sample_position)
+		while trail_history.size() > MAX_TRAIL_POINTS:
+			trail_history.pop_front()
+
+
 func begin_return(owner_node) -> void:
 	if is_returning:
 		return
@@ -210,27 +224,46 @@ static func visual_profile_for_skill(attack_skill_id: String) -> Dictionary:
 			return {"element": "talisman", "primary": Color("#e9c65d"), "core": Color("#fff0b0")}
 
 
+func _draw_motion_trail(primary: Color, core: Color) -> void:
+	if trail_history.is_empty():
+		return
+	var points := PackedVector2Array()
+	for sample_position in trail_history:
+		points.append((sample_position - position).rotated(-rotation))
+	points.append(Vector2.ZERO)
+	for index in range(points.size() - 1):
+		var progress := float(index + 1) / float(points.size() - 1)
+		var outer := Color(primary.r, primary.g, primary.b, lerpf(0.08, 0.32, progress))
+		var inner := Color(core.r, core.g, core.b, lerpf(0.04, 0.34, progress))
+		var width := lerpf(2.0, 7.0, progress)
+		draw_line(points[index], points[index + 1], outer, width + 3.0, true)
+		draw_line(points[index], points[index + 1], inner, maxf(1.2, width * 0.36), true)
+
+
 func _draw() -> void:
 	var profile: Dictionary = visual_profile_for_skill(skill_id)
 	var primary: Color = profile["primary"]
 	var core: Color = profile["core"]
+	var pulse_scale := 1.0 + sin(age * 16.0) * 0.045
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * PROJECTILE_VISUAL_SCALE * pulse_scale)
+	_draw_motion_trail(primary, core)
 	match skill_id:
 		"fire_talisman":
-			draw_line(Vector2(0.0, 7.0), Vector2(0.0, 18.0), Color(1.0, 0.28, 0.05, 0.55), 5.0, true)
-			draw_line(Vector2(-2.0, 10.0), Vector2(-6.0, 17.0), Color(1.0, 0.58, 0.12, 0.68), 2.2, true)
-			draw_line(Vector2(2.0, 9.0), Vector2(6.0, 15.0), Color(1.0, 0.44, 0.08, 0.55), 1.8, true)
-			draw_circle(Vector2.ZERO, 10.5, Color(primary.r, primary.g, primary.b, 0.22))
-			draw_circle(Vector2.ZERO, 8.0, primary)
-			draw_circle(Vector2(-1.6, -1.8), 4.8, core)
-			draw_arc(Vector2.ZERO, 8.5, -2.8, 1.1, 24, Color("#ffb64f"), 1.3, true)
+			draw_line(Vector2(0.0, 7.0), Vector2(0.0, 23.0), Color(1.0, 0.28, 0.05, 0.66), 6.5, true)
+			draw_line(Vector2(-2.0, 10.0), Vector2(-7.0, 21.0), Color(1.0, 0.58, 0.12, 0.78), 2.8, true)
+			draw_line(Vector2(2.0, 9.0), Vector2(7.0, 19.0), Color(1.0, 0.44, 0.08, 0.68), 2.3, true)
+			draw_circle(Vector2.ZERO, 12.5, Color(primary.r, primary.g, primary.b, 0.30))
+			draw_circle(Vector2.ZERO, 9.5, primary)
+			draw_circle(Vector2(-1.6, -1.8), 5.5, core)
+			draw_arc(Vector2.ZERO, 10.0, -2.8, 1.1, 24, Color("#ffb64f"), 1.6, true)
 			draw_circle(Vector2(4.8, 4.5), 1.4, Color("#fff0bd"))
 		"water_array":
-			draw_line(Vector2(-2.0, 8.0), Vector2(-5.0, 16.0), Color(0.23, 0.77, 1.0, 0.48), 2.0, true)
-			draw_line(Vector2(2.0, 8.0), Vector2(6.0, 14.0), Color(0.23, 0.77, 1.0, 0.42), 1.7, true)
-			draw_circle(Vector2.ZERO, 10.0, Color(primary.r, primary.g, primary.b, 0.18))
-			draw_circle(Vector2.ZERO, 7.8, Color(0.08, 0.48, 0.72, 0.92))
-			draw_arc(Vector2.ZERO, 7.8, 0.3, 4.8, 28, primary, 2.1, true)
-			draw_arc(Vector2(-1.0, -1.0), 5.2, 3.5, 5.7, 18, core, 1.8, true)
+			draw_line(Vector2(-2.0, 8.0), Vector2(-6.0, 20.0), Color(0.23, 0.77, 1.0, 0.58), 2.6, true)
+			draw_line(Vector2(2.0, 8.0), Vector2(7.0, 18.0), Color(0.23, 0.77, 1.0, 0.52), 2.2, true)
+			draw_circle(Vector2.ZERO, 12.5, Color(primary.r, primary.g, primary.b, 0.26))
+			draw_circle(Vector2.ZERO, 9.4, Color(0.08, 0.48, 0.72, 0.96))
+			draw_arc(Vector2.ZERO, 9.4, 0.3, 4.8, 28, primary, 2.5, true)
+			draw_arc(Vector2(-1.0, -1.0), 6.0, 3.5, 5.7, 18, core, 2.0, true)
 			draw_circle(Vector2(-2.6, -3.0), 1.9, core)
 			draw_circle(Vector2(4.4, 3.2), 1.1, Color("#8cecff"))
 		"thunder_talisman", "five_thunder":
@@ -263,9 +296,11 @@ func _draw() -> void:
 			draw_line(Vector2(-7.0, -7.0), Vector2(-3.0, -4.0), Color("#a3e5a0"), 1.2, true)
 			draw_line(Vector2(7.0, -1.0), Vector2(3.0, 2.0), Color("#a3e5a0"), 1.2, true)
 		_:
-			draw_circle(Vector2.ZERO, 8.0, Color(primary.r, primary.g, primary.b, 0.2))
-			draw_rect(Rect2(-4.0, -8.5, 8.0, 17.0), Color("#f2d8a0"))
-			draw_rect(Rect2(-4.0, -8.5, 8.0, 17.0), primary, false, 1.2)
+			draw_circle(Vector2.ZERO, 11.0, Color(primary.r, primary.g, primary.b, 0.28))
+			draw_rect(Rect2(-5.5, -11.0, 11.0, 22.0), Color("#f2d8a0"))
+			draw_rect(Rect2(-5.5, -11.0, 11.0, 22.0), primary, false, 1.7)
 			draw_line(Vector2(0.0, -5.5), Vector2(0.0, 5.5), Color("#a6322b"), 1.4, true)
 			draw_line(Vector2(-2.0, -2.0), Vector2(2.0, 1.0), Color("#a6322b"), 1.0, true)
 			draw_circle(Vector2.ZERO, 1.6, core)
+
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

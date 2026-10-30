@@ -93,6 +93,7 @@ func _test_hud_presentation(main: Variant) -> void:
 func _test_sprite_assets(main: Variant) -> void:
 	var background := load("res://assets/sprites/graveyard_background.svg") as Texture2D
 	var atlas := load("res://assets/sprites/player_taoist_views_hd.webp") as Texture2D
+	var walk_atlas := load("res://assets/sprites/player_taoist_walk_cycle.png") as Texture2D
 	var portrait := load("res://assets/sprites/player_taoist_portrait.tres") as Texture2D
 	var front := load("res://assets/sprites/player_taoist_front.tres") as Texture2D
 	var side_left := load("res://assets/sprites/player_taoist_side_left.tres") as Texture2D
@@ -102,6 +103,7 @@ func _test_sprite_assets(main: Variant) -> void:
 	var background_source := FileAccess.get_file_as_string("res://assets/sprites/graveyard_background.svg")
 	_check(background_source.contains("id=\"ruined-yizhuang-hall\"") and background_source.contains("id=\"ground-ritual-marks\""), "义庄背景包含灵堂建筑与低对比地面符纹细节")
 	_check(atlas != null and atlas.get_size() == Vector2(96.0, 220.0), "高清背剑主角图集包含四向视图和 HUD 头像区域")
+	_check(walk_atlas != null and walk_atlas.get_size() == Vector2(384.0, 368.0), "主角四向行走动画图集包含 4×4 个透明帧")
 	_check(portrait != null and portrait.get_size() == Vector2(48.0, 48.0), "背剑主角 64×64 HUD 头像可加载")
 	_check(front != null and side_left != null and back != null and side_right != null, "主角四向背剑 AtlasTexture 资源全部可加载")
 	_check(front.get_size() == Vector2(48.0, 86.0) and side_left.get_size() == Vector2(48.0, 86.0) and back.get_size() == Vector2(48.0, 86.0) and side_right.get_size() == Vector2(48.0, 86.0), "高清主角四向视图使用统一 48×86 区域")
@@ -518,19 +520,36 @@ func _test_player_animation_frames() -> void:
 	var player: Variant = PLAYER_SCRIPT.new()
 	root.add_child(player)
 	_check(player.PLAYER_IDLE_FRAMES.size() == 4, "主角待机状态保留 4 帧节奏槽，画面由四向视图决定")
-	_check(player.PLAYER_WALK_FRAMES.size() == 4, "主角移动状态保留 4 帧节奏槽，匹配动作帧待制作")
+	_check(player.PLAYER_WALK_FRAMES.size() == 4 and player.PLAYER_WALK_ATLAS != null, "主角移动状态接入四向四帧行走图集")
+	_check(player.PLAYER_WALK_ATLAS.get_size() == Vector2(384.0, 368.0), "四向行走图集尺寸与帧区域匹配")
+	player.animation_frame_index = 2
+	player.facing = Vector2.DOWN
+	_check(player._walk_frame_region() == Rect2(192.0, 0.0, 96.0, 92.0), "朝下移动选取正面行走帧")
+	player.facing = Vector2.LEFT
+	_check(player._walk_frame_region() == Rect2(192.0, 92.0, 96.0, 92.0), "朝左移动选取左侧行走帧")
+	player.facing = Vector2.UP
+	_check(player._walk_frame_region() == Rect2(192.0, 184.0, 96.0, 92.0), "朝上移动选取背面行走帧")
+	player.facing = Vector2.RIGHT
+	_check(player._walk_frame_region() == Rect2(192.0, 276.0, 96.0, 92.0), "朝右移动选取右侧行走帧")
+	_check(player.PLAYER_WALK_DRAW_SIZE.y == player.PLAYER_DRAW_SIZE.y and player.PLAYER_WALK_DRAW_SIZE.x > player.PLAYER_DRAW_SIZE.x, "行走帧按源图比例绘制且保持脚底高度")
 	_check(player.PLAYER_ATTACK_FRAMES.size() == 4, "主角符箓攻击状态保留 4 帧节奏槽，匹配动作帧待制作")
 	_check(player.PLAYER_HIT_FRAMES.size() == 3, "主角受击状态保留 3 帧节奏槽，匹配动作帧待制作")
 	_check(player.PLAYER_DEATH_FRAMES.size() == 6, "主角临时保留 6 帧旧倒地动画")
 	var all_frames_load := true
-	for frames in [player.PLAYER_IDLE_FRAMES, player.PLAYER_WALK_FRAMES, player.PLAYER_ATTACK_FRAMES, player.PLAYER_HIT_FRAMES, player.PLAYER_DEATH_FRAMES]:
+	for frames in [player.PLAYER_IDLE_FRAMES, player.PLAYER_ATTACK_FRAMES, player.PLAYER_HIT_FRAMES, player.PLAYER_DEATH_FRAMES]:
 		for texture in frames:
 			if texture == null or texture.get_width() <= 0 or texture.get_height() <= 0:
 				all_frames_load = false
-	_check(all_frames_load, "主角四向视图占位与旧倒地帧资源均可加载")
+	_check(all_frames_load and player.PLAYER_WALK_ATLAS != null, "主角待机/攻击/受击/倒地帧及行走图集均可加载")
+	player.facing = Vector2.DOWN
+	player.animation_state = "idle"
+	player.animation_frame_index = 0
+	player.animation_frame_elapsed = 0.0
 	player.is_moving = true
 	player._update_animation(0.01)
-	_check(player.animation_state == "walk", "移动输入切换到逐帧行走动画")
+	_check(player.animation_state == "walk", "移动输入切换到四向逐帧行走动画")
+	player._update_animation(0.12)
+	_check(player.animation_frame_index == 1, "行走状态按帧时长推进真实步态帧")
 	player.trigger_attack(Vector2.RIGHT)
 	player._update_animation(0.01)
 	_check(player.animation_state == "attack", "自动攻击触发独立符箓攻击动画")
@@ -609,6 +628,14 @@ func _has_skill_effect(main: Variant, effect_kind: String) -> bool:
 
 
 func _test_combat_visuals(main: Variant) -> void:
+	var projectile_visual: Variant = PROJECTILE_SCRIPT.new()
+	root.add_child(projectile_visual)
+	projectile_visual.setup(null, 1.0, "fire_talisman")
+	projectile_visual._record_trail_point(Vector2.ZERO)
+	projectile_visual._record_trail_point(Vector2(12.0, 0.0))
+	_check(projectile_visual.trail_history.size() == 2, "投射物飞行时采样并保留连续轨迹点")
+	_check(projectile_visual.PROJECTILE_VISUAL_SCALE >= 1.4 and projectile_visual.MAX_TRAIL_POINTS >= 4, "投射物放大轮廓并保留多帧拖尾")
+	projectile_visual.queue_free()
 	var temp_enemy: Variant = ENEMY_SCRIPT.new()
 	temp_enemy.setup("walker")
 	temp_enemy.position = main.player.position + Vector2(50.0, 0.0)
