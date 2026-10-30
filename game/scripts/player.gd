@@ -10,9 +10,9 @@ const PLAYER_IDLE_TEXTURE: Texture2D = PLAYER_FRONT_TEXTURE
 const PLAYER_WALK_TEXTURE: Texture2D = PLAYER_SIDE_RIGHT_TEXTURE
 const PLAYER_WALK_ATLAS: Texture2D = preload("res://assets/sprites/player_taoist_walk_cycle.png")
 const PLAYER_WALK_FRAME_SIZE := Vector2(96.0, 92.0)
-const PLAYER_WALK_DRAW_SIZE := Vector2(178.0, 171.0)
-const PLAYER_DRAW_SIZE := Vector2(96.0, 171.0)
-const PLAYER_DEATH_DRAW_SIZE := Vector2(115.2, 96.0)
+const PLAYER_WALK_DRAW_SIZE := Vector2(142.0, 137.0)
+const PLAYER_DRAW_SIZE := Vector2(77.0, 137.0)
+const PLAYER_DEATH_DRAW_SIZE := Vector2(92.0, 77.0)
 
 # Idle/attack/hit currently use the approved directional stills. Walking uses a dedicated
 # 4-row x 4-column atlas: front, left, back, right; each row is one four-frame gait cycle.
@@ -161,7 +161,10 @@ func _animation_frames_for_state(state: String) -> Array:
 func _animation_frame_duration(state: String) -> float:
 	match state:
 		"walk":
-			return 0.11
+			# Keep the sprite cadence in phase with gait_phase.
+			var speed_ratio := clampf(velocity.length() / maxf(1.0, move_speed), 0.0, 1.0)
+			var gait_speed := lerpf(4.5, 11.0, speed_ratio)
+			return TAU / (gait_speed * float(PLAYER_WALK_FRAMES.size()))
 		"attack":
 			return 0.065
 		"hit":
@@ -252,20 +255,20 @@ func _draw() -> void:
 	# Layered soft shadow + warm floor bounce prevent the larger full-body sprite from reading as a flat sticker.
 	var shadow_y := PLAYER_DRAW_SIZE.y * 0.47
 	draw_set_transform(Vector2(0.0, shadow_y + absf(bob) * 0.12), 0.0, Vector2(1.46 + gait * 0.03, 0.34 - gait * 0.012))
-	draw_circle(Vector2.ZERO, 25.0, Color(0.015, 0.014, 0.012, 0.40))
-	draw_circle(Vector2.ZERO, 15.0, Color(0.015, 0.014, 0.012, 0.23))
+	draw_circle(Vector2.ZERO, 20.0, Color(0.015, 0.014, 0.012, 0.40))
+	draw_circle(Vector2.ZERO, 12.0, Color(0.015, 0.014, 0.012, 0.23))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	draw_set_transform(Vector2(0.0, shadow_y + 3.0), 0.0, Vector2(1.4, 0.34))
-	draw_circle(Vector2.ZERO, 18.0, Color(0.66, 0.49, 0.23, 0.065))
+	draw_circle(Vector2.ZERO, 14.5, Color(0.66, 0.49, 0.23, 0.065))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	draw_set_transform(Vector2(0.0, shadow_y + 4.0), 0.0, Vector2(1.0, 0.32))
-	draw_circle(Vector2.ZERO, 15.0, Color(0.015, 0.014, 0.012, 0.28))
+	draw_circle(Vector2.ZERO, 12.0, Color(0.015, 0.014, 0.012, 0.28))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if is_moving and footstep_flash > 0.0:
 		var dust_alpha := footstep_flash / 0.13 * 0.2
-		draw_circle(Vector2(-10.0 * footstep_side, PLAYER_DRAW_SIZE.y * 0.40), 3.2, Color(0.70, 0.62, 0.43, dust_alpha))
-		draw_circle(Vector2(-13.0 * footstep_side, PLAYER_DRAW_SIZE.y * 0.42), 2.0, Color(0.70, 0.62, 0.43, dust_alpha * 0.7))
+		draw_circle(Vector2(-8.0 * footstep_side, PLAYER_DRAW_SIZE.y * 0.40), 2.6, Color(0.70, 0.62, 0.43, dust_alpha))
+		draw_circle(Vector2(-10.0 * footstep_side, PLAYER_DRAW_SIZE.y * 0.42), 1.6, Color(0.70, 0.62, 0.43, dust_alpha * 0.7))
 
 	# Directional artwork is already oriented; never mirror the sword onto the wrong shoulder.
 	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2.ONE)
