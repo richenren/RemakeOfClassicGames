@@ -1736,9 +1736,9 @@ func _draw_skill_effects() -> void:
 					draw_line(sword_base, sword_tip, Color(0.8, 1.0, 0.74, life * 0.9), 1.6, true)
 					draw_line(sword_base + tangent * 4.0, sword_base - tangent * 4.0, Color(0.62, 0.43, 0.24, life * 0.8), 1.8, true)
 			"five_thunder":
-				draw_circle(center, radius * 0.54, Color(0.34, 0.1, 0.72, life * 0.2))
-				draw_arc(center, radius * 0.92, 0.0, TAU, 56, Color(0.68, 0.4, 1.0, life * 0.88), 2.5)
-				draw_arc(center, radius * 0.58, 0.0, TAU, 44, Color(0.9, 0.78, 1.0, life * 0.82), 1.4)
+				draw_circle(center, radius * 0.54, Color(0.62, 0.76, 0.86, life * 0.16))
+				draw_arc(center, radius * 0.92, 0.0, TAU, 56, Color("#dcefff", life * 0.96), 2.5)
+				draw_arc(center, radius * 0.58, 0.0, TAU, 44, Color("#ffffff", life * 0.94), 1.4)
 				for i in range(5):
 					var angle := TAU * float(i) / 5.0 + elapsed_seconds * 0.18
 					var direction := Vector2(cos(angle), sin(angle))
@@ -1759,17 +1759,17 @@ func _draw_skill_effects() -> void:
 					draw_colored_polygon(PackedVector2Array([leaf_center - tangent * 3.0, leaf_center + direction * 5.0, leaf_center + tangent * 3.0]), Color(0.36, 0.82, 0.42, life * 0.78))
 			"lightning":
 				var impact_radius := radius * (0.34 + progress * 0.66)
-				draw_circle(center, impact_radius * 0.52, Color("#713bd0", life * 0.24))
-				draw_arc(center, impact_radius, 0.0, TAU, 40, Color("#9c6cff", life * 0.94), 3.0, true)
-				draw_arc(center, impact_radius * 0.58, 0.0, TAU, 32, Color("#e7d9ff", life * 0.9), 1.8, true)
-				draw_circle(center, radius * 0.12, Color("#f4edff", life * 0.76))
+				draw_circle(center, impact_radius * 0.52, Color("#dcefff", life * 0.16))
+				draw_arc(center, impact_radius, 0.0, TAU, 40, Color("#dcefff", life * 0.98), 3.0, true)
+				draw_arc(center, impact_radius * 0.58, 0.0, TAU, 32, Color("#ffffff", life * 0.96), 1.8, true)
+				draw_circle(center, radius * 0.12, Color("#ffffff", life * 0.92))
 				for spark_index in range(6):
 					var spark_angle := TAU * float(spark_index) / 6.0 + elapsed_seconds * 2.8
 					var spark_direction := Vector2(cos(spark_angle), sin(spark_angle))
 					var spark_start := center + spark_direction * impact_radius * 0.48
 					var spark_end := center + spark_direction * impact_radius * 0.82
-					draw_line(spark_start, spark_end, Color("#b58cff", life * 0.92), 2.2, true)
-					draw_line(spark_start.lerp(spark_end, 0.25), spark_end, Color("#f2eaff", life * 0.86), 0.9, true)
+					draw_line(spark_start, spark_end, Color("#dcefff", life * 0.96), 2.2, true)
+					draw_line(spark_start.lerp(spark_end, 0.25), spark_end, Color("#ffffff", life * 0.92), 0.9, true)
 			"lightning_chain", "metal_chain", "wood_chain":
 				var chain_start: Vector2 = effect.get("from", center)
 				var chain_end: Vector2 = effect.get("to", center)
@@ -1786,7 +1786,7 @@ func _draw_skill_effects() -> void:
 					if visible_end.distance_squared_to(chain_start) > 4.0:
 						# One continuous jagged trunk only. Do not draw lateral branches on the primary bolt.
 						_draw_lightning_bolt(chain_start, visible_end, chain_alpha, progress * 5.0)
-						draw_circle(visible_end, 3.6, Color("#a978ff", chain_alpha * 0.82))
+						draw_circle(visible_end, 3.6, Color("#dcefff", chain_alpha * 0.92))
 						draw_circle(visible_end, 1.6, Color("#f4edff", chain_alpha))
 			"talisman_seal", "thunder_seal", "sword_manual", "body_jade", "cold_relic", "formation_seal":
 				_draw_artifact_sigil(center, radius, life, kind)
@@ -1865,7 +1865,7 @@ func _draw_cultivation_feedback(center: Vector2, radius: float, life: float, ele
 				draw_line(center, center + Vector2(cos(angle), sin(angle)) * radius * 0.58, Color(0.68, 0.56, 0.36, life * 0.85), 1.6, true)
 		"thunder":
 			_draw_lightning_bolt(center + Vector2(-radius * 0.35, -radius * 0.5), center + Vector2(radius * 0.12, radius * 0.42), life, elapsed_seconds * 3.0)
-			draw_arc(center, radius * 0.62, 0.0, TAU, 28, Color(0.7, 0.46, 1.0, life * 0.72), 1.4)
+			draw_arc(center, radius * 0.62, 0.0, TAU, 28, Color("#c9e1ef", life * 0.88), 1.4)
 
 
 
@@ -1948,9 +1948,9 @@ func _draw_lightning_bolt(start_position: Vector2, end_position: Vector2, alpha:
 		points.append(start_position + axis * t + normal * jitter)
 	points.append(end_position)
 	for i in range(points.size() - 1):
-		draw_line(points[i], points[i + 1], Color("#6030b7", alpha * 0.34), 10.5, true)
-		draw_line(points[i], points[i + 1], Color("#a46aff", alpha * 0.98), 4.2, true)
-		draw_line(points[i], points[i + 1], Color("#f6efff", alpha), 1.55, true)
+		draw_line(points[i], points[i + 1], Color("#7892a3", alpha * 0.42), 10.5, true)
+		draw_line(points[i], points[i + 1], Color("#dcefff", alpha), 4.2, true)
+		draw_line(points[i], points[i + 1], Color("#ffffff", alpha), 1.55, true)
 
 
 func _draw_fire_zones() -> void:
