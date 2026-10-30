@@ -5,7 +5,7 @@
  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff2bd"/><stop offset=".45" stop-color="#e5b85d"/><stop offset="1" stop-color="#8a552b"/></linearGradient>
  <linearGradient id="bluePaper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8edc7"/><stop offset=".5" stop-color="#d8c58c"/><stop offset="1" stop-color="#8d7952"/></linearGradient>
  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff4c8"/><stop offset=".35" stop-color="#d7d9d3"/><stop offset=".65" stop-color="#9caaad"/><stop offset="1" stop-color="#4d5b63"/></linearGradient>
- <radialGradient id="thunderAura"><stop stop-color="#7bbaff" stop-opacity=".55"/><stop offset=".5" stop-color="#4d5cff" stop-opacity=".24"/><stop offset="1" stop-color="#171e73" stop-opacity="0"/></radialGradient>
+ <radialGradient id="thunderAura"><stop stop-color="#f2fbff" stop-opacity=".62"/><stop offset=".5" stop-color="#b8d3e1" stop-opacity=".28"/><stop offset="1" stop-color="#263b49" stop-opacity="0"/></radialGradient>
  <radialGradient id="waterAura"><stop stop-color="#9ef5ff" stop-opacity=".5"/><stop offset=".55" stop-color="#2ca5d2" stop-opacity=".2"/><stop offset="1" stop-color="#143e6c" stop-opacity="0"/></radialGradient>
  <radialGradient id="earthAura"><stop stop-color="#f8d98b" stop-opacity=".4"/><stop offset=".7" stop-color="#8f6832" stop-opacity=".16"/><stop offset="1" stop-color="#4c3521" stop-opacity="0"/></radialGradient>
 </defs>
@@ -26,16 +26,16 @@
 <!-- THUNDER TALISMAN -->
 <g transform="translate(192 64)">
  <circle r="61" fill="url(#thunderAura)"/>
- <circle r="48" fill="none" stroke="#536dff" stroke-width="1.3" opacity=".65"/>
- <circle r="39" fill="none" stroke="#9bc7ff" stroke-width=".8" stroke-dasharray="3 5" opacity=".8"/>
- <path d="M-45 -35 L-28 -17 L-37 -4 L-21 3 L-32 21 M42 -38 L28 -21 L37 -7 L21 3 L31 21" fill="none" stroke="#687dff" stroke-width="3" stroke-linejoin="round"/>
- <path d="M-28 -52 L-14 -34 L-25 -20 L-11 -12 L-18 4 M31 -50 L16 -30 L27 -17 L12 -7 L18 9" fill="none" stroke="#d4e8ff" stroke-width="2.2" stroke-linejoin="round"/>
+ <circle r="48" fill="none" stroke="#b7d1e1" stroke-width="1.3" opacity=".78"/>
+ <circle r="39" fill="none" stroke="#e7f5ff" stroke-width=".8" stroke-dasharray="3 5" opacity=".9"/>
+ <path d="M-45 -35 L-28 -17 L-37 -4 L-21 3 L-32 21 M42 -38 L28 -21 L37 -7 L21 3 L31 21" fill="none" stroke="#c9e1ef" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M-28 -52 L-14 -34 L-25 -20 L-11 -12 L-18 4 M31 -50 L16 -30 L27 -17 L12 -7 L18 9" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round"/>
  <path d="M-25 -44 L18 -40 L23 33 L-28 36Z" fill="url(#bluePaper)" stroke="#806b45" stroke-width="2.4" transform="rotate(5)"/>
  <path d="M-19 -37 L12 -34 L17 27 L-21 29Z" fill="none" stroke="#fff1bf" stroke-width="1.2" transform="rotate(5)"/>
  <path d="M8 -31 L-11 -4 L-1 -4 L-9 19 L17 -14 L5 -13Z" fill="#bd942e" stroke="#77502a" stroke-width="1.8" stroke-linejoin="round"/>
  <path d="M-13 22 Q0 12 13 22" fill="none" stroke="#a12c2c" stroke-width="3" stroke-linecap="round"/>
- <path d="M-47 8 L-35 1 L-40 18 L-29 13 M45 6 L34 -1 L39 16 L28 11" fill="none" stroke="#d8efff" stroke-width="2.4" stroke-linejoin="round"/>
- <circle cx="-42" cy="31" r="2.2" fill="#8bbcff"/><circle cx="41" cy="-25" r="2.5" fill="#d4e9ff"/><circle cx="33" cy="36" r="2" fill="#7788ff"/>
+ <path d="M-47 8 L-35 1 L-40 18 L-29 13 M45 6 L34 -1 L39 16 L28 11" fill="none" stroke="#f4fbff" stroke-width="2.4" stroke-linejoin="round"/>
+ <circle cx="-42" cy="31" r="2.2" fill="#e7f5ff"/><circle cx="41" cy="-25" r="2.5" fill="#d4e9ff"/><circle cx="33" cy="36" r="2" fill="#d1e4f0"/>
 </g>
 <!-- COPPER COIN SWORD -->
 <g transform="translate(320 64)">
