@@ -520,18 +520,20 @@ func _test_player_animation_frames() -> void:
 	var player: Variant = PLAYER_SCRIPT.new()
 	root.add_child(player)
 	_check(player.PLAYER_IDLE_FRAMES.size() == 4, "主角待机状态保留 4 帧节奏槽，画面由四向视图决定")
-	_check(player.PLAYER_WALK_FRAMES.size() == 4 and player.PLAYER_WALK_ATLAS != null, "主角移动状态接入四向四帧行走图集")
-	_check(player.PLAYER_WALK_ATLAS.get_size() == Vector2(384.0, 368.0), "四向行走图集尺寸与帧区域匹配")
-	player.animation_frame_index = 2
+	_check(player.PLAYER_WALK_FRAMES.size() == 8 and player.PLAYER_WALK_ATLAS != null, "主角移动状态接入四向八帧完整行走图集")
+	_check(player.PLAYER_WALK_ATLAS.get_size() == Vector2(384.0, 256.0), "四向八帧图集尺寸与 48×64 帧区域匹配")
+	player.animation_frame_index = 6
 	player.facing = Vector2.DOWN
-	_check(player._walk_frame_region() == Rect2(192.0, 0.0, 96.0, 92.0), "朝下移动选取正面行走帧")
+	_check(player._walk_frame_region() == Rect2(288.0, 0.0, 48.0, 64.0), "朝下移动选取正面第七帧")
 	player.facing = Vector2.LEFT
-	_check(player._walk_frame_region() == Rect2(192.0, 92.0, 96.0, 92.0), "朝左移动选取左侧行走帧")
+	_check(player._walk_frame_region() == Rect2(288.0, 64.0, 48.0, 64.0), "朝左移动选取左侧第七帧")
 	player.facing = Vector2.UP
-	_check(player._walk_frame_region() == Rect2(192.0, 184.0, 96.0, 92.0), "朝上移动选取背面行走帧")
+	_check(player._walk_frame_region() == Rect2(288.0, 128.0, 48.0, 64.0), "朝上移动选取背面第七帧")
 	player.facing = Vector2.RIGHT
-	_check(player._walk_frame_region() == Rect2(192.0, 276.0, 96.0, 92.0), "朝右移动选取右侧行走帧")
-	_check(player.PLAYER_WALK_DRAW_SIZE.y == player.PLAYER_DRAW_SIZE.y and player.PLAYER_WALK_DRAW_SIZE.x > player.PLAYER_DRAW_SIZE.x, "行走帧按源图比例绘制且保持脚底高度")
+	_check(player._walk_frame_region() == Rect2(288.0, 192.0, 48.0, 64.0), "朝右移动选取右侧第七帧")
+	var walker_size: Vector2 = ENEMY_SCRIPT.WALKER_DRAW_SIZE
+	_check(player.PLAYER_DRAW_SIZE.x < walker_size.x and player.PLAYER_DRAW_SIZE.y < walker_size.y, "主角绘制尺寸略小于普通行尸")
+	_check(player.PLAYER_WALK_DRAW_SIZE == player.PLAYER_DRAW_SIZE, "待机与行走尺寸完全一致，切换时不缩放跳变")
 	_check(player.PLAYER_ATTACK_FRAMES.size() == 4, "主角符箓攻击状态保留 4 帧节奏槽，匹配动作帧待制作")
 	_check(player.PLAYER_HIT_FRAMES.size() == 3, "主角受击状态保留 3 帧节奏槽，匹配动作帧待制作")
 	_check(player.PLAYER_DEATH_FRAMES.size() == 6, "主角临时保留 6 帧旧倒地动画")
@@ -554,8 +556,8 @@ func _test_player_animation_frames() -> void:
 	player.velocity = Vector2.RIGHT * player.move_speed
 	player._update_animation(0.01)
 	_check(player.animation_state == "walk", "移动输入切换到四向逐帧行走动画")
-	player._update_animation(0.14)
-	_check(player.animation_frame_index == 1, "行走动画在最高移动速度下与步态周期同步")
+	player._update_animation(0.08)
+	_check(player.animation_frame_index == 1, "八帧行走动画在最高移动速度下与步态周期同步")
 	player.trigger_attack(Vector2.RIGHT)
 	player._update_animation(0.01)
 	_check(player.animation_state == "attack", "自动攻击触发独立符箓攻击动画")

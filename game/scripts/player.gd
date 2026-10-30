@@ -8,16 +8,16 @@ const PLAYER_BACK_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoi
 const PLAYER_SIDE_RIGHT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_side_right.tres")
 const PLAYER_IDLE_TEXTURE: Texture2D = PLAYER_FRONT_TEXTURE
 const PLAYER_WALK_TEXTURE: Texture2D = PLAYER_SIDE_RIGHT_TEXTURE
-const PLAYER_WALK_ATLAS: Texture2D = preload("res://assets/sprites/player_taoist_walk_cycle.png")
-const PLAYER_WALK_FRAME_SIZE := Vector2(96.0, 92.0)
-const PLAYER_WALK_DRAW_SIZE := Vector2(142.0, 137.0)
-const PLAYER_DRAW_SIZE := Vector2(77.0, 137.0)
-const PLAYER_DEATH_DRAW_SIZE := Vector2(92.0, 77.0)
+const PLAYER_WALK_ATLAS: Texture2D = preload("res://assets/sprites/player_taoist_walk_cycle_8f.png")
+const PLAYER_WALK_FRAME_SIZE := Vector2(48.0, 64.0)
+const PLAYER_WALK_DRAW_SIZE := Vector2(52.0, 72.0)
+const PLAYER_DRAW_SIZE := Vector2(52.0, 72.0)
+const PLAYER_DEATH_DRAW_SIZE := Vector2(58.0, 48.0)
 
 # Idle/attack/hit currently use the approved directional stills. Walking uses a dedicated
-# 4-row x 4-column atlas: front, left, back, right; each row is one four-frame gait cycle.
+# 4-row x 8-column atlas: front, left, back, right; each row is one complete eight-frame gait cycle.
 const PLAYER_IDLE_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
-const PLAYER_WALK_FRAMES = [0, 1, 2, 3]
+const PLAYER_WALK_FRAMES = [0, 1, 2, 3, 4, 5, 6, 7]
 const PLAYER_ATTACK_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
 const PLAYER_HIT_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
 const PLAYER_DEATH_FRAMES = [
@@ -255,14 +255,14 @@ func _draw() -> void:
 	# Layered soft shadow + warm floor bounce prevent the larger full-body sprite from reading as a flat sticker.
 	var shadow_y := PLAYER_DRAW_SIZE.y * 0.47
 	draw_set_transform(Vector2(0.0, shadow_y + absf(bob) * 0.12), 0.0, Vector2(1.46 + gait * 0.03, 0.34 - gait * 0.012))
-	draw_circle(Vector2.ZERO, 20.0, Color(0.015, 0.014, 0.012, 0.40))
-	draw_circle(Vector2.ZERO, 12.0, Color(0.015, 0.014, 0.012, 0.23))
+	draw_circle(Vector2.ZERO, 16.0, Color(0.015, 0.014, 0.012, 0.40))
+	draw_circle(Vector2.ZERO, 10.0, Color(0.015, 0.014, 0.012, 0.23))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	draw_set_transform(Vector2(0.0, shadow_y + 3.0), 0.0, Vector2(1.4, 0.34))
-	draw_circle(Vector2.ZERO, 14.5, Color(0.66, 0.49, 0.23, 0.065))
+	draw_circle(Vector2.ZERO, 12.0, Color(0.66, 0.49, 0.23, 0.065))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	draw_set_transform(Vector2(0.0, shadow_y + 4.0), 0.0, Vector2(1.0, 0.32))
-	draw_circle(Vector2.ZERO, 12.0, Color(0.015, 0.014, 0.012, 0.28))
+	draw_circle(Vector2.ZERO, 10.0, Color(0.015, 0.014, 0.012, 0.28))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if is_moving and footstep_flash > 0.0:
