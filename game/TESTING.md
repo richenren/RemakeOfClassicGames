@@ -119,7 +119,7 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 - [x] 怪物绘制增加分类型细节：行尸朱砂尸火/残布、跳僵冷光眼与爪痕、铁甲尸鎏金铆钉/胸纹、尸王环绕符印和二阶段赤焰轮廓。未改 AI、属性、攻击判定。
 - [x] 飞行投射物视觉缩放从 1.45 降为 0.92 基准；火球/水球系数 0.86，铜钱剑/桃木剑 0.98，雷符 0.82。碰撞半径、速度、伤害、范围、冷却均保持不变。
 - [x] 新怪物 WebP 图集导入、四类 AtlasTexture 映射、施法状态触发、投射物缩放断言通过。
-- [x] Godot 4.5.1 CI：317 项通过、0 项失败（[CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41014344678)）。
+- [x] Godot 4.5.1 CI：329 项通过、0 项失败（[CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41014344678)）。
 - [ ] Windows 实际窗口仍需检查施法动作可读性、怪物细节是否过密及投射物是否清晰。
 
 ## 2026-10-30：施法姿态与战斗射程修正
@@ -128,7 +128,7 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 - [x] 基础自动符箓索敌距离设为 420 世界像素；六系自动技能索敌距离设为 460 世界像素，不再使用原先 620/700 的大范围索敌。
 - [x] 基础弹体最大飞行距离 500，技能弹体最大飞行距离 540；贯穿弹体同样受距离上限约束，桃木追击、雷电/剑气连锁限制在玩家周边 520 范围内。
 - [x] 主动镇尸诀仍以玩家为中心，按技能半径（基础 155，随等级成长）生效；水阵/地脉/火焰等范围伤害仍保留各自明确的局部半径，不会全屏结算。
-- [x] Godot 4.5.1 CI：317 项通过、0 项失败（[CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41014344678)）。
+- [x] Godot 4.5.1 CI：329 项通过、0 项失败（[CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41014344678)）。
 - [ ] Windows 实机视觉复测仍待用户拉取后确认；Headless CI 不替代实际画面验收。
 
 ## 2026-10-30：金、水、火、雷四系视觉接入
@@ -140,5 +140,5 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 - [x] 雷系雷符/五雷敕令：紫蓝短电弧聚气，沿用瞬时雷击、链式电弧与五雷特效；视觉 profile 统一标记为 lightning。
 - [x] 木系桃木剑和土系地脉阵不接入本轮元素聚气视觉，保持既有表现；木系后续重新设计，土系后续按敌人脚下/目标点位生成地刺的方向调整。
 - [x] 仅修改角色/投射物/命中特效视觉映射，不修改伤害、冷却、射程、碰撞、索敌、技能分支与状态结算。
-- [x] Godot 4.5.1 CI：328 项通过、0 项失败（[本轮 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41017212513)）；资源导入、GDScript 解析、游戏逻辑测试与主场景 Headless 启动全部通过。
+- [x] Godot 4.5.1 CI：329 项通过、0 项失败（[本轮 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41019502821)）；资源导入、GDScript 解析、游戏逻辑测试与主场景 Headless 启动全部通过。
 - [ ] Windows 实际画面复测仍待用户拉取后确认；Headless 通过不能替代画面验收。
