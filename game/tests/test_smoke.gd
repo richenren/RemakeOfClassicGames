@@ -463,7 +463,7 @@ func _test_skill_art_assets() -> void:
 	_check(hud._skill_art_region("copper_coin_sword").position.x == 256.0, "铜钱剑使用独立武器插画帧")
 	_check(hud._skill_art_region("peachwood_sword").position.x == 384.0, "桃木剑使用独立武器插画帧")
 	_check(hud._skill_art_region("water_array").position.x == 512.0, "水阵使用专属插画帧")
-	_check(hud._skill_art_region("earth_formation").position.x == 640.0, "地脉阵使用专属插画帧")
+	_check(hud._skill_art_region("earth_formation").position.x == 640.0, "地刺使用专属插画帧")
 	_check(hud._skill_card_art_region("fire_talisman").position.x == 0.0, "火符卡使用横向火符主视觉")
 	_check(hud._skill_card_art_region("thunder_talisman").position.x == 320.0, "雷符卡使用横向雷符主视觉")
 	_check(hud._skill_card_art_region("copper_coin_sword").position.x == 640.0, "铜钱剑卡使用横向御剑主视觉")
@@ -471,13 +471,13 @@ func _test_skill_art_assets() -> void:
 	_check(hud._skill_card_art_region("greenwood_guardian").position.x == 2240.0, "青木守护使用木系灵枝插画")
 	_check(hud._skill_card_art_region("body_jade").position.x == 2240.0, "护身玉佩使用灵玉主视觉")
 	_check(hud._skill_card_art_region("water_array").position.x == 1280.0, "水阵卡使用横向水阵主视觉")
-	_check(hud._skill_card_art_region("earth_formation").position.x == 1600.0, "地脉阵卡使用横向地脉主视觉")
+	_check(hud._skill_card_art_region("earth_formation").position.x == 1600.0, "地刺卡使用横向地刺主视觉")
 	var card_svg_source := FileAccess.get_file_as_string("res://assets/sprites/skill_card_art_atlas.svg")
 	var earth_start := card_svg_source.find('<g transform="translate(1600 0)">')
 	var earth_end := card_svg_source.find('<g transform="translate(1920 0)">')
 	var earth_art := card_svg_source.substr(earth_start, earth_end - earth_start) if earth_start >= 0 and earth_end > earth_start else ""
-	_check(earth_art.contains("<title>土系地脉阵：裂地岩柱与石屑震波</title>"), "土系地脉阵插画明确表达裂地岩柱与石屑震波")
-	_check(not earth_art.contains("#ef6529") and not earth_art.contains("#ffd16c"), "土系地脉阵插画不复用火系高饱和火焰配色")
+	_check(earth_art.contains("<title>土系地刺：多格裂地岩柱与石屑震波</title>"), "土系地刺插画明确表达多格裂地岩柱与石屑震波")
+	_check(not earth_art.contains("#ef6529") and not earth_art.contains("#ffd16c"), "土系地刺插画不复用火系高饱和火焰配色")
 	_check(hud._skill_card_art_region("cultivation_metal").position.x == 1920.0, "金系修炼卡有独立横向插画")
 	_check(hud._skill_card_art_region("cultivation_thunder").position.x == 3520.0, "雷系修炼卡有独立横向插画")
 	_check(hud._cultivation_art_region("cultivation_metal").position.x == 0.0, "金系修炼使用专属剑意插画")
@@ -695,6 +695,13 @@ func _test_combat_visuals(main: Variant) -> void:
 	main._tick_fire_zones(0.02)
 	_check(main.fire_zones.size() == 1, "火符按固定间隔自动生成持续火焰区域")
 	_check(main.has_method("_draw_fire_zones") and main.has_method("_draw_water_field"), "火场与寒潮水域使用独立的持续效果绘制器")
+	var fire_cells: PackedVector2Array = main._ground_effect_cells("fire")
+	var water_cells: PackedVector2Array = main._ground_effect_cells("water")
+	var earth_cells: PackedVector2Array = main._ground_effect_cells("earth")
+	_check(fire_cells.size() == 7 and water_cells.size() == 7 and fire_cells[2] != water_cells[2], "火场与水域使用轮廓不同的七格地面单元布局")
+	_check(earth_cells.size() == 5, "土系地刺以敌人脚下为中心生成五格突刺布局")
+	_check(main.AUTO_SKILL_DEFS.has("earth_formation") and main.AUTO_SKILL_DEFS["earth_formation"].get("name", "") == "地刺", "土系保留内部技能 ID 并将显示名称调整为地刺")
+	_check(main.has_method("_draw_support_array"), "通用辅助阵拥有独立的金色几何阵纹绘制器")
 	var hp_before_zone: float = temp_enemy.hp
 	main._tick_fire_zones(0.3)
 	_check(temp_enemy.hp < hp_before_zone, "持续火焰区域周期性灼烧范围内敌人")
@@ -840,14 +847,19 @@ func _test_combat_visuals(main: Variant) -> void:
 	temp_enemy.hp = temp_enemy.max_hp
 	main.pending_area_attacks.clear()
 	main._cast_auto_skill("earth_formation", temp_enemy)
-	_check(main.pending_area_attacks.size() == 1 and is_equal_approx(temp_enemy.hp, temp_enemy.max_hp), "地脉阵先显示地面预兆，不立即扣血")
+	_check(main.pending_area_attacks.size() == 1 and is_equal_approx(temp_enemy.hp, temp_enemy.max_hp), "土系地刺先显示目标脚下多格地面预兆，不立即扣血")
+	var saw_earth_telegraph := false
+	for effect in main.skill_effects:
+		if str(effect.get("kind", "")) == "earth_telegraph":
+			saw_earth_telegraph = true
+	_check(saw_earth_telegraph, "土系预兆使用多格裂纹而不是圆形符阵")
 	main._tick_pending_area_attacks(0.22)
-	_check(temp_enemy.hp < temp_enemy.max_hp, "地脉阵预兆结束后岩刺爆发并结算伤害")
+	_check(temp_enemy.hp < temp_enemy.max_hp, "地刺预兆结束后岩刺爆发并结算伤害")
 	var saw_earth_spike := false
 	for effect in main.skill_effects:
 		if str(effect.get("kind", "")) == "earth_spike":
 			saw_earth_spike = true
-	_check(saw_earth_spike, "地脉阵爆发时显示独立岩刺与碎石特效")
+	_check(saw_earth_spike, "地刺爆发时显示独立岩刺与碎石特效")
 
 	# Verify that every final evolution has its own visible signature and matching artifact feedback.
 	for old_projectile in main.projectiles:

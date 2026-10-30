@@ -216,7 +216,7 @@ func _compact_artifact_label(artifact_id: String) -> String:
 		"sword_manual":
 			return "御剑"
 		"formation_manual":
-			return "阵解"
+			return "镇岳"
 		"body_jade":
 			return "护身"
 		_:

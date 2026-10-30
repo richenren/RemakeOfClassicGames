@@ -46,7 +46,7 @@ const AUTO_SKILL_DEFS := {
 	"copper_coin_sword": {"name": "铜钱剑", "desc": "御使铜钱剑追击敌人，强化贯穿或回旋", "upgrade_desc": "铜钱剑伤害与出手频率提升", "damage": 17.0, "cooldown": 1.8},
 	"peachwood_sword": {"name": "桃木剑", "desc": "御剑驱邪，可追击或环身护主", "upgrade_desc": "桃木剑伤害与护身范围提升", "damage": 16.0, "cooldown": 1.9},
 	"water_array": {"name": "寒潮阵", "desc": "寒潮席卷指定区域，造成伤害并持续减速", "upgrade_desc": "扩大寒潮阵范围，强化冰霜伤害与减速", "damage": 10.0, "cooldown": 3.0},
-	"earth_formation": {"name": "地脉阵", "desc": "震动地脉压制一片区域，适合群体清场", "upgrade_desc": "地脉阵范围与伤害提升", "damage": 21.0, "cooldown": 2.8}
+	"earth_formation": {"name": "地刺", "desc": "目标脚下地面裂开，岩刺突起造成范围伤害与击退", "upgrade_desc": "地刺覆盖范围与岩刺伤害提升", "damage": 21.0, "cooldown": 2.8}
 }
 
 const ARTIFACT_DEFS := {
@@ -54,7 +54,7 @@ const ARTIFACT_DEFS := {
 	"thunder_seal": {"name": "天雷法印", "desc": "强化雷系伤害；雷符主修 Lv5 时解锁五雷敕令", "icon": "thunder_seal"},
 	"talisman_scroll": {"name": "符箓秘卷", "desc": "强化火符；火符主修 Lv5 时解锁焚天符阵", "icon": "talisman_scroll"},
 	"sword_manual": {"name": "御剑诀", "desc": "强化金系剑意；铜钱剑主修 Lv5 时解锁金锋剑阵", "icon": "sword_manual"},
-	"formation_manual": {"name": "阵法真解", "desc": "强化地脉阵；地脉阵主修 Lv5 时解锁镇岳神印", "icon": "formation_manual"},
+	"formation_manual": {"name": "镇岳真解", "desc": "强化土系地刺；地刺主修 Lv5 时解锁镇岳神印", "icon": "formation_manual"},
 	"body_jade": {"name": "护身玉", "desc": "受到的接触伤害降低 8%；桃木剑主修 Lv5 时解锁青木护身剑", "icon": "body_jade"}
 }
 
@@ -87,8 +87,8 @@ const SKILL_BRANCHES := {
 		{"id": "tide", "name": "潮涌", "desc": "扩大水阵范围，覆盖更多敌人"}
 	],
 	"earth_formation": [
-		{"id": "mountain", "name": "镇岳", "desc": "扩大镇压范围并击退敌人"},
-		{"id": "earthspike", "name": "地刺", "desc": "牺牲部分控制，换取更高爆发伤害"}
+		{"id": "mountain", "name": "镇岳", "desc": "扩大地刺覆盖范围并强化击退"},
+		{"id": "earthspike", "name": "穿岩", "desc": "岩刺更加集中，牺牲部分控制换取更高爆发伤害"}
 	]
 }
 
@@ -97,7 +97,7 @@ const ELEMENT_DEFS := {
 	"wood": {"name": "木", "skill_id": "peachwood_sword", "cultivation_name": "青木回生", "cultivation_desc": "击杀敌人时恢复少量生命，每级提高恢复量", "icon": "cultivation_wood", "artifact_id": "body_jade", "evolution_id": "greenwood_guardian", "evolution_name": "青木护身剑", "evolution_desc": "桃木剑攻击时额外释放护身剑气，击退近身邪祟", "effect": "wood"},
 	"water": {"name": "水", "skill_id": "water_array", "cultivation_name": "清泉回元", "cultivation_desc": "每秒恢复少量生命；主修时可继续强化续航", "icon": "cultivation_water", "artifact_id": "cold_relic", "evolution_id": "ice_array", "evolution_name": "冰魄阵", "evolution_desc": "水阵进化为冰魄阵，强化范围减速与短暂冻结", "effect": "water"},
 	"fire": {"name": "火", "skill_id": "fire_talisman", "cultivation_name": "余烬续燃", "cultivation_desc": "延长火焰区域并提高灼烧伤害", "icon": "cultivation_fire", "artifact_id": "talisman_scroll", "evolution_id": "heavenfire_array", "evolution_name": "焚天符阵", "evolution_desc": "火符命中后留下持续燃烧的火场，强化范围压制", "effect": "fire"},
-	"earth": {"name": "土", "skill_id": "earth_formation", "cultivation_name": "地脉回响", "cultivation_desc": "扩大地脉阵范围并强化击退", "icon": "cultivation_earth", "artifact_id": "formation_manual", "evolution_id": "earth_seal", "evolution_name": "镇岳神印", "evolution_desc": "地脉阵召出更大范围的镇岳震波，强化压制与击退", "effect": "earth"},
+	"earth": {"name": "土", "skill_id": "earth_formation", "cultivation_name": "地脉回响", "cultivation_desc": "扩大地刺覆盖范围并强化击退", "icon": "cultivation_earth", "artifact_id": "formation_manual", "evolution_id": "earth_seal", "evolution_name": "镇岳神印", "evolution_desc": "地刺进化为多格岩刺与地裂震波，强化压制与击退", "effect": "earth"},
 	"thunder": {"name": "雷", "skill_id": "thunder_talisman", "cultivation_name": "引雷蓄势", "cultivation_desc": "雷符连锁伤害提高，水系湿润目标更易传导", "icon": "cultivation_thunder", "artifact_id": "thunder_seal", "evolution_id": "five_thunder", "evolution_name": "五雷敕令", "evolution_desc": "雷击爆发与连锁清场强化，传导目标数仍有上限", "effect": "lightning"}
 }
 
@@ -1631,45 +1631,11 @@ func _draw_skill_effects() -> void:
 			"water_field", "ice_field":
 				_draw_water_field(center, radius, life, progress, kind == "ice_field")
 			"earth":
-				draw_arc(center, radius, 0.0, TAU, 48, Color(0.72, 0.61, 0.39, life * 0.8), 3.0)
-				draw_arc(center, radius * 0.58, 0.0, TAU, 40, Color(0.54, 0.48, 0.32, life * 0.55), 2.0)
-				for i in range(8):
-					var angle := TAU * float(i) / 8.0
-					draw_line(center + Vector2(cos(angle), sin(angle)) * radius * 0.76, center + Vector2(cos(angle), sin(angle)) * radius, Color(0.78, 0.68, 0.44, life * 0.7), 2.0)
+				_draw_earth_impact(center, radius, life, progress)
 			"earth_telegraph":
-				draw_circle(center, radius * 0.58, Color(0.05, 0.045, 0.035, life * 0.24))
-				draw_arc(center, radius * (0.82 + progress * 0.08), 0.0, TAU, 48, Color(0.82, 0.68, 0.42, life * 0.82), 2.4)
-				for i in range(7):
-					var angle := TAU * float(i) / 7.0
-					var direction := Vector2(cos(angle), sin(angle))
-					var crack_start := center + direction * radius * 0.18
-					var crack_end := center + direction * radius * 0.78
-					draw_line(crack_start, crack_end, Color(0.66, 0.54, 0.35, life * 0.82), 2.0, true)
-					draw_line(crack_start.lerp(crack_end, 0.55), crack_start.lerp(crack_end, 0.55) + Vector2(-direction.y, direction.x) * radius * 0.12, Color(0.52, 0.45, 0.32, life * 0.72), 1.3, true)
+				_draw_earth_telegraph(center, radius, life, progress)
 			"earth_spike", "earth_seal":
-				draw_circle(center, radius * 0.42, Color(0.04, 0.035, 0.028, life * 0.22))
-				draw_arc(center, radius * 0.86, 0.0, TAU, 48, Color(0.72, 0.59, 0.37, life * 0.72), 2.0)
-				if kind == "earth_seal":
-					var seal_points := PackedVector2Array()
-					for seal_index in range(7):
-						var seal_angle := TAU * float(seal_index) / 6.0 - PI * 0.5
-						seal_points.append(center + Vector2(cos(seal_angle), sin(seal_angle)) * radius * 0.31)
-					draw_colored_polygon(PackedVector2Array([seal_points[0], seal_points[1], seal_points[2], seal_points[3], seal_points[4], seal_points[5]]), Color(0.45, 0.34, 0.19, life * 0.24))
-					draw_polyline(seal_points, Color(0.91, 0.74, 0.43, life * 0.92), 1.8, true)
-					draw_circle(center, radius * 0.12, Color(0.91, 0.74, 0.43, life * 0.65))
-				var spike_count := 9 if kind == "earth_seal" else 7
-				for i in range(spike_count):
-					var angle := TAU * float(i) / float(spike_count) + (0.08 if kind == "earth_seal" else 0.0)
-					var direction := Vector2(cos(angle), sin(angle))
-					var tangent := Vector2(-direction.y, direction.x)
-					var base := center + direction * radius * 0.27
-					var width := radius * (0.07 if kind == "earth_seal" else 0.085)
-					var left := base - tangent * width
-					var right := base + tangent * width
-					var tip := center + direction * radius * (0.55 + 0.08 * sin(float(i) * 2.3 + progress * 5.0))
-					draw_colored_polygon(PackedVector2Array([left, tip, right]), Color(0.23, 0.22, 0.18, life * 0.95))
-					draw_line(left, tip, Color(0.76, 0.63, 0.41, life * 0.82), 1.7, true)
-					draw_line(tip, right, Color(0.10, 0.11, 0.10, life * 0.9), 1.7, true)
+				_draw_earth_spikes(center, radius, life, progress, kind == "earth_seal")
 			"steam":
 				draw_circle(center, radius * (0.65 + progress * 0.35), Color(0.82, 0.83, 0.76, life * 0.16))
 				draw_arc(center, radius, 0.0, TAU, 40, Color(0.8, 0.82, 0.78, life * 0.4), 1.5)
@@ -1798,8 +1764,7 @@ func _draw_skill_effects() -> void:
 			"cultivation_metal", "cultivation_wood", "cultivation_water", "cultivation_fire", "cultivation_earth", "cultivation_thunder":
 				_draw_cultivation_feedback(center, radius, life, kind.trim_prefix("cultivation_"))
 			"control":
-				draw_arc(center, radius, 0.0, TAU, 64, Color(0.92, 0.76, 0.38, life * 0.85), 3.0)
-				draw_arc(center, radius * 0.78, 0.0, TAU, 56, Color(0.74, 0.56, 0.3, life * 0.55), 1.5)
+				_draw_support_array(center, radius, life, progress)
 
 func _draw_artifact_sigil(center: Vector2, radius: float, life: float, kind: String) -> void:
 	var gold := Color(0.9, 0.7, 0.35, life * 0.82)
@@ -1864,10 +1829,14 @@ func _draw_cultivation_feedback(center: Vector2, radius: float, life: float, ele
 				var direction := Vector2(cos(angle), sin(angle))
 				draw_line(center + direction * radius * 0.18, center + direction * radius * 0.58, Color(1.0, 0.52, 0.16, life * 0.9), 1.8, true)
 		"earth":
-			draw_arc(center, radius * 0.68, 0.0, TAU, 32, Color(0.76, 0.64, 0.42, life * 0.8), 1.6)
 			for i in range(4):
-				var angle := TAU * float(i) / 4.0
-				draw_line(center, center + Vector2(cos(angle), sin(angle)) * radius * 0.58, Color(0.68, 0.56, 0.36, life * 0.85), 1.6, true)
+				var angle := TAU * float(i) / 4.0 + PI * 0.25
+				var direction := Vector2(cos(angle), sin(angle))
+				var chip_center := center + direction * radius * 0.42
+				var tangent := Vector2(-direction.y, direction.x)
+				var chip := PackedVector2Array([chip_center - direction * 4.0 - tangent * 2.0, chip_center + direction * 5.0, chip_center - direction * 1.0 + tangent * 3.0])
+				draw_colored_polygon(chip, Color(0.48, 0.39, 0.27, life * 0.84))
+				draw_line(chip[0], chip[1], Color(0.82, 0.69, 0.47, life * 0.86), 1.2, true)
 		"thunder":
 			_draw_lightning_bolt(center + Vector2(-radius * 0.35, -radius * 0.5), center + Vector2(radius * 0.12, radius * 0.42), life, elapsed_seconds * 3.0)
 			draw_arc(center, radius * 0.62, 0.0, TAU, 28, Color("#c9e1ef", life * 0.88), 1.4)
@@ -1911,52 +1880,46 @@ func _draw_water_splash(center: Vector2, radius: float, life: float, progress: f
 
 
 func _draw_water_field(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
-	# Lingering water is a shallow pool with moving ripples and curved currents.
-	# It is presentation only; all damage and status application happen on impact.
-	var cyan := Color(0.22, 0.76, 0.98, life * 0.78)
-	var pale := Color(0.78, 0.94, 1.0, life * 0.86)
-	var pool_radius := radius * (0.76 + 0.035 * sin(elapsed_seconds * 2.4 + progress * PI))
-	var pool_outline := PackedVector2Array()
-	for point_index in range(57):
-		var angle := TAU * float(point_index) / 56.0
-		var wobble := 1.0 + 0.025 * sin(angle * 4.0 + elapsed_seconds * 1.1)
-		pool_outline.append(center + Vector2(cos(angle) * pool_radius * wobble, sin(angle) * pool_radius * 0.54 * wobble))
-	pool_outline.append(pool_outline[0])
-	draw_colored_polygon(pool_outline, Color(0.02, 0.17, 0.29, life * 0.28))
-	draw_polyline(pool_outline, cyan, 2.2, true)
-	for ring_index in range(3):
-		var phase := elapsed_seconds * (1.0 + 0.18 * float(ring_index)) + float(ring_index) * 1.7
-		var ring_radius := radius * (0.24 + float(ring_index) * 0.22) * (0.94 + 0.06 * sin(phase))
-		var ripple_points := PackedVector2Array()
-		for step in range(39):
-			var t := float(step) / 38.0
-			var angle := -PI * 0.14 + t * PI * 1.28 + phase * 0.08
-			var ripple := sin(angle * 3.0 + phase) * 2.0
-			ripple_points.append(center + Vector2(cos(angle) * (ring_radius + ripple), sin(angle) * (ring_radius * 0.52 + ripple * 0.35)))
-		draw_polyline(ripple_points, Color(0.48, 0.86, 1.0, life * (0.7 - float(ring_index) * 0.12)), 1.8 if ring_index == 0 else 1.3, true)
-	for stream_index in range(2):
-		var current_points := PackedVector2Array()
-		for step in range(33):
-			var t := float(step) / 32.0
-			var angle := elapsed_seconds * 0.65 + float(stream_index) * PI + t * TAU * 0.82
-			var spiral_radius := radius * (0.14 + t * 0.52)
-			current_points.append(center + Vector2(cos(angle) * spiral_radius, sin(angle) * spiral_radius * 0.5))
-		draw_polyline(current_points, Color(0.36, 0.78, 0.98, life * 0.68), 1.8, true)
-	for drop_index in range(5):
-		var drop_angle := TAU * float(drop_index) / 5.0 + elapsed_seconds * 0.6
-		var drop_radius := radius * (0.22 + 0.08 * sin(elapsed_seconds * 2.2 + float(drop_index)))
-		var drop_position := center + Vector2(cos(drop_angle) * drop_radius, sin(drop_angle) * drop_radius * 0.48)
-		draw_circle(drop_position, 1.8, pale)
-	if frozen:
-		for crystal_index in range(8):
-			var angle := TAU * float(crystal_index) / 8.0 + progress * 0.12
-			var direction := Vector2(cos(angle), sin(angle))
-			var tangent := Vector2(-direction.y, direction.x)
-			var base := center + Vector2(direction.x * radius * 0.72, direction.y * radius * 0.42)
-			var tip := base + direction * (8.0 + 2.0 * sin(elapsed_seconds * 3.0 + float(crystal_index)))
-			draw_colored_polygon(PackedVector2Array([base - tangent * 3.2, tip, base + tangent * 3.2]), Color(0.6, 0.87, 1.0, life * 0.72))
-			draw_line(base, tip, pale, 1.2, true)
-
+	# Water is a connected group of shallow pools on separate floor cells, never a circular rune.
+	var cells := _ground_effect_cells("water")
+	var cell_size := Vector2(clampf(radius * 0.5, 38.0, 46.0), clampf(radius * 0.37, 27.0, 34.0))
+	var spacing := cell_size + Vector2(4.0, 4.0)
+	var fade := clampf(life * 1.4, 0.0, 1.0)
+	for i in range(cells.size()):
+		for j in range(i + 1, cells.size()):
+			var cell_delta := cells[i] - cells[j]
+			if absf(cell_delta.x) + absf(cell_delta.y) == 1.0:
+				var from_center := center + Vector2(cells[i].x * spacing.x, cells[i].y * spacing.y)
+				var to_center := center + Vector2(cells[j].x * spacing.x, cells[j].y * spacing.y)
+				draw_line(from_center, to_center, Color(0.03, 0.25, 0.4, fade * 0.42), cell_size.y * 0.3, true)
+	for i in range(cells.size()):
+		var cell_center := center + Vector2(cells[i].x * spacing.x, cells[i].y * spacing.y)
+		var tile := _ground_tile_polygon(cell_center, cell_size, i + 1)
+		draw_colored_polygon(tile, Color(0.015, 0.16, 0.26, fade * 0.62))
+		var inner_tile := _ground_tile_polygon(cell_center + Vector2(0.0, -1.0), cell_size * 0.78, i + 3)
+		draw_colored_polygon(inner_tile, Color(0.06, 0.36, 0.5, fade * 0.3))
+		_draw_ground_tile_outline(tile, Color(0.25, 0.72, 0.92, fade * 0.84), 1.45)
+		_draw_ground_tile_outline(inner_tile, Color(0.64, 0.9, 1.0, fade * 0.38), 0.9)
+		for ring_index in range(2):
+			var phase := elapsed_seconds * (1.25 + float(ring_index) * 0.2) + float(i) * 0.83 + progress * 0.7
+			var ripple_radius := minf(cell_size.x, cell_size.y) * (0.16 + float(ring_index) * 0.17 + 0.025 * sin(phase))
+			var ripple_points := PackedVector2Array()
+			for step in range(19):
+				var t := float(step) / 18.0
+				var angle := -PI * 0.82 + t * PI * 1.64 + phase * 0.12
+				var wobble := sin(angle * 3.0 + phase) * 1.1
+				ripple_points.append(cell_center + Vector2(cos(angle) * (ripple_radius + wobble), sin(angle) * (ripple_radius * 0.48 + wobble * 0.35)))
+			draw_polyline(ripple_points, Color(0.58, 0.9, 1.0, fade * (0.68 - float(ring_index) * 0.18)), 1.3 if ring_index == 0 else 1.0, true)
+		var droplet_phase := fposmod(elapsed_seconds * 0.72 + float(i) * 0.21, 1.0)
+		var droplet_position := cell_center + Vector2(cell_size.x * 0.27, -cell_size.y * (0.1 + droplet_phase * 0.22))
+		draw_circle(droplet_position, 1.35, Color(0.84, 0.97, 1.0, fade * (1.0 - droplet_phase) * 0.9))
+		if frozen and i % 2 == 0:
+			var crystal_base := cell_center + Vector2(cell_size.x * 0.42, -cell_size.y * 0.24)
+			var crystal_tip := crystal_base + Vector2(2.0, -8.0 - 2.0 * sin(elapsed_seconds * 3.0 + float(i)))
+			draw_colored_polygon(PackedVector2Array([
+				crystal_base + Vector2(-3.0, 1.0), crystal_tip, crystal_base + Vector2(3.0, 1.0)
+			]), Color(0.68, 0.9, 1.0, fade * 0.76))
+			draw_line(crystal_base, crystal_tip, Color(0.9, 0.98, 1.0, fade * 0.92), 1.1, true)
 
 
 func _draw_water_formation_effect(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
@@ -2021,44 +1984,153 @@ func _draw_lightning_bolt(start_position: Vector2, end_position: Vector2, alpha:
 		draw_line(points[i], points[i + 1], Color("#ffffff", alpha), 1.55, true)
 
 
+func _draw_support_array(center: Vector2, radius: float, life: float, progress: float) -> void:
+	# Calm gold geomancy array used by the general support/control skill, not the earth attack.
+	var outer_radius := radius * (0.9 + progress * 0.04)
+	var gold := Color(0.78, 0.64, 0.39, life * 0.72)
+	var pale := Color(0.93, 0.81, 0.55, life * 0.82)
+	draw_arc(center, outer_radius, 0.0, TAU, 72, gold, 2.0)
+	draw_arc(center, outer_radius * 0.62, 0.0, TAU, 56, Color(0.64, 0.5, 0.29, life * 0.48), 1.3)
+	var diamond := PackedVector2Array([center + Vector2(0.0, -outer_radius * 0.56), center + Vector2(outer_radius * 0.56, 0.0), center + Vector2(0.0, outer_radius * 0.56), center + Vector2(-outer_radius * 0.56, 0.0), center + Vector2(0.0, -outer_radius * 0.56)])
+	draw_polyline(diamond, gold, 1.7, true)
+	var inner_diamond := PackedVector2Array([center + Vector2(0.0, -outer_radius * 0.25), center + Vector2(outer_radius * 0.25, 0.0), center + Vector2(0.0, outer_radius * 0.25), center + Vector2(-outer_radius * 0.25, 0.0), center + Vector2(0.0, -outer_radius * 0.25)])
+	draw_polyline(inner_diamond, pale, 1.2, true)
+	for i in range(4):
+		var angle := TAU * float(i) / 4.0 - PI * 0.5
+		var direction := Vector2(cos(angle), sin(angle))
+		var mark_center := center + direction * outer_radius * 0.78
+		var tangent := Vector2(-direction.y, direction.x)
+		draw_colored_polygon(PackedVector2Array([mark_center + direction * 5.0, mark_center + tangent * 2.8, mark_center - direction * 5.0, mark_center - tangent * 2.8]), Color(0.84, 0.69, 0.42, life * 0.62))
+	draw_circle(center, maxf(2.0, radius * 0.035), pale)
+
+
+func _ground_effect_cells(effect_kind: String) -> PackedVector2Array:
+	match effect_kind:
+		"fire":
+			return PackedVector2Array([Vector2(-1.0, -1.0), Vector2(0.0, -1.0), Vector2(1.0, -1.0), Vector2(-1.0, 0.0), Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, 1.0)])
+		"water":
+			return PackedVector2Array([Vector2(-1.0, -1.0), Vector2(0.0, -1.0), Vector2(-1.0, 0.0), Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, 1.0), Vector2(1.0, 1.0)])
+		"earth":
+			return PackedVector2Array([Vector2(-1.0, 0.0), Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, -1.0), Vector2(0.0, 1.0)])
+		_:
+			return PackedVector2Array()
+
+
+func _ground_tile_polygon(center: Vector2, size: Vector2, variant: int = 0) -> PackedVector2Array:
+	var half := size * 0.5
+	var cut := 2.5 + float(variant % 3) * 0.8
+	var skew := float(variant % 2) * 1.4
+	return PackedVector2Array([center + Vector2(-half.x + cut, -half.y), center + Vector2(half.x - cut, -half.y + skew), center + Vector2(half.x, -half.y * 0.12), center + Vector2(half.x - cut * 0.45, half.y), center + Vector2(-half.x + cut, half.y - 1.0), center + Vector2(-half.x, -half.y * 0.12)])
+
+
+func _draw_ground_tile_outline(points: PackedVector2Array, color: Color, width: float) -> void:
+	for point_index in range(points.size()):
+		draw_line(points[point_index], points[(point_index + 1) % points.size()], color, width, true)
+
+
+func _draw_earth_telegraph(center: Vector2, radius: float, life: float, progress: float) -> void:
+	var cells := _ground_effect_cells("earth")
+	var cell_size := Vector2(clampf(radius * 0.42, 30.0, 38.0), clampf(radius * 0.32, 23.0, 30.0))
+	var spacing := cell_size + Vector2(5.0, 4.0)
+	for i in range(cells.size()):
+		var cell_center := center + Vector2(cells[i].x * spacing.x, cells[i].y * spacing.y)
+		var tile := _ground_tile_polygon(cell_center, cell_size, i)
+		draw_colored_polygon(tile, Color(0.045, 0.04, 0.032, life * 0.42))
+		_draw_ground_tile_outline(tile, Color(0.66, 0.53, 0.34, life * 0.72), 1.1)
+		var pulse := 0.7 + 0.3 * sin(elapsed_seconds * 18.0 + float(i) * 1.4)
+		var crack_color := Color(0.82, 0.66, 0.42, life * pulse * 0.86)
+		draw_line(cell_center + Vector2(-cell_size.x * 0.34, cell_size.y * 0.24), cell_center + Vector2(cell_size.x * 0.08, -cell_size.y * 0.18), crack_color, 1.6, true)
+		draw_line(cell_center + Vector2(cell_size.x * 0.08, -cell_size.y * 0.18), cell_center + Vector2(cell_size.x * 0.3, cell_size.y * 0.22), crack_color, 1.2, true)
+		draw_circle(cell_center + Vector2(0.0, cell_size.y * 0.28), 1.2, Color(0.74, 0.6, 0.4, life * pulse * 0.72))
+
+
+func _draw_earth_impact(center: Vector2, radius: float, life: float, progress: float) -> void:
+	for i in range(5):
+		var angle := TAU * (float(i) / 5.0) + 0.31
+		var direction := Vector2(cos(angle), sin(angle))
+		var tangent := Vector2(-direction.y, direction.x)
+		var chip_center := center + direction * radius * (0.16 + progress * 0.12)
+		var chip_size := 2.8 + float(i % 2) * 1.5
+		var chip := PackedVector2Array([chip_center - direction * chip_size - tangent * chip_size * 0.45, chip_center + direction * chip_size * 0.8, chip_center + tangent * chip_size * 0.8])
+		draw_colored_polygon(chip, Color(0.42, 0.36, 0.27, life * 0.82))
+		draw_line(chip[0], chip[1], Color(0.78, 0.65, 0.43, life * 0.74), 1.0, true)
+
+
+func _draw_earth_spikes(center: Vector2, radius: float, life: float, progress: float, evolved: bool) -> void:
+	var cells := _ground_effect_cells("earth")
+	if evolved:
+		cells.append_array(PackedVector2Array([Vector2(-1.0, -1.0), Vector2(1.0, -1.0), Vector2(-1.0, 1.0), Vector2(1.0, 1.0)]))
+	var cell_size := Vector2(clampf(radius * 0.34, 30.0, 38.0), clampf(radius * 0.26, 22.0, 29.0))
+	var spacing := cell_size + Vector2(5.0, 4.0)
+	var growth := clampf(progress * 3.2, 0.28, 1.0)
+	for i in range(cells.size()):
+		var cell_center := center + Vector2(cells[i].x * spacing.x, cells[i].y * spacing.y)
+		var is_center := cells[i] == Vector2.ZERO
+		var local_size := cell_size * (1.0 if is_center else 0.88)
+		var tile := _ground_tile_polygon(cell_center, local_size, i + 2)
+		draw_colored_polygon(tile, Color(0.065, 0.06, 0.052, life * 0.48))
+		_draw_ground_tile_outline(tile, Color(0.46, 0.39, 0.29, life * 0.74), 1.0)
+		var crack_color := Color(0.66, 0.56, 0.4, life * 0.74)
+		draw_line(cell_center + Vector2(-local_size.x * 0.34, local_size.y * 0.22), cell_center, crack_color, 1.25, true)
+		draw_line(cell_center, cell_center + Vector2(local_size.x * 0.32, -local_size.y * 0.2), crack_color, 1.25, true)
+		var height := (25.0 if is_center else 16.0 + float(i % 3) * 2.2) * growth
+		if evolved:
+			height *= 1.22
+		var width := (local_size.x * (0.29 if is_center else 0.23)) * growth
+		var base := cell_center + Vector2(0.0, local_size.y * 0.22)
+		var left := base + Vector2(-width, 3.5)
+		var right := base + Vector2(width, 3.5)
+		var tip := base + Vector2(-1.5 + 1.2 * sin(elapsed_seconds * 5.0 + float(i)), -height)
+		draw_colored_polygon(PackedVector2Array([left, tip, base, right]), Color(0.27, 0.27, 0.24, life * 0.96))
+		draw_colored_polygon(PackedVector2Array([left, tip, base]), Color(0.48, 0.43, 0.34, life * 0.94))
+		draw_colored_polygon(PackedVector2Array([tip, right, base]), Color(0.15, 0.17, 0.16, life * 0.98))
+		draw_line(left, tip, Color(0.8, 0.69, 0.48, life * 0.9), 1.5, true)
+		draw_line(tip, right, Color(0.09, 0.1, 0.1, life * 0.92), 1.4, true)
+		for debris_index in range(2):
+			var debris_direction := Vector2(cos(float(i) * 1.9 + float(debris_index) * 2.6), sin(float(i) * 1.9 + float(debris_index) * 2.6))
+			var debris_center := cell_center + debris_direction * local_size.x * 0.38
+			var debris := PackedVector2Array([debris_center + Vector2(-2.0, 1.0), debris_center + Vector2(2.8, -1.2), debris_center + Vector2(1.0, 2.2)])
+			draw_colored_polygon(debris, Color(0.45, 0.38, 0.28, life * 0.86))
+
+func _draw_fire_ground_cell(center: Vector2, cell_size: Vector2, cell_index: int, alpha: float) -> void:
+	var tile := _ground_tile_polygon(center, cell_size, cell_index)
+	draw_colored_polygon(tile, Color(0.08, 0.025, 0.012, alpha * 0.78))
+	_draw_ground_tile_outline(tile, Color(0.58, 0.12, 0.025, alpha * 0.78), 1.25)
+	var inner_tile := _ground_tile_polygon(center + Vector2(0.0, 1.0), cell_size * 0.76, cell_index + 1)
+	draw_colored_polygon(inner_tile, Color(0.25, 0.035, 0.008, alpha * 0.52))
+	var phase := elapsed_seconds * 7.4 + float(cell_index) * 1.63
+	var crack_start := center + Vector2(-cell_size.x * 0.34, cell_size.y * 0.22)
+	var crack_joint := center + Vector2(-cell_size.x * 0.02, -cell_size.y * 0.08)
+	var crack_end := center + Vector2(cell_size.x * 0.31, cell_size.y * 0.2)
+	draw_line(crack_start, crack_joint, Color(0.78, 0.16, 0.018, alpha * 0.78), 1.8, true)
+	draw_line(crack_joint, crack_end, Color(1.0, 0.39, 0.035, alpha * 0.82), 1.4, true)
+	var flame_count := 1 if cell_index % 2 == 0 else 2
+	for flame_index in range(flame_count):
+		var base := center + Vector2((float(flame_index) - float(flame_count - 1) * 0.5) * cell_size.x * 0.34, cell_size.y * 0.12)
+		var flame_height := cell_size.y * (0.36 + 0.18 * (0.5 + 0.5 * sin(phase + float(flame_index))))
+		var tip := base + Vector2(1.8 * sin(phase + float(flame_index) * 1.7), -flame_height)
+		var flame_width := 2.7 + 0.7 * sin(phase * 0.8 + float(flame_index))
+		draw_colored_polygon(PackedVector2Array([base + Vector2(-flame_width, 2.0), tip, base + Vector2(flame_width, 2.0)]), Color(1.0, 0.24, 0.025, alpha * 0.88))
+		draw_line(base + Vector2(0.0, 1.0), tip.lerp(base, 0.24), Color(1.0, 0.82, 0.32, alpha * 0.9), 1.1, true)
+	for ember_index in range(2):
+		var ember_phase := fposmod(elapsed_seconds * 0.72 + float(cell_index) * 0.19 + float(ember_index) * 0.43, 1.0)
+		var ember_position := center + Vector2(-cell_size.x * 0.22 + float(ember_index) * cell_size.x * 0.42, -cell_size.y * 0.14 - ember_phase * 8.0)
+		draw_circle(ember_position, 1.0 + (1.0 - ember_phase) * 0.7, Color(1.0, 0.7, 0.24, alpha * (1.0 - ember_phase) * 0.86))
+
 func _draw_fire_zones() -> void:
 	for zone in fire_zones:
 		var center: Vector2 = zone.get("position", Vector2.ZERO)
 		var radius := float(zone.get("radius", 78.0))
 		var duration := maxf(0.01, float(zone.get("duration", 3.0)))
 		var life := clampf(float(zone.get("time", 0.0)) / duration, 0.0, 1.0)
-		# Fire reads as an irregular scorched patch, not a clean circular magic array.
-		var scorch_outline := PackedVector2Array()
-		for point_index in range(65):
-			var angle := TAU * float(point_index) / 64.0
-			var edge := 0.91 + 0.045 * sin(angle * 5.0 + elapsed_seconds * 0.55) + 0.025 * sin(angle * 9.0 - elapsed_seconds * 0.9)
-			scorch_outline.append(center + Vector2(cos(angle) * radius * edge, sin(angle) * radius * edge * 0.84))
-		scorch_outline.append(scorch_outline[0])
-		draw_colored_polygon(scorch_outline, Color(0.12, 0.025, 0.012, life * 0.24))
-		draw_polyline(scorch_outline, Color(0.82, 0.16, 0.025, life * 0.72), 3.0, true)
-		var inner_scorch := PackedVector2Array()
-		for point_index in range(49):
-			var angle := TAU * float(point_index) / 48.0
-			var inner_edge := 0.62 + 0.035 * sin(angle * 6.0 + elapsed_seconds * 0.8)
-			inner_scorch.append(center + Vector2(cos(angle) * radius * inner_edge, sin(angle) * radius * inner_edge * 0.78))
-		inner_scorch.append(inner_scorch[0])
-		draw_polyline(inner_scorch, Color(0.55, 0.075, 0.012, life * 0.48), 1.5, true)
-		for i in range(11):
-			var angle := TAU * float(i) / 11.0 + elapsed_seconds * 0.08
-			var direction := Vector2(cos(angle), sin(angle))
-			var tangent := Vector2(-direction.y, direction.x)
-			var base := center + direction * radius * (0.66 + 0.025 * sin(elapsed_seconds * 2.0 + float(i)))
-			var flame_length := radius * (0.14 + 0.12 * (0.5 + 0.5 * sin(elapsed_seconds * 8.0 + float(i) * 1.7)))
-			var tip := base + direction * flame_length
-			var flame_width := 3.6 + 1.1 * sin(elapsed_seconds * 6.0 + float(i))
-			draw_colored_polygon(PackedVector2Array([base - tangent * flame_width, tip, base + tangent * flame_width]), Color(1.0, 0.28, 0.025, life * 0.76))
-			draw_line(base, tip, Color(1.0, 0.82, 0.3, life * 0.9), 1.6, true)
-		for ember_index in range(8):
-			var ember_phase := fposmod(elapsed_seconds * 0.45 + float(ember_index) * 0.13, 1.0)
-			var ember_angle := TAU * float(ember_index) / 8.0 - elapsed_seconds * 0.12
-			var ember_distance := radius * (0.34 + ember_phase * 0.5)
-			var ember_position := center + Vector2(cos(ember_angle) * ember_distance, sin(ember_angle) * ember_distance * 0.78 - ember_phase * 4.0)
-			draw_circle(ember_position, 1.1 + (1.0 - ember_phase) * 0.8, Color(1.0, 0.72, 0.24, life * (1.0 - ember_phase) * 0.86))
+		var fade := clampf(life * 1.35, 0.0, 1.0)
+		# A persistent fire patch occupies distinct floor cells, each with its own scorch and flame tongues.
+		var cell_size := Vector2(clampf(radius * 0.56, 38.0, 45.0), clampf(radius * 0.42, 27.0, 34.0))
+		var spacing := cell_size + Vector2(4.0, 4.0)
+		var cells := _ground_effect_cells("fire")
+		for i in range(cells.size()):
+			var cell_center := center + Vector2(cells[i].x * spacing.x, cells[i].y * spacing.y)
+			_draw_fire_ground_cell(cell_center, cell_size, i, fade)
 
 
 func cast_active_skill() -> void:
@@ -2102,18 +2174,6 @@ func _draw() -> void:
 	# above this background and continue to use their real collision/gameplay logic.
 	draw_texture_rect(GRAVEYARD_BACKGROUND, Rect2(Vector2.ZERO, WORLD_SIZE), false)
 	draw_rect(Rect2(Vector2.ZERO, WORLD_SIZE), Color("#080d11", 0.18), false, 8.0)
-
-	if active_skill_effect_time > 0.0 and player != null:
-		var progress := 1.0 - active_skill_effect_time / ACTIVE_SKILL_EFFECT_DURATION
-		var alpha := clampf(active_skill_effect_time / ACTIVE_SKILL_EFFECT_DURATION, 0.0, 1.0)
-		var radius := ACTIVE_SKILL_RADIUS * (0.88 + progress * 0.12)
-		draw_arc(player.position, radius, 0.0, TAU, 72, Color(0.88, 0.72, 0.36, alpha * 0.9), 4.0)
-		draw_arc(player.position, radius * 0.82, 0.0, TAU, 64, Color(0.65, 0.48, 0.28, alpha * 0.55), 2.0)
-		for i in range(8):
-			var angle := TAU * float(i) / 8.0
-			var inner := Vector2(cos(angle), sin(angle)) * radius * 0.9
-			var outer := Vector2(cos(angle), sin(angle)) * radius
-			draw_line(player.position + inner, player.position + outer, Color(0.93, 0.81, 0.5, alpha * 0.8), 2.0)
 
 	_draw_skill_effects()
 	_draw_fire_zones()
