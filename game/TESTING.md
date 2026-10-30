@@ -140,4 +140,5 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 - [x] 雷系雷符/五雷敕令：紫蓝短电弧聚气，沿用瞬时雷击、链式电弧与五雷特效；视觉 profile 统一标记为 lightning。
 - [x] 木系桃木剑和土系地脉阵不接入本轮元素聚气视觉，保持既有表现；木系后续重新设计，土系后续按敌人脚下/目标点位生成地刺的方向调整。
 - [x] 仅修改角色/投射物/命中特效视觉映射，不修改伤害、冷却、射程、碰撞、索敌、技能分支与状态结算。
-- [ ] 本轮 Godot CI 与 Windows 实际画面复测待完成；Headless 通过不能替代画面验收。
+- [x] Godot 4.5.1 CI：328 项通过、0 项失败（[本轮 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41017212513)）；资源导入、GDScript 解析、游戏逻辑测试与主场景 Headless 启动全部通过。
+- [ ] Windows 实际画面复测仍待用户拉取后确认；Headless 通过不能替代画面验收。
