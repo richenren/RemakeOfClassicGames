@@ -1,0 +1,14 @@
+# Godot editor/import cache
+.godot/
+
+# Exported builds and packs
+.export/
+build/
+*.apk
+*.aab
+*.pck
+*.exe
+
+# Local editor/OS files
+.DS_Store
+Thumbs.db

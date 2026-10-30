@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="128" viewBox="0 0 768 128">
+<defs>
+ <radialGradient id="gGold"><stop stop-color="#ffe8a0" stop-opacity=".48"/><stop offset=".58" stop-color="#bd8a35" stop-opacity=".16"/><stop offset="1" stop-color="#4b3216" stop-opacity="0"/></radialGradient>
+ <radialGradient id="gWood"><stop stop-color="#a4e6a0" stop-opacity=".38"/><stop offset=".58" stop-color="#32764b" stop-opacity=".16"/><stop offset="1" stop-color="#183b2b" stop-opacity="0"/></radialGradient>
+ <radialGradient id="gWater"><stop stop-color="#a8f3ff" stop-opacity=".46"/><stop offset=".58" stop-color="#2e9bc0" stop-opacity=".18"/><stop offset="1" stop-color="#123c5e" stop-opacity="0"/></radialGradient>
+ <radialGradient id="gFire"><stop stop-color="#ffe2a0" stop-opacity=".48"/><stop offset=".55" stop-color="#ef5b24" stop-opacity=".22"/><stop offset="1" stop-color="#641c16" stop-opacity="0"/></radialGradient>
+ <radialGradient id="gEarth"><stop stop-color="#e7cb86" stop-opacity=".38"/><stop offset=".58" stop-color="#8c6a36" stop-opacity=".18"/><stop offset="1" stop-color="#33271b" stop-opacity="0"/></radialGradient>
+ <radialGradient id="gThunder"><stop stop-color="#f4fbff" stop-opacity=".58"/><stop offset=".55" stop-color="#b9d0df" stop-opacity=".24"/><stop offset="1" stop-color="#263b49" stop-opacity="0"/></radialGradient>
+ <linearGradient id="goldBlade" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3c1"/><stop offset=".4" stop-color="#e7c16a"/><stop offset="1" stop-color="#8d5c28"/></linearGradient>
+ <linearGradient id="jade" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c2f0b4"/><stop offset=".5" stop-color="#4e9c68"/><stop offset="1" stop-color="#24513c"/></linearGradient>
+ <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#e1fbff"/><stop offset=".5" stop-color="#75d9ee"/><stop offset="1" stop-color="#277cbd"/></linearGradient>
+ <linearGradient id="fire" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff0a8"/><stop offset=".48" stop-color="#ffad42"/><stop offset="1" stop-color="#d53d1f"/></linearGradient>
+ <linearGradient id="stone" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e4d3a2"/><stop offset=".45" stop-color="#a58a57"/><stop offset="1" stop-color="#55452e"/></linearGradient>
+ <linearGradient id="thunder" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset=".45" stop-color="#dcefff"/><stop offset="1" stop-color="#718b9b"/></linearGradient>
+</defs>
+<!-- METAL: sword intent -->
+<g transform="translate(64 64)">
+ <circle r="61" fill="url(#gGold)"/>
+ <circle r="48" fill="#171711" fill-opacity=".88" stroke="#98753d" stroke-width="1.3"/>
+ <circle r="41" fill="none" stroke="#e2c176" stroke-opacity=".65" stroke-width="1"/>
+ <circle r="34" fill="none" stroke="#9b773e" stroke-dasharray="2 5" stroke-width="1.2"/>
+ <path d="M-29 -3 A29 29 0 0 1 29 -3" fill="none" stroke="#d4ad58" stroke-width="1.4"/>
+ <path d="M-28 8 A29 29 0 0 0 28 8" fill="none" stroke="#d4ad58" stroke-width="1.4"/>
+ <circle r="20" fill="#b98538" stroke="#f4d88b" stroke-width="2.5"/>
+ <circle r="14.5" fill="#2d2417" stroke="#d4a64e" stroke-width="1.2"/>
+ <rect x="-5" y="-5" width="10" height="10" rx="1" fill="#caa65b" stroke="#f7dfa0" stroke-width="1"/>
+ <path d="M-5 31 L19 -25 L25 -31 L22 -18 L-1 34 Z" fill="url(#goldBlade)" stroke="#f7dfa0" stroke-width="1.2"/>
+ <path d="M-12 17 L5 24 M-17 12 L-8 21" stroke="#f0cf7c" stroke-width="3" stroke-linecap="round"/>
+ <path d="M-25 -25 L-20 -20 M25 25 L20 20 M-25 25 L-20 20 M25 -25 L20 -20" stroke="#f1d58a" stroke-width="2" stroke-linecap="round"/>
+ <circle cx="-34" cy="0" r="2" fill="#f1d58a"/><circle cx="34" cy="0" r="2" fill="#f1d58a"/>
+</g>
+<!-- WOOD: living ward -->
+<g transform="translate(192 64)">
+ <circle r="61" fill="url(#gWood)"/>
+ <circle r="48" fill="#111b14" fill-opacity=".9" stroke="#68966b" stroke-width="1.3"/>
+ <circle r="40" fill="none" stroke="#a7d49b" stroke-opacity=".55" stroke-width="1"/>
+ <circle r="33" fill="none" stroke="#6da87b" stroke-dasharray="3 5" stroke-width="1.2"/>
+ <path d="M-27 24 Q-12 6 -11 -14 Q-8 -26 0 -34 Q8 -21 5 -9 Q8 2 23 -4 Q33 -8 34 -19 Q41 -3 28 8 Q19 18 7 14 Q9 27 25 31 L-25 31 Q-13 23 -10 13" fill="none" stroke="#b6d99a" stroke-width="2" stroke-linecap="round"/>
+ <path d="M0 31 Q-3 10 0 -10 Q2 -24 0 -34" fill="none" stroke="url(#jade)" stroke-width="6" stroke-linecap="round"/>
+ <path d="M0 -7 Q-24 -11 -27 -29 Q-8 -30 0 -7Z" fill="url(#jade)" stroke="#c9efae" stroke-width="1.2"/>
+ <path d="M1 4 Q24 -1 29 -20 Q9 -19 1 4Z" fill="url(#jade)" stroke="#c9efae" stroke-width="1.2"/>
+ <path d="M0 11 Q-23 5 -31 17 Q-15 29 0 11Z" fill="#438a59" stroke="#b1df98" stroke-width="1.2"/>
+ <path d="M0 15 Q20 8 28 22 Q13 31 0 15Z" fill="#438a59" stroke="#b1df98" stroke-width="1.2"/>
+ <path d="M-33 -3 Q-24 -16 -13 -13 M33 1 Q24 -10 15 -8" fill="none" stroke="#e0ce88" stroke-width="1.3"/>
+ <circle cx="0" cy="0" r="6" fill="#e7d79a" fill-opacity=".18" stroke="#c8df9b" stroke-width="1.3"/>
+</g>
+<!-- WATER: clear spring and recovery -->
+<g transform="translate(320 64)">
+ <circle r="61" fill="url(#gWater)"/>
+ <circle r="48" fill="#0d1c25" fill-opacity=".92" stroke="#4f9fbd" stroke-width="1.3"/>
+ <circle r="40" fill="none" stroke="#9be8f3" stroke-opacity=".58" stroke-width="1"/>
+ <circle r="32" fill="none" stroke="#4eaccb" stroke-dasharray="2 5" stroke-width="1.2"/>
+ <path d="M-29 13 Q-19 3 -9 13 T11 13 T31 13" fill="none" stroke="#54b9db" stroke-width="3" stroke-linecap="round"/>
+ <path d="M-26 23 Q-16 13 -6 23 T14 23 T29 23" fill="none" stroke="#a1f3f4" stroke-width="2" stroke-linecap="round"/>
+ <path d="M0 -35 C-6 -22 -22 -8 -20 4 C-18 20 -4 24 5 17 C19 7 10 -8 0 -35Z" fill="url(#water)" stroke="#d6fbff" stroke-width="1.5"/>
+ <path d="M-2 -18 Q-11 -4 -9 3" fill="none" stroke="#f1ffff" stroke-width="2.2" stroke-linecap="round"/>
+ <circle cx="-31" cy="-14" r="2.4" fill="#b9f6ff"/><circle cx="31" cy="-13" r="2" fill="#b9f6ff"/>
+ <path d="M-34 -28 L-28 -22 M34 -28 L28 -22 M-34 31 L-28 25 M34 31 L28 25" stroke="#e1c67d" stroke-width="1.4"/>
+</g>
+<!-- FIRE: ember continuity -->
+<g transform="translate(448 64)">
+ <circle r="61" fill="url(#gFire)"/>
+ <circle r="48" fill="#25130f" fill-opacity=".92" stroke="#b45c36" stroke-width="1.3"/>
+ <circle r="40" fill="none" stroke="#f0b56a" stroke-opacity=".62" stroke-width="1"/>
+ <circle r="32" fill="none" stroke="#c75b32" stroke-dasharray="2 5" stroke-width="1.2"/>
+ <path d="M-28 27 Q-39 8 -25 -5 Q-28 -21 -12 -29 Q-12 -11 -2 -8 Q2 -26 12 -37 Q13 -16 27 -6 Q38 13 22 28Z" fill="#a92f20" stroke="#f17b3d" stroke-width="1.3"/>
+ <path d="M-19 28 Q-26 12 -13 1 Q-11 -8 -3 -16 Q0 -1 10 4 Q22 14 14 28Z" fill="url(#fire)" stroke="#ffd27b" stroke-width="1.1"/>
+ <path d="M-8 28 Q-11 17 -4 10 Q0 5 2 0 Q13 13 7 28Z" fill="#fff0b0"/>
+ <path d="M-21 -31 L5 -34 L11 1 L-26 4Z" fill="#d8b96c" stroke="#ffe8a3" stroke-width="1.5" transform="rotate(-9)"/>
+ <path d="M-14 -26 L-1 -25 M-15 -17 L0 -16 M-14 -8 L-3 -7" stroke="#8e3928" stroke-width="2" stroke-linecap="round" transform="rotate(-9)"/>
+ <path d="M-36 0 L-31 5 M36 0 L31 5 M0 -45 L0 -38" stroke="#f5c66d" stroke-width="2" stroke-linecap="round"/>
+</g>
+<!-- EARTH: mountain pulse -->
+<g transform="translate(576 64)">
+ <circle r="61" fill="url(#gEarth)"/>
+ <circle r="48" fill="#201b13" fill-opacity=".93" stroke="#9a8050" stroke-width="1.3"/>
+ <circle r="40" fill="none" stroke="#d2b779" stroke-opacity=".58" stroke-width="1"/>
+ <path d="M-31 24 L-20 3 L-9 15 L6 -19 L18 4 L26 -7 L35 24Z" fill="url(#stone)" stroke="#e7d09a" stroke-width="1.4" stroke-linejoin="round"/>
+ <path d="M-9 15 L6 -19 L13 2 L7 7 L5 16Z" fill="#f0dfac" fill-opacity=".72"/>
+ <path d="M-30 29 L30 29 M-24 34 L24 34" stroke="#d0b675" stroke-width="1.5" stroke-linecap="round"/>
+ <path d="M-24 -22 L-18 -16 L-24 -10 M24 -22 L18 -16 L24 -10" fill="none" stroke="#c7a35f" stroke-width="1.5"/>
+ <path d="M0 -37 L0 -29 M-4 -33 L4 -33 M-36 0 L-29 0 M36 0 L29 0" stroke="#e6cb87" stroke-width="1.8" stroke-linecap="round"/>
+ <circle r="31" fill="none" stroke="#927348" stroke-dasharray="1 6" stroke-width="1.5"/>
+</g>
+<!-- THUNDER: charged seal -->
+<g transform="translate(704 64)">
+ <circle r="61" fill="url(#gThunder)"/>
+ <circle r="48" fill="#11142a" fill-opacity=".94" stroke="#b2c6d4" stroke-width="1.3"/>
+ <circle r="40" fill="none" stroke="#e7f4fb" stroke-opacity=".6" stroke-width="1"/>
+ <circle r="32" fill="none" stroke="#c5dce9" stroke-dasharray="2 5" stroke-width="1.2"/>
+ <path d="M-25 -31 L19 -34 L25 31 L-29 34Z" fill="#d7c58f" stroke="#f5e7b8" stroke-width="1.6" transform="rotate(5)"/>
+ <path d="M-18 -24 L12 -26 M-19 24 L14 22" stroke="#9a7a45" stroke-width="1.1" transform="rotate(5)"/>
+ <path d="M5 -27 L-10 -2 L1 -2 L-7 22 L18 -9 L5 -8Z" fill="url(#thunder)" stroke="#f1fbff" stroke-width="1.6" stroke-linejoin="round"/>
+ <path d="M-29 -15 L-37 -6 L-29 -2 M27 9 L36 0 L29 -5" fill="none" stroke="#d1e5f0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+ <path d="M-16 -39 L-11 -33 M18 37 L12 31 M-39 18 L-32 14 M39 -20 L32 -15" stroke="#f6fbff" stroke-width="1.8" stroke-linecap="round"/>
+ <circle cx="-31" cy="30" r="2" fill="#e9f6ff"/><circle cx="31" cy="-30" r="2" fill="#e9f6ff"/>
+</g>
+</svg>

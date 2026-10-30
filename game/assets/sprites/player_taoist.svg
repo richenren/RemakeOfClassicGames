@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="160" viewBox="0 0 128 160">
+<defs>
+ <linearGradient id="robe" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f3d99c"/><stop offset=".45" stop-color="#c29a57"/><stop offset="1" stop-color="#79502f"/></linearGradient>
+ <linearGradient id="silk" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0d0"/><stop offset="1" stop-color="#c8b38c"/></linearGradient>
+ <linearGradient id="inner" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#313a3b"/><stop offset="1" stop-color="#11191c"/></linearGradient>
+ <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8d6b2"/><stop offset=".65" stop-color="#d69e78"/><stop offset="1" stop-color="#8c5946"/></linearGradient>
+ <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#39302a"/><stop offset=".55" stop-color="#171819"/><stop offset="1" stop-color="#080d10"/></linearGradient>
+</defs>
+<!-- A slim peachwood sword and flowing waist ribbons give the Taoist a more dynamic silhouette. -->
+<g id="peachwood-sword">
+ <path d="M100 91L111 49L120 17L124 18L117 52L105 95Z" fill="#a6b0b2" stroke="#493b2b" stroke-width="1.6"/>
+ <path d="M112 48L120 17L122 18L116 49Z" fill="#fff0c7" opacity=".94"/>
+ <path d="M97 89L111 94L108 100L94 95Z" fill="#d2a65a" stroke="#64462b" stroke-width="1.4"/>
+ <path d="M100 94L93 107L89 105L96 92Z" fill="#5d2b25" stroke="#2b1b18" stroke-width="1.2"/>
+ <path d="M93 106L89 116M96 105L95 118" stroke="#a8342b" stroke-width="2.2" stroke-linecap="round"/>
+</g>
+<g id="flowing-sashes">
+ <path d="M45 103C31 108 25 120 13 128C29 129 42 121 51 111Z" fill="#8d2e29" stroke="#4c2420" stroke-width="1.4"/>
+ <path d="M43 108C32 115 28 120 22 124" fill="none" stroke="#d8b76e" stroke-width="1.2"/>
+ <path d="M81 103C97 108 104 117 117 123C109 110 98 103 85 99Z" fill="#c7a15a" stroke="#6b4c2d" stroke-width="1.2"/>
+ <path d="M84 105C97 111 105 116 111 120" fill="none" stroke="#f2d99a" stroke-width="1.1"/>
+</g>
+<!-- narrow boots and long-legged silhouette -->
+<path d="M48 111 L60 113 L56 139 L48 148 L38 147 L42 137Z" fill="#202327" stroke="#9a7847" stroke-width="1.4"/>
+<path d="M66 111 L78 109 L83 136 L79 147 L68 148 L68 137Z" fill="#202327" stroke="#9a7847" stroke-width="1.4"/>
+<path d="M37 143 Q47 139 56 144 L55 151 Q44 154 34 150Z" fill="#181b1e" stroke="#d0a35c" stroke-width="1.5"/>
+<path d="M68 143 Q77 139 84 143 L88 150 Q77 154 67 151Z" fill="#181b1e" stroke="#d0a35c" stroke-width="1.5"/>
+<path d="M44 122 L53 124 M70 122 L79 120" stroke="#d6b773" stroke-width="1.4"/>
+<!-- flowing robe: slim shoulders, fitted waist, elegant long hem -->
+<path d="M47 51 Q39 54 35 65 L25 83 L34 91 L43 78 L39 113 Q49 125 64 127 Q79 125 89 112 L84 78 L94 91 L103 83 L92 64 Q86 54 78 51Z" fill="url(#robe)" stroke="#4b3424" stroke-width="2"/>
+<path d="M49 52 L64 63 L78 52 L81 111 L64 129 L47 111Z" fill="url(#inner)" stroke="#101719" stroke-width="1.6"/>
+<!-- crossed silk lapels and fine gold piping -->
+<path d="M48 51 L64 63 L57 74 L43 59Z" fill="url(#silk)" stroke="#9a7546" stroke-width="1.1"/>
+<path d="M79 51 L64 63 L71 74 L85 59Z" fill="url(#silk)" stroke="#9a7546" stroke-width="1.1"/>
+<path d="M62 65 L68 83 L64 111 L59 83Z" fill="#d3ad66" stroke="#6e492c" stroke-width="1"/>
+<path d="M64 70 L64 108" stroke="#fff0bd" stroke-width="1.2" opacity=".75"/>
+<!-- slimmer sleeves, angled rather than broad -->
+<path d="M42 58 Q34 61 31 70 L21 82 Q18 88 24 92 L34 88 L48 73Z" fill="url(#robe)" stroke="#6e4d2e" stroke-width="1.6"/>
+<path d="M24 82 L34 76 L43 70 L46 75 L34 89 L25 92Z" fill="url(#silk)" stroke="#9b7c51" stroke-width="1.1"/>
+<path d="M83 58 Q91 61 94 69 L106 80 Q110 86 104 91 L94 88 L80 73Z" fill="url(#robe)" stroke="#6e4d2e" stroke-width="1.6"/>
+<path d="M105 80 L95 75 L87 70 L83 75 L94 89 L104 91Z" fill="url(#silk)" stroke="#9b7c51" stroke-width="1.1"/>
+<!-- hands and cuffs -->
+<path d="M22 83 L29 79 L35 85 L31 96 L24 98 L19 91Z" fill="url(#skin)" stroke="#76503a" stroke-width="1.1"/>
+<path d="M96 82 L103 79 L109 85 L106 95 L99 98 L94 91Z" fill="url(#skin)" stroke="#76503a" stroke-width="1.1"/>
+<path d="M20 88 L31 84 L35 90 L31 96 L23 98Z M94 88 L105 84 L109 90 L106 96 L98 98Z" fill="#efe0c1" stroke="#92734b" stroke-width="1.2"/>
+<!-- narrow waist, jade clasp and red tassel -->
+<path d="M42 96 Q64 102 86 96 L88 104 Q64 111 40 104Z" fill="#262322" stroke="#c39a52" stroke-width="1.5"/>
+<path d="M59 99 L68 99 L71 106 L64 110 L57 106Z" fill="#e9c575" stroke="#6d492c" stroke-width="1.2"/>
+<circle cx="78" cy="104" r="3.2" fill="#b68a43" stroke="#4e3524" stroke-width="1"/>
+<path d="M45 105 L41 119 L45 128 L50 113Z" fill="#a73d32" stroke="#5d2923" stroke-width="1"/>
+<path d="M84 105 L88 119 L83 129 L79 113Z" fill="#a73d32" stroke="#5d2923" stroke-width="1"/>
+<!-- talisman raised in one hand -->
+<path d="M17 49 L29 46 L35 70 L23 74Z" fill="#f5df9f" stroke="#7c522d" stroke-width="1.5"/>
+<path d="M20 52 L28 50 L32 68 L24 70Z" fill="#fff0bd" stroke="#c49b55" stroke-width=".8"/>
+<path d="M22 54 L29 57 L23 61 L30 64 L25 68" fill="none" stroke="#a62e28" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M23 48 L27 43 L31 48" fill="none" stroke="#e8c16e" stroke-width="1.5"/>
+<!-- handsome, narrower face and defined jaw -->
+<path d="M49 26 Q51 17 64 17 Q76 18 79 28 L76 41 Q72 49 64 51 Q55 49 51 41Z" fill="url(#skin)" stroke="#5b3929" stroke-width="1.4"/>
+<path d="M49 30 Q43 27 45 35 Q47 40 51 38 M78 30 Q84 27 82 35 Q80 40 76 38" fill="url(#skin)" stroke="#76503a" stroke-width="1"/>
+<path d="M48 29 Q43 18 53 12 Q64 7 73 13 Q83 17 80 31 L75 27 L71 21 L65 24 L57 21 L52 28Z" fill="url(#hair)" stroke="#090d10" stroke-width="1.4"/>
+<path d="M53 17 Q50 7 60 4 Q70 3 74 12 L70 20 L59 21Z" fill="url(#hair)" stroke="#111417" stroke-width="1.4"/>
+<path d="M53 13 Q64 18 75 11 L76 15 Q64 23 52 17Z" fill="#a6322c" stroke="#6a2522" stroke-width=".8"/>
+<path d="M68 17 L80 22 L77 27 L69 23Z" fill="#a6322c"/>
+<!-- clean eyebrows, sharp eyes, nose and restrained smile -->
+<path d="M52 30 L60 28 M68 28 L76 30" stroke="#34231d" stroke-width="1.8" stroke-linecap="round"/>
+<path d="M52 33 Q56 31 60 33 M68 33 Q72 31 76 33" fill="none" stroke="#fff0da" stroke-width="1.2"/>
+<ellipse cx="56" cy="33.5" rx="2.0" ry="1.5" fill="#11191a"/><ellipse cx="72" cy="33.5" rx="2.0" ry="1.5" fill="#11191a"/>
+<circle cx="56.6" cy="33.2" r=".55" fill="#fff0cc"/><circle cx="72.6" cy="33.2" r=".55" fill="#fff0cc"/>
+<path d="M64 34 L61 40 L65 41" fill="none" stroke="#9b6549" stroke-width="1.2" stroke-linecap="round"/>
+<path d="M59 44 Q64 46 69 43" fill="none" stroke="#7d3b30" stroke-width="1.3" stroke-linecap="round"/>
+<path d="M52 38 L56 39 M72 39 L76 38" stroke="#f6d3b2" stroke-width="1.1" opacity=".75"/>
+<!-- embroidered sleeve seams and robe folds -->
+<path d="M38 69 L48 88 L45 109 M90 69 L80 88 L84 109 M54 77 L51 98 M73 77 L77 98" fill="none" stroke="#f4d38c" stroke-width="1.25" opacity=".9"/>
+<path d="M43 113 L37 128 L42 143 M85 112 L91 128 L85 143" fill="none" stroke="#9b7848" stroke-width="1.5"/>
+<path d="M54 116 L49 134 M73 116 L78 134" stroke="#e7c47a" stroke-width="1" opacity=".65"/>
+<path d="M31 78 L36 82 M92 77 L88 82" stroke="#fff0cf" stroke-width="1.2" opacity=".65"/>
+</svg>

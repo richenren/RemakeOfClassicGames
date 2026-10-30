@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="128" viewBox="0 0 768 128">
+<defs>
+ <radialGradient id="fireAura"><stop stop-color="#ffb43b" stop-opacity=".6"/><stop offset=".55" stop-color="#e94d1c" stop-opacity=".22"/><stop offset="1" stop-color="#8b1c16" stop-opacity="0"/></radialGradient>
+ <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3c9"/><stop offset=".48" stop-color="#e8c77e"/><stop offset="1" stop-color="#a77a43"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff2bd"/><stop offset=".45" stop-color="#e5b85d"/><stop offset="1" stop-color="#8a552b"/></linearGradient>
+ <linearGradient id="bluePaper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8edc7"/><stop offset=".5" stop-color="#d8c58c"/><stop offset="1" stop-color="#8d7952"/></linearGradient>
+ <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff4c8"/><stop offset=".35" stop-color="#d7d9d3"/><stop offset=".65" stop-color="#9caaad"/><stop offset="1" stop-color="#4d5b63"/></linearGradient>
+ <radialGradient id="thunderAura"><stop stop-color="#f2fbff" stop-opacity=".62"/><stop offset=".5" stop-color="#b8d3e1" stop-opacity=".28"/><stop offset="1" stop-color="#263b49" stop-opacity="0"/></radialGradient>
+ <radialGradient id="waterAura"><stop stop-color="#9ef5ff" stop-opacity=".5"/><stop offset=".55" stop-color="#2ca5d2" stop-opacity=".2"/><stop offset="1" stop-color="#143e6c" stop-opacity="0"/></radialGradient>
+ <radialGradient id="earthAura"><stop stop-color="#f8d98b" stop-opacity=".4"/><stop offset=".7" stop-color="#8f6832" stop-opacity=".16"/><stop offset="1" stop-color="#4c3521" stop-opacity="0"/></radialGradient>
+</defs>
+<!-- FIRE TALISMAN -->
+<g transform="translate(64 64)">
+ <circle r="61" fill="url(#fireAura)"/>
+ <path d="M-47 38 Q-57 18 -41 4 Q-47 -14 -29 -31 Q-26 -8 -16 -3 Q-12 -25 1 -49 Q7 -22 21 -11 Q36 -23 37 -37 Q55 -8 43 13 Q51 28 33 43Z" fill="#a82d1e" opacity=".88"/>
+ <path d="M-35 38 Q-40 19 -26 7 Q-28 -5 -16 -20 Q-13 -2 -4 2 Q2 -20 10 -30 Q11 -7 26 2 Q37 13 26 38Z" fill="#ef6a25"/>
+ <path d="M-23 39 Q-24 21 -13 12 Q-13 0 -4 -10 Q1 6 9 12 Q16 20 10 39Z" fill="#ffbf58"/>
+ <path d="M-20 -43 L19 -39 L25 34 L-25 38Z" fill="#7e4026" opacity=".65" transform="rotate(-7)"/>
+ <path d="M-25 -46 L17 -42 L23 32 L-28 36Z" fill="url(#paper)" stroke="#7d4a28" stroke-width="2.5" transform="rotate(-7)"/>
+ <path d="M-19 -39 L11 -36 L17 26 L-21 29Z" fill="none" stroke="#fff0b6" stroke-width="1.2" transform="rotate(-7)"/>
+ <path d="M-9 -29 L9 -23 L-8 -9 L10 -2 L-8 12 L4 22" fill="none" stroke="#9d2927" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+ <path d="M-33 -23 Q-48 -5 -38 12 M32 -29 Q48 -8 38 7" fill="none" stroke="#ff9b35" stroke-width="2.2" opacity=".9"/>
+ <path d="M-44 23 L-37 17 M36 25 L44 17 M-8 -56 L-3 -48 M22 -52 L18 -44" stroke="#ffd16a" stroke-width="2" stroke-linecap="round"/>
+ <circle cx="-42" cy="-12" r="2.5" fill="#ffb65a"/><circle cx="42" cy="-8" r="2" fill="#ffce70"/><circle cx="30" cy="44" r="2.5" fill="#ff8b35"/>
+</g>
+<!-- THUNDER TALISMAN -->
+<g transform="translate(192 64)">
+ <circle r="61" fill="url(#thunderAura)"/>
+ <circle r="48" fill="none" stroke="#b7d1e1" stroke-width="1.3" opacity=".78"/>
+ <circle r="39" fill="none" stroke="#e7f5ff" stroke-width=".8" stroke-dasharray="3 5" opacity=".9"/>
+ <path d="M-45 -35 L-28 -17 L-37 -4 L-21 3 L-32 21 M42 -38 L28 -21 L37 -7 L21 3 L31 21" fill="none" stroke="#c9e1ef" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M-28 -52 L-14 -34 L-25 -20 L-11 -12 L-18 4 M31 -50 L16 -30 L27 -17 L12 -7 L18 9" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round"/>
+ <path d="M-25 -44 L18 -40 L23 33 L-28 36Z" fill="url(#bluePaper)" stroke="#806b45" stroke-width="2.4" transform="rotate(5)"/>
+ <path d="M-19 -37 L12 -34 L17 27 L-21 29Z" fill="none" stroke="#fff1bf" stroke-width="1.2" transform="rotate(5)"/>
+ <path d="M8 -31 L-11 -4 L-1 -4 L-9 19 L17 -14 L5 -13Z" fill="#bd942e" stroke="#77502a" stroke-width="1.8" stroke-linejoin="round"/>
+ <path d="M-13 22 Q0 12 13 22" fill="none" stroke="#a12c2c" stroke-width="3" stroke-linecap="round"/>
+ <path d="M-47 8 L-35 1 L-40 18 L-29 13 M45 6 L34 -1 L39 16 L28 11" fill="none" stroke="#f4fbff" stroke-width="2.4" stroke-linejoin="round"/>
+ <circle cx="-42" cy="31" r="2.2" fill="#e7f5ff"/><circle cx="41" cy="-25" r="2.5" fill="#d4e9ff"/><circle cx="33" cy="36" r="2" fill="#d1e4f0"/>
+</g>
+<!-- COPPER COIN SWORD -->
+<g transform="translate(320 64)">
+ <circle r="61" fill="url(#earthAura)"/>
+ <circle r="50" fill="none" stroke="#d3a85a" stroke-width="1.2" opacity=".65"/>
+ <circle r="42" fill="none" stroke="#f2d88e" stroke-width=".8" stroke-dasharray="2 4"/>
+ <path d="M-39 35 Q-54 8 -29 -15 M35 -38 Q54 -8 32 20" fill="none" stroke="#e7c477" stroke-width="2" opacity=".8"/>
+ <g transform="rotate(28)">
+  <path d="M-8 -46 L7 -46 L10 26 L0 43 L-10 26Z" fill="url(#steel)" stroke="#67513a" stroke-width="1.8"/>
+  <path d="M-3 -37 L2 -37 L4 21 L0 30 L-4 21Z" fill="#fff8d9" opacity=".9"/>
+  <path d="M-18 -18 L18 -18 L14 -10 L-14 -10Z" fill="url(#gold)" stroke="#75512d" stroke-width="1.5"/>
+  <path d="M-5 25 L5 25 L7 40 L-7 40Z" fill="#9c4b31" stroke="#553523" stroke-width="1.5"/>
+  <path d="M0 40 L0 50" stroke="#d8ae59" stroke-width="3"/>
+  <circle cx="0" cy="0" r="14" fill="url(#gold)" stroke="#f5d58b" stroke-width="2"/>
+  <circle cx="0" cy="0" r="9" fill="#30261b" stroke="#a57937" stroke-width="1.5"/>
+  <rect x="-3.5" y="-3.5" width="7" height="7" fill="#d9b36a" stroke="#f7e5a5" stroke-width=".8"/>
+ </g>
+ <path d="M-37 -20 L-27 -25 M29 27 L40 21 M-35 42 L-28 35" stroke="#ffe3a0" stroke-width="2" stroke-linecap="round"/>
+ <circle cx="-39" cy="0" r="3" fill="#e7be67"/><circle cx="37" cy="-15" r="2.5" fill="#f5dc9a"/>
+</g>
+<!-- PEACHWOOD SWORD -->
+<g transform="translate(448 64)">
+ <circle r="61" fill="url(#fireAura)" opacity=".65"/>
+ <circle r="47" fill="none" stroke="#c48c4d" stroke-width="1.1" opacity=".7"/>
+ <path d="M-48 22 Q-24 -6 -43 -31 M48 -24 Q20 1 43 31" fill="none" stroke="#f1c66d" stroke-width="2.1"/>
+ <g transform="rotate(-32)">
+  <path d="M-8 -48 L8 -48 L6 24 L0 37 L-6 24Z" fill="#f0dcb2" stroke="#74452a" stroke-width="2"/>
+  <path d="M-3 -40 L3 -40 L2 20 L0 28 L-2 20Z" fill="#fff6d8"/>
+  <path d="M-19 -19 L19 -19 L15 -10 L-15 -10Z" fill="url(#gold)" stroke="#78482a" stroke-width="1.8"/>
+  <path d="M-6 24 L6 24 L7 40 L-7 40Z" fill="#9e422f" stroke="#5a2e22" stroke-width="1.5"/>
+  <path d="M0 40 L0 50" stroke="#b77b45" stroke-width="3.5"/>
+  <path d="M-4 -34 L3 -28 L-3 -18 L4 -11" fill="none" stroke="#9e3028" stroke-width="1.6"/>
+ </g>
+ <path d="M-34 -40 L-29 -31 L-21 -34 L-26 -26 M33 35 L27 27 L20 32 L25 23" fill="none" stroke="#f5d18a" stroke-width="2" stroke-linejoin="round"/>
+ <circle cx="-37" cy="3" r="2.5" fill="#f2bc63"/><circle cx="39" cy="-5" r="2" fill="#f8dfa1"/>
+</g>
+<!-- WATER / ICE FORMATION -->
+<g transform="translate(576 64)">
+ <circle r="61" fill="url(#waterAura)"/>
+ <circle r="51" fill="none" stroke="#63d5f0" stroke-width="1.5" opacity=".8"/>
+ <circle r="43" fill="none" stroke="#b6f5ff" stroke-width="1" stroke-dasharray="4 4"/>
+ <circle r="32" fill="none" stroke="#44b8df" stroke-width="2"/>
+ <circle r="21" fill="none" stroke="#a9f2f7" stroke-width="1.5"/>
+ <path d="M0 -47 L7 -26 L0 -18 L-7 -26Z M47 0 L26 7 L18 0 L26 -7Z M0 47 L-7 26 L0 18 L7 26Z M-47 0 L-26 -7 L-18 0 L-26 7Z" fill="#a7f1f8" stroke="#e3ffff" stroke-width="1"/>
+ <path d="M-31 -31 L-13 -13 L-31 -8 L-25 5 L-10 3 L-4 20 L-18 31 M31 -31 L13 -13 L31 -8 L25 5 L10 3 L4 20 L18 31" fill="none" stroke="#7bd7f0" stroke-width="2.2" stroke-linejoin="round"/>
+ <path d="M-15 13 L-5 -24 L3 -7 L12 -18 L7 17 L-1 27Z" fill="#d6faff" stroke="#4db9d9" stroke-width="1.5" opacity=".9"/>
+ <circle r="5" fill="#f0ffff" stroke="#7dd7eb" stroke-width="1.5"/>
+ <circle cx="-39" cy="21" r="2.5" fill="#c8f9ff"/><circle cx="37" cy="-22" r="2" fill="#d9ffff"/><circle cx="24" cy="39" r="2.5" fill="#7adbf3"/>
+</g>
+<!-- EARTH SPIKE -->
+<g transform="translate(704 64)">
+ <path d="M-55 28L-42 8L-20 15L-4 -8L17 10L42 2L55 29L39 49L-34 48Z" fill="#272820" stroke="#8f7952" stroke-width="2" opacity=".82"/>
+ <path d="M-47 28L-27 20L-11 29L4 18L20 29L42 20" fill="none" stroke="#a58c5d" stroke-width="2" opacity=".72"/>
+ <path d="M-40 36L-28 29L-17 38L-4 31L9 40L25 31L40 38" fill="none" stroke="#5c5140" stroke-width="2"/>
+ <path d="M-42 27L-31 -1L-17 10L-9 -20L8 9L11 29Z" fill="#4c5048" stroke="#a38e64" stroke-width="2.2" stroke-linejoin="round"/>
+ <path d="M-31 16L-17 10L-9 -14L-5 11L7 22" fill="none" stroke="#c0a77a" stroke-width="1.6"/>
+ <path d="M-8 30L8 -43L26 -14L35 30Z" fill="#6a695b" stroke="#d0b887" stroke-width="2.5" stroke-linejoin="round"/>
+ <path d="M8 -7L18 -33L22 -6L30 12L19 8L12 23Z" fill="#a99b78" opacity=".9"/>
+ <path d="M20 31L33 4L43 15L49 31Z" fill="#42483f" stroke="#a28d62" stroke-width="1.8"/>
+ <path d="M-52 -2L-42 -11L-34 -5M36 -27L45 -34L52 -28M-4 50L2 57L9 49" fill="none" stroke="#c5ac7b" stroke-width="2" opacity=".78"/>
+ <path d="M-22 33L-11 39L1 32L15 41L28 34" fill="none" stroke="#e0c58c" stroke-width="1.4" opacity=".72"/>
+</g>
+</svg>
