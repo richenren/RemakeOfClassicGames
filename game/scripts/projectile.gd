@@ -233,7 +233,7 @@ static func visual_profile_for_skill(attack_skill_id: String) -> Dictionary:
 		"fire_talisman":
 			return {"element": "fire", "primary": Color("#ff542f"), "core": Color("#fff0bd")}
 		"thunder_talisman", "five_thunder":
-			return {"element": "thunder", "primary": Color("#b56cff"), "core": Color("#f5e8ff")}
+			return {"element": "lightning", "primary": Color("#b56cff"), "core": Color("#f5e8ff")}
 		"water_array":
 			return {"element": "water", "primary": Color("#38c9e8"), "core": Color("#e3fbff")}
 		"copper_coin_sword":

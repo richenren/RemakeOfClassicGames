@@ -71,6 +71,7 @@ var animation_frame_elapsed: float = 0.0
 var attack_animation_timer: float = 0.0
 var cast_animation_timer: float = 0.0
 var cast_direction: Vector2 = Vector2.DOWN
+var cast_element: String = "neutral"
 var hit_animation_timer: float = 0.0
 
 
@@ -123,10 +124,25 @@ func tick(delta: float) -> void:
 	queue_redraw()
 
 
-func trigger_cast(direction: Vector2, duration: float = CAST_DURATION) -> void:
+static func cast_element_for_skill(skill_id: String) -> String:
+	match skill_id:
+		"copper_coin_sword":
+			return "metal"
+		"water_array":
+			return "water"
+		"fire_talisman":
+			return "fire"
+		"thunder_talisman", "five_thunder":
+			return "lightning"
+		_:
+			return "neutral"
+
+
+func trigger_cast(direction: Vector2, duration: float = CAST_DURATION, element: String = "neutral") -> void:
 	if direction.length_squared() > 0.001:
 		cast_direction = direction.normalized()
 		facing = cast_direction
+	cast_element = element if element in ["metal", "water", "fire", "lightning"] else "neutral"
 	cast_animation_timer = maxf(cast_animation_timer, duration)
 	animation_frame_index = 0
 	animation_frame_elapsed = 0.0
@@ -265,8 +281,39 @@ func _draw_cast_pose() -> void:
 
 	if progress > 0.18:
 		var arc_radius := 7.0 + pulse * 1.5
-		draw_arc(talisman_center, arc_radius, direction.angle() - 0.72, direction.angle() + 0.72, 12, Color("#e3bd75", 0.48 * pulse), 1.0, true)
-		draw_circle(talisman_center + direction * 5.0, 1.0, Color("#ffe4a6", 0.62 * pulse))
+		draw_arc(talisman_center, arc_radius, direction.angle() - 0.72, direction.angle() + 0.72, 12, Color("#e3bd75", 0.22 * pulse), 0.8, true)
+		_draw_cast_element_effect(talisman_center, direction, progress, pulse)
+
+
+func _draw_cast_element_effect(center: Vector2, direction: Vector2, progress: float, pulse: float) -> void:
+	# Element accents stay small and close to the held seal; they never form a large aura.
+	var side := Vector2(-direction.y, direction.x)
+	match cast_element:
+		"metal":
+			var gold := Color("#f0c56a", 0.78 * pulse)
+			draw_arc(center, 5.8 + pulse * 1.2, 0.0, TAU, 16, gold, 1.0, true)
+			for i in range(3):
+				var offset := side * (float(i) - 1.0) * 5.0 - direction * (2.0 + float(i % 2) * 2.0)
+				draw_line(center + offset + Vector2(-1.2, 0.0), center + offset + Vector2(1.2, 0.0), gold, 1.0, true)
+				draw_line(center + offset + Vector2(0.0, -1.2), center + offset + Vector2(0.0, 1.2), gold, 1.0, true)
+		"water":
+			var cyan := Color("#69d9ef", 0.72 * pulse)
+			draw_arc(center, 6.0 + pulse, -0.9, 1.0, 14, cyan, 1.2, true)
+			draw_circle(center + side * 6.0 - direction * 2.0, 1.35, Color("#d5faff", 0.82 * pulse))
+			draw_circle(center - side * 5.0 + direction * 1.0, 1.0, cyan)
+		"fire":
+			var ember := Color("#ff8a43", 0.78 * pulse)
+			for i in range(3):
+				var offset := side * (float(i) - 1.0) * 4.0 - direction * (3.0 + float(i % 2) * 2.0)
+				draw_circle(center + offset, 1.0 + pulse * 0.45, ember)
+				draw_circle(center + offset - direction * 1.2, 0.55, Color("#ffe7a6", 0.76 * pulse))
+		"lightning":
+			var electric := Color("#a98aff", 0.86 * pulse)
+			var bolt := PackedVector2Array([center - direction * 4.0 - side * 2.0, center - direction * 1.0 + side * 1.5, center + direction * 1.0 - side * 1.0, center + direction * 4.0 + side * 1.8])
+			draw_polyline(bolt, electric, 1.5, true)
+			draw_circle(center + direction * 4.0 + side * 1.8, 1.0, Color("#f0eaff", 0.92 * pulse))
+		_:
+			pass
 
 
 func take_damage(amount: float) -> void:

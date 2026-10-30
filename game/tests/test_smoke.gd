@@ -151,6 +151,12 @@ func _test_sprite_assets(main: Variant) -> void:
 	_check(metal_profile["primary"] != wood_profile["primary"] and metal_profile["primary"] != fire_profile["primary"], "金系剑气与木系桃木剑具备独立颜色")
 	var water_profile: Dictionary = PROJECTILE_SCRIPT.visual_profile_for_skill("water_array")
 	_check(water_profile["primary"] != fire_profile["primary"] and water_profile["element"] == "water", "水系投射物拥有独立的水球视觉配置")
+	_check(thunder_profile["element"] == "lightning", "雷系视觉配置统一标记为 lightning")
+	_check(PLAYER_SCRIPT.cast_element_for_skill("copper_coin_sword") == "metal", "铜钱剑施法采用金系聚气特效")
+	_check(PLAYER_SCRIPT.cast_element_for_skill("water_array") == "water", "寒潮阵施法采用水系聚气特效")
+	_check(PLAYER_SCRIPT.cast_element_for_skill("fire_talisman") == "fire", "火符施法采用火系聚气特效")
+	_check(PLAYER_SCRIPT.cast_element_for_skill("thunder_talisman") == "lightning" and PLAYER_SCRIPT.cast_element_for_skill("five_thunder") == "lightning", "雷符与五雷敕令共用雷系聚气特效")
+	_check(PLAYER_SCRIPT.cast_element_for_skill("peachwood_sword") == "neutral" and PLAYER_SCRIPT.cast_element_for_skill("earth_formation") == "neutral", "木系与土系暂不套用本轮四系聚气特效")
 
 
 
@@ -700,6 +706,7 @@ func _test_combat_visuals(main: Variant) -> void:
 	splash_enemy.hp = splash_enemy.max_hp
 	main._cast_auto_skill("fire_talisman", temp_enemy)
 	_check(main.projectiles.size() == 1, "火符释放独立火球弹体")
+	_check(main.player.cast_element == "fire", "火符触发主角通用施法动作并使用火系聚气表现")
 	if not main.projectiles.is_empty():
 		main.projectiles[0].speed = 10000.0
 		main._tick_projectiles(0.1)
@@ -717,6 +724,7 @@ func _test_combat_visuals(main: Variant) -> void:
 	splash_enemy.wet_timer = 0.0
 	main._cast_auto_skill("water_array", temp_enemy)
 	_check(main.projectiles.size() == 1, "寒潮阵先发射水球而非瞬间结算范围伤害")
+	_check(main.player.cast_element == "water", "寒潮阵触发主角通用施法动作并使用水系聚气表现")
 	_check(is_equal_approx(temp_enemy.hp, temp_enemy.max_hp), "水球飞行时不会提前造成伤害")
 	if not main.projectiles.is_empty():
 		main.projectiles[0].speed = 10000.0
@@ -737,12 +745,14 @@ func _test_combat_visuals(main: Variant) -> void:
 	var projectiles_before_thunder: int = main.projectiles.size()
 	main._cast_auto_skill("thunder_talisman", temp_enemy)
 	_check(main.projectiles.size() == projectiles_before_thunder, "雷符采用瞬时雷击，不生成普通飞行弹体")
+	_check(main.player.cast_element == "lightning", "雷系瞬时攻击也触发通用施法动作")
 	_check(temp_enemy.hp < temp_enemy.max_hp, "瞬时主雷击命中首个目标并造成伤害")
 	var saw_thunder_arc := false
 	for effect in main.skill_effects:
 		if str(effect.get("kind", "")) == "lightning_chain":
 			saw_thunder_arc = true
 	_check(saw_thunder_arc, "雷符主雷击绘制从施法者连接到实际命中目标的电弧")
+	_check(main.player.cast_element == "lightning", "雷符触发主角通用施法动作并使用雷系聚气表现")
 
 	# Metal's pierce branch must physically pass through a second enemy, not jump to a nearby target.
 	for old_projectile in main.projectiles:
@@ -755,6 +765,7 @@ func _test_combat_visuals(main: Variant) -> void:
 	temp_enemy.hp = temp_enemy.max_hp
 	splash_enemy.hp = splash_enemy.max_hp
 	main._cast_auto_skill("copper_coin_sword", temp_enemy)
+	_check(main.player.cast_element == "metal", "铜钱剑触发主角通用施法动作并使用金系聚气表现")
 	_check(main.projectiles.size() == 1 and main.projectiles[0].behavior == "pierce", "铜钱剑贯穿分支启用直线穿透行为")
 	if not main.projectiles.is_empty():
 		main._tick_projectiles(0.1)

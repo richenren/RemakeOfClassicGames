@@ -1220,7 +1220,7 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 	var damage := _skill_damage(skill_id, float(definition["damage"]))
 	var cooldown := _skill_cooldown(skill_id, float(definition["cooldown"]))
 	var cast_direction: Vector2 = (target.position - player.position).normalized()
-	player.trigger_cast(cast_direction)
+	player.trigger_cast(cast_direction, PLAYER_SCRIPT.CAST_DURATION, PLAYER_SCRIPT.cast_element_for_skill(skill_id))
 	match skill_id:
 		"fire_talisman":
 			var target_count := 2 if branch == "spread" else 1
@@ -1465,7 +1465,7 @@ func _resolve_projectile_hit(projectile) -> void:
 			if branch == "pierce" and int(projectile.pierce_hit_count) > 1:
 				hit_damage *= float(projectile.pierce_damage_multiplier)
 			target.take_damage(hit_damage)
-			_spawn_skill_effect("slash", target.position, 25.0, 0.18)
+			_spawn_skill_effect("metal_impact", target.position, 25.0, 0.18)
 			if branch == "return":
 				projectile.begin_return(player)
 			if evolved == "golden_sword_array":
@@ -1694,6 +1694,16 @@ func _draw_skill_effects() -> void:
 					var tip := center + direction * flame_radius * (0.78 + 0.14 * sin(elapsed_seconds * 8.0 + float(i)))
 					draw_colored_polygon(PackedVector2Array([base - tangent * 4.0, tip, base + tangent * 4.0]), Color(1.0, 0.34, 0.04, life * 0.78))
 					draw_line(base, tip, Color(1.0, 0.84, 0.42, life * 0.9), 1.5, true)
+			"metal_impact":
+				var blade_angle := -0.62 + sin(elapsed_seconds * 24.0) * 0.08
+				var blade_direction := Vector2(cos(blade_angle), sin(blade_angle))
+				var blade_side := Vector2(-blade_direction.y, blade_direction.x)
+				draw_line(center - blade_direction * radius * 0.82, center + blade_direction * radius * 0.82, Color("#f6d98d", life * 0.92), 3.2, true)
+				draw_line(center - blade_direction * radius * 0.62 + blade_side * 2.0, center + blade_direction * radius * 0.58 + blade_side * 2.0, Color("#fff2c8", life * 0.8), 1.2, true)
+				for spark_index in range(4):
+					var spark_angle := TAU * float(spark_index) / 4.0 + elapsed_seconds * 7.0
+					var spark_direction := Vector2(cos(spark_angle), sin(spark_angle))
+					draw_line(center + spark_direction * radius * 0.24, center + spark_direction * radius * 0.52, Color("#e9bd58", life * 0.82), 1.6, true)
 			"slash", "golden_sword_array":
 				draw_line(center + Vector2(-radius * 0.75, radius * 0.55), center + Vector2(radius * 0.72, -radius * 0.55), Color(0.98, 0.86, 0.58, life), 3.2)
 				draw_line(center + Vector2(-radius * 0.38, radius * 0.72), center + Vector2(radius * 0.48, -radius * 0.25), Color(0.78, 0.63, 0.36, life * 0.75), 1.8)
