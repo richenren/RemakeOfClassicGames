@@ -126,6 +126,7 @@ func _test_sprite_assets(main: Variant) -> void:
 	_check(walker._sprite_draw_size_for_kind("walker").y >= 70.0, "普通行尸恢复可辨认的全身比例")
 	_check(walker._sprite_draw_size_for_kind("armored").y >= 76.0, "铁甲尸保留独立且更厚重的绘制比例")
 	_check(walker._sprite_draw_size_for_kind("boss").y > walker._sprite_draw_size_for_kind("walker").y, "尸王仍保持独立的精英体型")
+	_check(walker.has_method("_draw_enemy_signature"), "怪物绘制包含分类型眼部/符纹/材质识别细节")
 	walker.is_moving = false
 	_check(walker._sprite_texture_for_kind("walker") == walker.WALKER_IDLE_TEXTURE, "行尸静止时显示待机姿态")
 	walker.is_moving = true
@@ -538,7 +539,8 @@ func _test_player_animation_frames() -> void:
 	var walker_size: Vector2 = ENEMY_SCRIPT.WALKER_DRAW_SIZE
 	_check(player.PLAYER_DRAW_SIZE.x < walker_size.x and player.PLAYER_DRAW_SIZE.y < walker_size.y, "主角绘制尺寸略小于普通行尸")
 	_check(player.PLAYER_WALK_DRAW_SIZE == player.PLAYER_DRAW_SIZE, "待机与行走尺寸完全一致，切换时不缩放跳变")
-	_check(player.PLAYER_ATTACK_FRAMES.size() == 4, "主角符箓攻击状态保留 4 帧节奏槽，匹配动作帧待制作")
+	_check(player.PLAYER_ATTACK_FRAMES.size() == 4, "主角旧攻击节奏槽保留兼容")
+	_check(player.PLAYER_CAST_FRAMES.size() == 6 and player.CAST_DURATION >= 0.4, "主角技能施放状态具有独立六段动作节奏")
 	_check(player.PLAYER_HIT_FRAMES.size() == 3, "主角受击状态保留 3 帧节奏槽，匹配动作帧待制作")
 	_check(player.PLAYER_DEATH_FRAMES.size() == 6, "主角临时保留 6 帧旧倒地动画")
 	var all_frames_load := true
@@ -564,7 +566,8 @@ func _test_player_animation_frames() -> void:
 	_check(player.animation_frame_index == 1, "八帧行走动画在最高移动速度下与步态周期同步")
 	player.trigger_attack(Vector2.RIGHT)
 	player._update_animation(0.01)
-	_check(player.animation_state == "attack", "自动攻击触发独立符箓攻击动画")
+	_check(player.animation_state == "cast" and player.cast_animation_timer > 0.0, "自动攻击触发独立施法动作状态")
+	_check(player.facing == Vector2.RIGHT, "施法动作锁定释放方向，避免移动中朝向跳变")
 	player.invuln_time = 0.0
 	player.take_damage(1.0)
 	player._update_animation(0.01)
@@ -646,7 +649,7 @@ func _test_combat_visuals(main: Variant) -> void:
 	projectile_visual._record_trail_point(Vector2.ZERO)
 	projectile_visual._record_trail_point(Vector2(12.0, 0.0))
 	_check(projectile_visual.trail_history.size() == 2, "投射物飞行时采样并保留连续轨迹点")
-	_check(projectile_visual.PROJECTILE_VISUAL_SCALE >= 1.4 and projectile_visual.MAX_TRAIL_POINTS >= 4, "投射物放大轮廓并保留多帧拖尾")
+	_check(projectile_visual.PROJECTILE_VISUAL_SCALE < 1.0 and projectile_visual.PROJECTILE_VISUAL_SCALE > 0.8 and projectile_visual.MAX_TRAIL_POINTS >= 4, "投射物主体缩至角色尺寸的克制比例并保留多帧拖尾")
 	projectile_visual.queue_free()
 	var temp_enemy: Variant = ENEMY_SCRIPT.new()
 	temp_enemy.setup("walker")

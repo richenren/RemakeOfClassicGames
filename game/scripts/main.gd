@@ -1191,6 +1191,8 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 	var definition: Dictionary = AUTO_SKILL_DEFS[skill_id]
 	var damage := _skill_damage(skill_id, float(definition["damage"]))
 	var cooldown := _skill_cooldown(skill_id, float(definition["cooldown"]))
+	var cast_direction: Vector2 = (target.position - player.position).normalized()
+	player.trigger_cast(cast_direction)
 	match skill_id:
 		"fire_talisman":
 			var target_count := 2 if branch == "spread" else 1
@@ -1929,6 +1931,7 @@ func cast_active_skill() -> void:
 		return
 	active_skill_cooldown = active_skill_base_cooldown
 	active_skill_effect_time = ACTIVE_SKILL_EFFECT_DURATION
+	player.trigger_cast(player.facing, 0.52)
 	var skill_level_bonus := float(active_skill_level - 1)
 	var skill_radius := ACTIVE_SKILL_RADIUS + skill_level_bonus * 18.0
 	var skill_damage := 8.0 + skill_level_bonus * 4.0

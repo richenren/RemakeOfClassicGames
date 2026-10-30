@@ -288,6 +288,60 @@ func _sprite_texture_for_kind(enemy_kind: String) -> Texture2D:
 			return WALKER_WALK_TEXTURE if is_moving else WALKER_IDLE_TEXTURE
 
 
+func _draw_enemy_signature() -> void:
+	# Compact high-contrast accents distinguish enemy types at gameplay scale.
+	var eye_y := -19.0
+	var eye_spacing := 4.8
+	var eye_color := Color("#e6a24e")
+	match kind:
+		"jumper":
+			eye_y = -16.0
+			eye_spacing = 5.0
+			eye_color = Color("#a9f0d8")
+		"armored":
+			eye_y = -22.0
+			eye_spacing = 5.4
+			eye_color = Color("#d8f0c0")
+		"boss":
+			eye_y = -40.0
+			eye_spacing = 8.0
+			eye_color = Color("#ff5a42") if boss_phase >= 2 else Color("#e7a15b")
+	for side in [-1.0, 1.0]:
+		var eye_center := Vector2(side * eye_spacing, eye_y)
+		draw_circle(eye_center, 2.25, Color(eye_color.r, eye_color.g, eye_color.b, 0.18))
+		draw_circle(eye_center, 1.15, eye_color)
+		draw_circle(eye_center + Vector2(-0.25, -0.25), 0.42, Color("#fff1cf"))
+	match kind:
+		"walker":
+			for side in [-1.0, 1.0]:
+				var sway := sin(animation_time * 3.0 + side) * 2.0
+				draw_line(Vector2(side * 15.0, -5.0), Vector2(side * (21.0 + sway), 7.0), Color("#7f2d29", 0.72), 1.8, true)
+				draw_line(Vector2(side * 18.0, 1.0), Vector2(side * (23.0 + sway), 13.0), Color("#bd4933", 0.52), 1.0, true)
+			draw_circle(Vector2(0.0, 4.0), 4.0, Color(0.63, 0.17, 0.10, 0.10))
+			draw_arc(Vector2(0.0, 4.0), 4.0, 0.2, 2.9, 16, Color("#c18a4c", 0.72), 0.8, true)
+		"jumper":
+			for side in [-1.0, 1.0]:
+				draw_line(Vector2(side * 18.0, 3.0), Vector2(side * 25.0, 12.0), Color("#d6c6a6", 0.74), 1.1, true)
+				draw_line(Vector2(side * 20.0, 5.0), Vector2(side * 27.0, 14.0), Color("#8c302b", 0.62), 1.0, true)
+			draw_arc(Vector2(0.0, -1.0), 21.0 + sin(animation_time * 8.0) * 1.2, 3.4, 5.8, 18, Color("#a43b31", 0.38), 1.2, true)
+		"armored":
+			for side in [-1.0, 1.0]:
+				var rivet := Vector2(side * 20.0, -12.0)
+				draw_circle(rivet, 2.0, Color("#3a2920", 0.92))
+				draw_circle(rivet, 1.15, Color("#d8b56c", 0.94))
+			draw_arc(Vector2(0.0, 2.0), 7.0, 0.15, PI - 0.15, 20, Color("#b58a4c", 0.64), 1.0, true)
+			draw_circle(Vector2(0.0, 2.0), 1.8, Color("#a23b2e", 0.8))
+		"boss":
+			for seal_index in range(4):
+				var angle := animation_time * 0.62 + TAU * float(seal_index) / 4.0
+				var seal_center := Vector2(cos(angle) * 39.0, -13.0 + sin(angle) * 20.0)
+				draw_circle(seal_center, 4.0, Color(0.65, 0.13, 0.08, 0.12))
+				draw_rect(Rect2(seal_center + Vector2(-1.6, -3.2), Vector2(3.2, 6.4)), Color("#d9bf83", 0.86))
+				draw_line(seal_center + Vector2(0.0, -2.0), seal_center + Vector2(0.0, 2.0), Color("#a12f27", 0.95), 0.8, true)
+			if boss_phase >= 2:
+				draw_arc(Vector2(0.0, -8.0), 46.0 + sin(animation_time * 4.5) * 1.8, 0.2, 2.8, 36, Color("#ef5938", 0.46), 1.8, true)
+
+
 func _sprite_draw_size_for_kind(enemy_kind: String) -> Vector2:
 	match enemy_kind:
 		"jumper":
@@ -376,6 +430,7 @@ func _draw() -> void:
 		tint = Color(1.0, 0.84, 0.78, 1.0)
 	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2(flip_x * squash_x, stretch_y))
 	draw_texture_rect(_sprite_texture_for_kind(kind), sprite_rect, false, tint)
+	_draw_enemy_signature()
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if hit_flash > 0.0:

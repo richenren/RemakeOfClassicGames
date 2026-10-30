@@ -18,6 +18,8 @@ const PLAYER_WALK_FRAME_SIZE := Vector2(48.0, 64.0)
 const PLAYER_WALK_DRAW_SIZE := Vector2(52.0, 72.0)
 const PLAYER_DRAW_SIZE := Vector2(52.0, 72.0)
 const PLAYER_DEATH_DRAW_SIZE := Vector2(58.0, 48.0)
+const CAST_DURATION := 0.46
+const PLAYER_CAST_FRAMES = [0, 1, 2, 3, 4, 5]
 
 # Idle/attack/hit currently use the approved directional stills. Walking uses four dedicated
 # 8-frame row atlases in front/left/back/right order; all views keep the sheathed sword visible.
@@ -66,6 +68,8 @@ var animation_state: String = "idle"
 var animation_frame_index: int = 0
 var animation_frame_elapsed: float = 0.0
 var attack_animation_timer: float = 0.0
+var cast_animation_timer: float = 0.0
+var cast_direction: Vector2 = Vector2.DOWN
 var hit_animation_timer: float = 0.0
 
 
@@ -76,6 +80,7 @@ func tick(delta: float) -> void:
 	footstep_flash = maxf(0.0, footstep_flash - delta)
 	attack_pulse = maxf(0.0, attack_pulse - delta)
 	attack_animation_timer = maxf(0.0, attack_animation_timer - delta)
+	cast_animation_timer = maxf(0.0, cast_animation_timer - delta)
 	hit_animation_timer = maxf(0.0, hit_animation_timer - delta)
 
 	var keyboard_move := Vector2.ZERO
@@ -99,7 +104,7 @@ func tick(delta: float) -> void:
 
 	is_moving = velocity.length_squared() > 36.0
 	if is_moving:
-		var target_facing := attack_direction if attack_pulse > 0.0 else velocity.normalized()
+		var target_facing := cast_direction if cast_animation_timer > 0.0 else (attack_direction if attack_pulse > 0.0 else velocity.normalized())
 		facing = facing.lerp(target_facing, clampf(delta * 13.0, 0.0, 1.0)).normalized()
 		position += velocity * delta
 		var old_phase := gait_phase
@@ -117,10 +122,20 @@ func tick(delta: float) -> void:
 	queue_redraw()
 
 
+func trigger_cast(direction: Vector2, duration: float = CAST_DURATION) -> void:
+	if direction.length_squared() > 0.001:
+		cast_direction = direction.normalized()
+		facing = cast_direction
+	cast_animation_timer = maxf(cast_animation_timer, duration)
+	animation_frame_index = 0
+	animation_frame_elapsed = 0.0
+	queue_redraw()
+
+
 func trigger_attack(direction: Vector2) -> void:
 	if direction.length_squared() > 0.001:
 		attack_direction = direction.normalized()
-		facing = attack_direction
+	trigger_cast(attack_direction, CAST_DURATION)
 	attack_pulse = 0.18
 	attack_animation_timer = 0.30
 	queue_redraw()
@@ -156,6 +171,8 @@ func _animation_frames_for_state(state: String) -> Array:
 	match state:
 		"walk":
 			return PLAYER_WALK_FRAMES
+		"cast":
+			return PLAYER_CAST_FRAMES
 		"attack":
 			return PLAYER_ATTACK_FRAMES
 		"hit":
@@ -173,6 +190,8 @@ func _animation_frame_duration(state: String) -> float:
 			var speed_ratio := clampf(velocity.length() / maxf(1.0, move_speed), 0.0, 1.0)
 			var gait_speed := lerpf(4.5, 11.0, speed_ratio)
 			return TAU / (gait_speed * float(PLAYER_WALK_FRAMES.size()))
+		"cast":
+			return CAST_DURATION / float(PLAYER_CAST_FRAMES.size())
 		"attack":
 			return 0.065
 		"hit":
@@ -195,6 +214,8 @@ func _update_animation(delta: float) -> void:
 		next_state = "death"
 	elif hit_animation_timer > 0.0:
 		next_state = "hit"
+	elif cast_animation_timer > 0.0:
+		next_state = "cast"
 	elif attack_animation_timer > 0.0:
 		next_state = "attack"
 	elif is_moving:
@@ -218,6 +239,38 @@ func _update_animation(delta: float) -> void:
 				break
 		else:
 			animation_frame_index = (animation_frame_index + 1) % frames.size()
+
+
+func _draw_cast_pose() -> void:
+	# Cosmetic directional casting pose layered over the approved back-sword artwork.
+	var progress := 1.0 - clampf(cast_animation_timer / CAST_DURATION, 0.0, 1.0)
+	var direction := cast_direction.normalized()
+	var shoulder := Vector2(direction.x * 5.0, -8.0)
+	var reach := lerpf(8.0, 19.0, smoothstep(0.12, 0.58, progress))
+	var hand := shoulder + direction * reach + Vector2(0.0, -1.0)
+	var glow := sin(progress * PI)
+	var glow_color := Color(1.0, 0.62, 0.20, 0.20 + glow * 0.38)
+	draw_line(shoulder, hand - direction * 3.0, Color("#241b18"), 7.0, true)
+	draw_line(shoulder + Vector2(0.0, -1.0), hand - direction * 4.0, Color("#8f6336", 0.95), 2.2, true)
+	draw_circle(hand, 2.7, Color("#d6b58d"))
+	draw_circle(hand, 1.4, Color("#f0d7ad"))
+	draw_circle(hand + direction * 3.0, 5.0 + glow * 4.0, glow_color)
+	var paper_center := hand + direction * 5.0
+	var paper_angle := direction.angle() + PI * 0.5
+	draw_set_transform(paper_center, paper_angle, Vector2.ONE)
+	draw_rect(Rect2(-2.8, -4.6, 5.6, 9.2), Color("#e9d4a0", 0.96))
+	draw_rect(Rect2(-2.8, -4.6, 5.6, 9.2), Color("#9b392b", 0.95), false, 0.8)
+	draw_line(Vector2(0.0, -2.8), Vector2(0.0, 2.8), Color("#a22d26"), 0.9, true)
+	draw_line(Vector2(-1.1, -0.8), Vector2(1.1, 0.9), Color("#a22d26"), 0.8, true)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if progress > 0.16:
+		var ring_radius := 7.0 + glow * 5.0
+		draw_arc(paper_center, ring_radius, -0.85, 1.1, 20, Color("#ffd27b", 0.78 * glow), 1.25, true)
+		draw_arc(paper_center, ring_radius + 3.0, 2.2, 3.7, 18, Color("#f08b36", 0.46 * glow), 0.9, true)
+		for spark_index in range(3):
+			var spark_angle := progress * 7.0 + float(spark_index) * TAU / 3.0
+			var spark_pos := paper_center + Vector2(cos(spark_angle), sin(spark_angle)) * (ring_radius + 3.0)
+			draw_circle(spark_pos, 0.8 + glow * 0.5, Color("#ffe9b0", 0.8 * glow))
 
 
 func take_damage(amount: float) -> void:
@@ -284,6 +337,8 @@ func _draw() -> void:
 		draw_texture_rect_region(_walk_atlas_for_direction(), sprite_rect, _walk_frame_region(), tint, false)
 	else:
 		draw_texture_rect(_current_animation_texture(), sprite_rect, false, tint)
+	if animation_state == "cast":
+		_draw_cast_pose()
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if attack_ratio > 0.0:

@@ -1,7 +1,7 @@
 extends Node2D
 
 const PROJECTILE_HIT_RADIUS := 4.0
-const PROJECTILE_VISUAL_SCALE := 1.45
+const PROJECTILE_VISUAL_SCALE := 0.92
 const MAX_TRAIL_POINTS := 6
 const TRAIL_SAMPLE_DISTANCE := 4.5
 
@@ -244,8 +244,16 @@ func _draw() -> void:
 	var profile: Dictionary = visual_profile_for_skill(skill_id)
 	var primary: Color = profile["primary"]
 	var core: Color = profile["core"]
-	var pulse_scale := 1.0 + sin(age * 16.0) * 0.045
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * PROJECTILE_VISUAL_SCALE * pulse_scale)
+	var pulse_scale := 1.0 + sin(age * 16.0) * 0.035
+	var skill_scale := 0.88
+	match skill_id:
+		"fire_talisman", "water_array":
+			skill_scale = 0.86
+		"copper_coin_sword", "peachwood_sword":
+			skill_scale = 0.98
+		"thunder_talisman", "five_thunder":
+			skill_scale = 0.82
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * PROJECTILE_VISUAL_SCALE * skill_scale * pulse_scale)
 	_draw_motion_trail(primary, core)
 	match skill_id:
 		"fire_talisman":
