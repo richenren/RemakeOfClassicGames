@@ -547,9 +547,9 @@ func _test_player_animation_frames() -> void:
 	player.animation_frame_elapsed = 0.0
 	player.is_moving = true
 	player.velocity = Vector2.RIGHT * player.move_speed
-	var fast_walk_frame_duration := player._animation_frame_duration("walk")
+	var fast_walk_frame_duration: float = player._animation_frame_duration("walk")
 	player.velocity = Vector2.RIGHT * player.move_speed * 0.5
-	var slow_walk_frame_duration := player._animation_frame_duration("walk")
+	var slow_walk_frame_duration: float = player._animation_frame_duration("walk")
 	_check(fast_walk_frame_duration < slow_walk_frame_duration, "行走帧播放速度随移动速度变化")
 	player.velocity = Vector2.RIGHT * player.move_speed
 	player._update_animation(0.01)
