@@ -546,7 +546,8 @@ func _test_player_animation_frames() -> void:
 	_check(player.PLAYER_DRAW_SIZE.x < walker_size.x and player.PLAYER_DRAW_SIZE.y < walker_size.y, "主角绘制尺寸略小于普通行尸")
 	_check(player.PLAYER_WALK_DRAW_SIZE == player.PLAYER_DRAW_SIZE, "待机与行走尺寸完全一致，切换时不缩放跳变")
 	_check(player.PLAYER_ATTACK_FRAMES.size() == 4, "主角旧攻击节奏槽保留兼容")
-	_check(player.PLAYER_CAST_FRAMES.size() == 6 and player.CAST_DURATION >= 0.4, "主角技能施放状态具有独立六段动作节奏")
+	_check(player.PLAYER_CAST_FRAMES.size() == 6 and player.CAST_DURATION >= 0.38, "主角技能施放状态具有独立六段动作节奏")
+	_check(player.CAST_TALISMAN_REACH <= 8.0, "施法符纸限制在手部附近，不再绘制从身体伸出的长臂火把")
 	_check(player.PLAYER_HIT_FRAMES.size() == 3, "主角受击状态保留 3 帧节奏槽，匹配动作帧待制作")
 	_check(player.PLAYER_DEATH_FRAMES.size() == 6, "主角临时保留 6 帧旧倒地动画")
 	var all_frames_load := true
@@ -656,7 +657,20 @@ func _test_combat_visuals(main: Variant) -> void:
 	projectile_visual._record_trail_point(Vector2(12.0, 0.0))
 	_check(projectile_visual.trail_history.size() == 2, "投射物飞行时采样并保留连续轨迹点")
 	_check(projectile_visual.PROJECTILE_VISUAL_SCALE < 1.0 and projectile_visual.PROJECTILE_VISUAL_SCALE > 0.8 and projectile_visual.MAX_TRAIL_POINTS >= 4, "投射物主体缩至角色尺寸的克制比例并保留多帧拖尾")
+	_check(projectile_visual.DEFAULT_MAX_TRAVEL_DISTANCE > 0.0, "所有投射物具有默认最大飞行距离")
 	projectile_visual.queue_free()
+
+	var range_projectile: Variant = PROJECTILE_SCRIPT.new()
+	root.add_child(range_projectile)
+	range_projectile.setup(null, 1.0, "copper_coin_sword")
+	range_projectile.behavior = "pierce"
+	range_projectile.travel_direction = Vector2.RIGHT
+	range_projectile.position = Vector2.ZERO
+	range_projectile.max_travel_distance = 32.0
+	range_projectile.speed = 1000.0
+	range_projectile.tick(0.1, [])
+	_check(not range_projectile.alive and is_equal_approx(range_projectile.position.x, 32.0), "贯穿投射物达到最大飞行距离后停止，不会无限向外飞行")
+	range_projectile.queue_free()
 	var temp_enemy: Variant = ENEMY_SCRIPT.new()
 	temp_enemy.setup("walker")
 	temp_enemy.position = main.player.position + Vector2(50.0, 0.0)
@@ -667,6 +681,7 @@ func _test_combat_visuals(main: Variant) -> void:
 	splash_enemy.position = main.player.position + Vector2(80.0, 0.0)
 	main.add_child(splash_enemy)
 	main.enemies.append(splash_enemy)
+	_test_combat_ranges(main, temp_enemy, splash_enemy)
 	main.skills.clear()
 	main.skills["fire_talisman"] = {"level": 1, "branch": "", "evolved": ""}
 	main.fire_zone_timer = 0.01
@@ -911,6 +926,61 @@ func _test_combat_visuals(main: Variant) -> void:
 	main.enemies.erase(splash_enemy)
 	temp_enemy.queue_free()
 	splash_enemy.queue_free()
+
+func _test_combat_ranges(main: Variant, temp_enemy: Variant, splash_enemy: Variant) -> void:
+	var saved_enemies: Array = main.enemies.duplicate()
+	var saved_projectiles: Array = main.projectiles.duplicate()
+	var saved_skills: Dictionary = main.skills.duplicate(true)
+	var saved_cooldowns: Dictionary = main.skill_cooldowns.duplicate(true)
+	var saved_temp_position: Vector2 = temp_enemy.position
+	var saved_splash_position: Vector2 = splash_enemy.position
+	var saved_facing: Vector2 = main.player.facing
+	main.projectiles.clear()
+	main.enemies = [temp_enemy]
+
+	temp_enemy.position = main.player.position + Vector2(main.BASIC_ATTACK_RANGE + 40.0, 0.0)
+	main._auto_attack()
+	_check(main.projectiles.is_empty(), "基础符箓不会攻击 420 世界像素以外的敌人")
+	temp_enemy.position = main.player.position + Vector2(main.BASIC_ATTACK_RANGE - 40.0, 0.0)
+	main._auto_attack()
+	_check(main.projectiles.size() == 1, "基础符箓仍可攻击有限射程内的敌人")
+	if not main.projectiles.is_empty():
+		_check(is_equal_approx(main.projectiles[0].max_travel_distance, main.BASIC_PROJECTILE_MAX_RANGE), "基础符箓弹体具有独立最大飞行距离")
+	for projectile in main.projectiles:
+		projectile.queue_free()
+	main.projectiles.clear()
+
+	main.skills.clear()
+	main.skills["fire_talisman"] = {"level": 1, "branch": "", "evolved": ""}
+	main.skill_cooldowns.clear()
+	temp_enemy.position = main.player.position + Vector2(main.AUTO_SKILL_RANGE + 40.0, 0.0)
+	main._tick_combat_skills(0.016)
+	_check(main.projectiles.is_empty(), "自动技能不会索敌 460 世界像素以外的敌人")
+	main._cast_auto_skill("fire_talisman", temp_enemy)
+	_check(main.projectiles.is_empty(), "直接调用技能也不能绕过索敌距离限制")
+	temp_enemy.position = main.player.position + Vector2(main.AUTO_SKILL_RANGE - 40.0, 0.0)
+	main._cast_auto_skill("fire_talisman", temp_enemy)
+	_check(main.projectiles.size() == 1, "自动技能仍可攻击有限射程内的敌人")
+	if not main.projectiles.is_empty():
+		_check(is_equal_approx(main.projectiles[0].max_travel_distance, main.AUTO_SKILL_PROJECTILE_MAX_RANGE), "技能弹体具有独立最大飞行距离")
+	for projectile in main.projectiles:
+		projectile.queue_free()
+	main.projectiles.clear()
+
+	main.enemies = [temp_enemy, splash_enemy]
+	temp_enemy.position = main.player.position + Vector2(420.0, 0.0)
+	splash_enemy.position = main.player.position + Vector2(main.MAX_CHAIN_DISTANCE_FROM_PLAYER + 40.0, 0.0)
+	_check(main._find_nearest_chain_target(temp_enemy.position, 200.0, [temp_enemy]) == null, "雷电/剑气/追击的二次连锁不会越过玩家最大战斗距离")
+
+	main.enemies = saved_enemies
+	main.projectiles = saved_projectiles
+	main.skills = saved_skills
+	main.skill_cooldowns = saved_cooldowns
+	temp_enemy.position = saved_temp_position
+	splash_enemy.position = saved_splash_position
+	main.player.facing = saved_facing
+	main.player.queue_redraw()
+
 
 func _test_combat_and_progression(main: Variant) -> void:
 	var player: Variant = main.player

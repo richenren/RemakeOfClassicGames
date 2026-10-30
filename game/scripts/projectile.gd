@@ -1,6 +1,7 @@
 extends Node2D
 
 const PROJECTILE_HIT_RADIUS := 4.0
+const DEFAULT_MAX_TRAVEL_DISTANCE := 540.0
 const PROJECTILE_VISUAL_SCALE := 0.92
 const MAX_TRAIL_POINTS := 6
 const TRAIL_SAMPLE_DISTANCE := 4.5
@@ -10,6 +11,8 @@ var impact_target
 var damage: float = 18.0
 var speed: float = 470.0
 var lifetime: float = 2.0
+var max_travel_distance: float = DEFAULT_MAX_TRAVEL_DISTANCE
+var travelled_distance: float = 0.0
 var age: float = 0.0
 var alive: bool = true
 var impacted: bool = false
@@ -44,6 +47,8 @@ func setup(target_node, hit_damage: float, attack_skill_id: String = "basic_tali
 	impacted = false
 	alive = true
 	age = 0.0
+	max_travel_distance = DEFAULT_MAX_TRAVEL_DISTANCE
+	travelled_distance = 0.0
 	damage = hit_damage
 	skill_id = attack_skill_id
 	splash_radius = 0.0
@@ -132,6 +137,15 @@ func tick(delta: float, collision_targets: Array = []) -> void:
 		travel_distance = minf(speed * delta, distance)
 		end_position = start_position + direction * travel_distance
 
+	if not is_returning:
+		var remaining_range := maxf(0.0, max_travel_distance - travelled_distance)
+		if remaining_range <= 0.001:
+			alive = false
+			return
+		if travel_distance > remaining_range:
+			travel_distance = remaining_range
+			end_position = start_position + direction * travel_distance
+
 	var segment := end_position - start_position
 	var segment_length_squared := segment.length_squared()
 	if segment_length_squared > 0.001:
@@ -155,6 +169,10 @@ func tick(delta: float, collision_targets: Array = []) -> void:
 			first_progress = progress_on_segment
 			first_position = closest_point
 
+	var actual_travel_distance := start_position.distance_to(first_position if first_target != null else end_position)
+	if not is_returning:
+		travelled_distance += actual_travel_distance
+
 	if first_target != null:
 		position = first_position
 		impact_target = first_target
@@ -162,7 +180,7 @@ func tick(delta: float, collision_targets: Array = []) -> void:
 		hit_targets.append(first_target)
 		if behavior == "pierce":
 			pierce_hit_count += 1
-			if pierce_remaining > 0:
+			if pierce_remaining > 0 and travelled_distance < max_travel_distance - 0.01:
 				pierce_remaining -= 1
 				alive = true
 			else:
@@ -180,6 +198,8 @@ func tick(delta: float, collision_targets: Array = []) -> void:
 	position = end_position
 	if direction.length_squared() > 0.001:
 		rotation = direction.angle() + PI * 0.5
+	if not is_returning and travelled_distance >= max_travel_distance - 0.01:
+		alive = false
 	if is_returning and return_age >= return_duration:
 		alive = false
 	queue_redraw()

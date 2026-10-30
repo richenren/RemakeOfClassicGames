@@ -18,7 +18,8 @@ const PLAYER_WALK_FRAME_SIZE := Vector2(48.0, 64.0)
 const PLAYER_WALK_DRAW_SIZE := Vector2(52.0, 72.0)
 const PLAYER_DRAW_SIZE := Vector2(52.0, 72.0)
 const PLAYER_DEATH_DRAW_SIZE := Vector2(58.0, 48.0)
-const CAST_DURATION := 0.46
+const CAST_DURATION := 0.40
+const CAST_TALISMAN_REACH := 7.0
 const PLAYER_CAST_FRAMES = [0, 1, 2, 3, 4, 5]
 
 # Idle/attack/hit currently use the approved directional stills. Walking uses four dedicated
@@ -242,35 +243,30 @@ func _update_animation(delta: float) -> void:
 
 
 func _draw_cast_pose() -> void:
-	# Cosmetic directional casting pose layered over the approved back-sword artwork.
+	# Keep the seal close to the palm and body silhouette. The character artwork already
+	# contains its arm; drawing another long arm here created a detached torch-like shape.
 	var progress := 1.0 - clampf(cast_animation_timer / CAST_DURATION, 0.0, 1.0)
 	var direction := cast_direction.normalized()
-	var shoulder := Vector2(direction.x * 5.0, -8.0)
-	var reach := lerpf(8.0, 19.0, smoothstep(0.12, 0.58, progress))
-	var hand := shoulder + direction * reach + Vector2(0.0, -1.0)
-	var glow := sin(progress * PI)
-	var glow_color := Color(1.0, 0.62, 0.20, 0.20 + glow * 0.38)
-	draw_line(shoulder, hand - direction * 3.0, Color("#241b18"), 7.0, true)
-	draw_line(shoulder + Vector2(0.0, -1.0), hand - direction * 4.0, Color("#8f6336", 0.95), 2.2, true)
-	draw_circle(hand, 2.7, Color("#d6b58d"))
-	draw_circle(hand, 1.4, Color("#f0d7ad"))
-	draw_circle(hand + direction * 3.0, 5.0 + glow * 4.0, glow_color)
-	var paper_center := hand + direction * 5.0
-	var paper_angle := direction.angle() + PI * 0.5
-	draw_set_transform(paper_center, paper_angle, Vector2.ONE)
-	draw_rect(Rect2(-2.8, -4.6, 5.6, 9.2), Color("#e9d4a0", 0.96))
-	draw_rect(Rect2(-2.8, -4.6, 5.6, 9.2), Color("#9b392b", 0.95), false, 0.8)
-	draw_line(Vector2(0.0, -2.8), Vector2(0.0, 2.8), Color("#a22d26"), 0.9, true)
-	draw_line(Vector2(-1.1, -0.8), Vector2(1.1, 0.9), Color("#a22d26"), 0.8, true)
+	var side := Vector2(-direction.y, direction.x)
+	var hand_anchor := direction * 4.0 + side * 5.0 + Vector2(0.0, -5.0)
+	var reach := lerpf(1.5, CAST_TALISMAN_REACH, smoothstep(0.08, 0.62, progress))
+	var talisman_center := hand_anchor + direction * reach
+	var pulse := sin(progress * PI)
+	var paper_alpha := 0.86 - progress * 0.12
+
+	# A small paper seal and a restrained warm glint read as a hand-held talisman,
+	# not a flame, torch or extra limb.
+	draw_circle(talisman_center, 4.2 + pulse * 1.4, Color(0.88, 0.61, 0.25, 0.035 + pulse * 0.10))
+	draw_set_transform(talisman_center, direction.angle() + PI * 0.5, Vector2.ONE)
+	draw_rect(Rect2(-2.0, -3.5, 4.0, 7.0), Color("#e7d4a6", paper_alpha))
+	draw_rect(Rect2(-2.0, -3.5, 4.0, 7.0), Color("#8f382d", 0.92), false, 0.7)
+	draw_line(Vector2(0.0, -2.1), Vector2(0.0, 2.1), Color("#a22d26", 0.92), 0.7, true)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	if progress > 0.16:
-		var ring_radius := 7.0 + glow * 5.0
-		draw_arc(paper_center, ring_radius, -0.85, 1.1, 20, Color("#ffd27b", 0.78 * glow), 1.25, true)
-		draw_arc(paper_center, ring_radius + 3.0, 2.2, 3.7, 18, Color("#f08b36", 0.46 * glow), 0.9, true)
-		for spark_index in range(3):
-			var spark_angle := progress * 7.0 + float(spark_index) * TAU / 3.0
-			var spark_pos := paper_center + Vector2(cos(spark_angle), sin(spark_angle)) * (ring_radius + 3.0)
-			draw_circle(spark_pos, 0.8 + glow * 0.5, Color("#ffe9b0", 0.8 * glow))
+
+	if progress > 0.18:
+		var arc_radius := 7.0 + pulse * 1.5
+		draw_arc(talisman_center, arc_radius, direction.angle() - 0.72, direction.angle() + 0.72, 12, Color("#e3bd75", 0.48 * pulse), 1.0, true)
+		draw_circle(talisman_center + direction * 5.0, 1.0, Color("#ffe4a6", 0.62 * pulse))
 
 
 func take_damage(amount: float) -> void:

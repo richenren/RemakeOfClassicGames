@@ -28,6 +28,13 @@ var active_skill_base_cooldown: float = 12.0
 var active_skill_effect_time: float = 0.0
 const ACTIVE_SKILL_EFFECT_DURATION := 0.34
 const ACTIVE_SKILL_RADIUS := 155.0
+const BASIC_ATTACK_RANGE := 420.0
+const AUTO_SKILL_RANGE := 460.0
+const BASIC_PROJECTILE_MAX_RANGE := 500.0
+const AUTO_SKILL_PROJECTILE_MAX_RANGE := 540.0
+const CHAIN_HOP_RANGE := 150.0
+const MAX_CHAIN_DISTANCE_FROM_PLAYER := 520.0
+const SECONDARY_CHASE_RANGE := 180.0
 const MAX_AUTO_SKILL_SLOTS := 4
 const MAX_ARTIFACT_SLOTS := 3
 const MIN_PRIMARY_BREAKTHROUGH_PLAYER_LEVEL := 6
@@ -373,7 +380,7 @@ func spawn_enemy(kind: String = "walker") -> void:
 func _auto_attack() -> void:
 	# Once the boss is within attack range, basic attacks help finish the encounter
 	# instead of being swallowed by the nearest crowd member.
-	var target = _find_combat_target(player.position, 620.0)
+	var target = _find_combat_target(player.position, BASIC_ATTACK_RANGE)
 	if target == null:
 		return
 
@@ -385,6 +392,7 @@ func _auto_attack() -> void:
 	var direction: Vector2 = (target.position - player.position).normalized()
 	player.trigger_attack(direction)
 	projectile.position = player.position + direction * 18.0
+	projectile.max_travel_distance = BASIC_PROJECTILE_MAX_RANGE
 	add_child(projectile)
 	projectiles.append(projectile)
 	player.queue_redraw()
@@ -1156,6 +1164,21 @@ func _find_nearest_targets(origin: Vector2, max_distance: float, limit: int) -> 
 	return targets
 
 
+func _find_nearest_chain_target(origin: Vector2, max_hop_distance: float, excluded: Array = []):
+	var nearest = null
+	var best_distance := max_hop_distance
+	for enemy in enemies:
+		if not is_instance_valid(enemy) or enemy.hp <= 0.0 or excluded.has(enemy):
+			continue
+		if player.position.distance_to(enemy.position) > MAX_CHAIN_DISTANCE_FROM_PLAYER:
+			continue
+		var distance: float = origin.distance_to(enemy.position)
+		if distance < best_distance:
+			best_distance = distance
+			nearest = enemy
+	return nearest
+
+
 func _spawn_skill_projectile(target, skill_id: String, damage: float):
 	var projectile = PROJECTILE_SCRIPT.new()
 	projectile.setup(target, damage, skill_id)
@@ -1165,6 +1188,7 @@ func _spawn_skill_projectile(target, skill_id: String, damage: float):
 	var direction: Vector2 = (target.position - player.position).normalized()
 	player.facing = direction
 	projectile.position = player.position + direction * 18.0
+	projectile.max_travel_distance = AUTO_SKILL_PROJECTILE_MAX_RANGE
 	add_child(projectile)
 	projectiles.append(projectile)
 	player.queue_redraw()
@@ -1176,7 +1200,7 @@ func _tick_combat_skills(delta: float) -> void:
 		skill_cooldowns[skill_id] = maxf(0.0, float(skill_cooldowns.get(skill_id, 0.0)) - delta)
 		if float(skill_cooldowns[skill_id]) > 0.0:
 			continue
-		var target = _find_combat_target(player.position, 700.0)
+		var target = _find_combat_target(player.position, AUTO_SKILL_RANGE)
 		if target == null:
 			skill_cooldowns[skill_id] = 0.25
 			continue
@@ -1184,6 +1208,10 @@ func _tick_combat_skills(delta: float) -> void:
 
 
 func _cast_auto_skill(skill_id: String, target) -> void:
+	if not is_instance_valid(target) or target.hp <= 0.0:
+		return
+	if player.position.distance_to(target.position) > AUTO_SKILL_RANGE:
+		return
 	var skill_data: Dictionary = skills[skill_id]
 	var skill_level := int(skill_data.get("level", 1))
 	var branch := str(skill_data.get("branch", ""))
@@ -1196,7 +1224,7 @@ func _cast_auto_skill(skill_id: String, target) -> void:
 	match skill_id:
 		"fire_talisman":
 			var target_count := 2 if branch == "spread" else 1
-			var targets := _find_nearest_targets(player.position, 700.0, target_count)
+			var targets := _find_nearest_targets(player.position, AUTO_SKILL_RANGE, target_count)
 			for i in range(targets.size()):
 				var fireball = _spawn_skill_projectile(targets[i], skill_id, damage * (0.78 if i > 0 else 1.0))
 				fireball.splash_radius = 46.0 + float(skill_level - 1) * 2.0
@@ -1450,7 +1478,7 @@ func _resolve_projectile_hit(projectile) -> void:
 		"peachwood_sword":
 			target.take_damage(damage)
 			if branch == "chase" and bool(projectile.allow_secondary_chase):
-				var chase_target = _find_nearest_enemy(target.position, 240.0, [target])
+				var chase_target = _find_nearest_chain_target(target.position, SECONDARY_CHASE_RANGE, [target])
 				if chase_target != null:
 					var chase_projectile = _spawn_skill_projectile(chase_target, skill_id, damage * 0.52)
 					chase_projectile.position = target.position
@@ -1471,7 +1499,7 @@ func _apply_chain_damage(origin_enemy, damage: float, max_targets: int, chain_st
 		return
 	var hit_targets: Array = [origin_enemy]
 	for i in range(max_targets):
-		var next_target = _find_nearest_enemy(origin_enemy.position, 190.0, hit_targets)
+		var next_target = _find_nearest_chain_target(origin_enemy.position, CHAIN_HOP_RANGE, hit_targets)
 		if next_target == null:
 			break
 		next_target.take_damage(damage)
@@ -1512,7 +1540,7 @@ func _tick_fire_zones(delta: float) -> void:
 	if skills.has("fire_talisman"):
 		fire_zone_timer -= delta
 		if fire_zone_timer <= 0.0:
-			var target = _find_combat_target(player.position, 620.0)
+			var target = _find_combat_target(player.position, AUTO_SKILL_RANGE)
 			if target != null:
 				var skill_data: Dictionary = skills["fire_talisman"]
 				var level := int(skill_data.get("level", 1))
