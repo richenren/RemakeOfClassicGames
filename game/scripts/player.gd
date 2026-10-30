@@ -138,6 +138,20 @@ static func cast_element_for_skill(skill_id: String) -> String:
 			return "neutral"
 
 
+func _cast_hand_anchor_local(direction: Vector2) -> Vector2:
+	# The seal sits at the leading hand for the selected four-way facing.
+	if absf(direction.x) >= absf(direction.y) * 1.05:
+		return Vector2(signf(direction.x) * 8.0, -6.5)
+	if direction.y >= 0.0:
+		return Vector2(7.0, -2.5)
+	return Vector2(-7.0, -8.0)
+
+
+func cast_hand_world_position(direction: Vector2) -> Vector2:
+	var aim := direction.normalized() if direction.length_squared() > 0.001 else facing.normalized()
+	return global_position + _cast_hand_anchor_local(aim) + aim * CAST_TALISMAN_REACH
+
+
 func trigger_cast(direction: Vector2, duration: float = CAST_DURATION, element: String = "neutral") -> void:
 	if direction.length_squared() > 0.001:
 		cast_direction = direction.normalized()
@@ -264,19 +278,22 @@ func _draw_cast_pose() -> void:
 	var progress := 1.0 - clampf(cast_animation_timer / CAST_DURATION, 0.0, 1.0)
 	var direction := cast_direction.normalized()
 	var side := Vector2(-direction.y, direction.x)
-	var hand_anchor := direction * 4.0 + side * 5.0 + Vector2(0.0, -5.0)
-	var reach := lerpf(1.5, CAST_TALISMAN_REACH, smoothstep(0.08, 0.62, progress))
+	var hand_anchor := _cast_hand_anchor_local(direction)
+	var reach := lerpf(1.0, CAST_TALISMAN_REACH, smoothstep(0.08, 0.62, progress))
 	var talisman_center := hand_anchor + direction * reach
 	var pulse := sin(progress * PI)
-	var paper_alpha := 0.86 - progress * 0.12
+	var paper_alpha := 0.9 - progress * 0.08
 
-	# A small paper seal and a restrained warm glint read as a hand-held talisman,
-	# not a flame, torch or extra limb.
-	draw_circle(talisman_center, 4.2 + pulse * 1.4, Color(0.88, 0.61, 0.25, 0.035 + pulse * 0.10))
+	# Keep the seal visibly attached to the leading hand; no detached arm/torch geometry.
+	draw_circle(talisman_center, 5.0 + pulse * 2.0, Color(0.88, 0.61, 0.25, 0.06 + pulse * 0.14))
 	draw_set_transform(talisman_center, direction.angle() + PI * 0.5, Vector2.ONE)
-	draw_rect(Rect2(-2.0, -3.5, 4.0, 7.0), Color("#e7d4a6", paper_alpha))
-	draw_rect(Rect2(-2.0, -3.5, 4.0, 7.0), Color("#8f382d", 0.92), false, 0.7)
-	draw_line(Vector2(0.0, -2.1), Vector2(0.0, 2.1), Color("#a22d26", 0.92), 0.7, true)
+	draw_rect(Rect2(-2.6, -4.8, 5.2, 9.6), Color("#e7d4a6", paper_alpha))
+	draw_rect(Rect2(-2.6, -4.8, 5.2, 9.6), Color("#8f382d", 0.96), false, 0.85)
+	if cast_element == "lightning":
+		var seal_bolt := PackedVector2Array([Vector2(-0.8, -3.0), Vector2(0.8, -1.0), Vector2(-0.7, 0.7), Vector2(0.8, 3.0)])
+		draw_polyline(seal_bolt, Color("#7043bd", 0.98), 1.15, true)
+	else:
+		draw_line(Vector2(0.0, -3.0), Vector2(0.0, 3.0), Color("#a22d26", 0.92), 0.85, true)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if progress > 0.18:
@@ -308,10 +325,12 @@ func _draw_cast_element_effect(center: Vector2, direction: Vector2, progress: fl
 				draw_circle(center + offset, 1.0 + pulse * 0.45, ember)
 				draw_circle(center + offset - direction * 1.2, 0.55, Color("#ffe7a6", 0.76 * pulse))
 		"lightning":
-			var electric := Color("#a98aff", 0.86 * pulse)
-			var bolt := PackedVector2Array([center - direction * 4.0 - side * 2.0, center - direction * 1.0 + side * 1.5, center + direction * 1.0 - side * 1.0, center + direction * 4.0 + side * 1.8])
-			draw_polyline(bolt, electric, 1.5, true)
-			draw_circle(center + direction * 4.0 + side * 1.8, 1.0, Color("#f0eaff", 0.92 * pulse))
+			var electric := Color("#a98aff", 0.9 * pulse)
+			var bolt := PackedVector2Array([center - direction * 6.0 - side * 2.5, center - direction * 2.0 + side * 2.0, center + direction * 1.0 - side * 1.8, center + direction * 5.0 + side * 2.5])
+			draw_arc(center, 8.0 + pulse * 2.0, direction.angle() - 1.05, direction.angle() + 1.05, 18, Color("#9d70ff", 0.72 * pulse), 1.45, true)
+			draw_polyline(bolt, electric, 2.0, true)
+			draw_circle(center + direction * 5.0 + side * 2.5, 1.35, Color("#f5efff", 0.98 * pulse))
+			draw_circle(center - direction * 5.0 - side * 1.5, 1.0, Color("#d4c0ff", 0.86 * pulse))
 		_:
 			pass
 

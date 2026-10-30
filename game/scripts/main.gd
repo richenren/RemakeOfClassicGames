@@ -1323,13 +1323,14 @@ func _cast_thunder_strike(target, damage: float, branch: String, evolved: String
 	if was_wet:
 		strike_target.wet_timer = 0.0
 	var direction: Vector2 = (strike_target.position - player.position).normalized()
-	_spawn_chain_effect(player.position + direction * 10.0, strike_target.position, 0.16)
+	var hand_origin: Vector2 = player.cast_hand_world_position(direction)
+	_spawn_chain_effect(hand_origin, strike_target.position, 0.22)
 	if evolved == "five_thunder":
-		_spawn_skill_effect("five_thunder", strike_target.position, 44.0, 0.36)
+		_spawn_skill_effect("five_thunder", strike_target.position, 48.0, 0.4)
 		if _artifact_level("thunder_seal") > 0:
 			_spawn_skill_effect("thunder_seal", player.position, 42.0, 0.32)
 	else:
-		_spawn_skill_effect("lightning", strike_target.position, 32.0, 0.25)
+		_spawn_skill_effect("lightning", strike_target.position, 38.0, 0.32)
 	if _cultivation_level("thunder") > 0:
 		_spawn_cultivation_feedback("thunder", strike_target.position, 26.0)
 	var chain_count := 0
@@ -1757,12 +1758,18 @@ func _draw_skill_effects() -> void:
 					var leaf_center := center + direction * radius * 0.64 + tangent * 5.0
 					draw_colored_polygon(PackedVector2Array([leaf_center - tangent * 3.0, leaf_center + direction * 5.0, leaf_center + tangent * 3.0]), Color(0.36, 0.82, 0.42, life * 0.78))
 			"lightning":
-				draw_circle(center, radius * 0.58, Color(0.42, 0.14, 0.86, life * 0.25))
-				draw_arc(center, radius, 0.0, TAU, 36, Color(0.67, 0.36, 1.0, life * 0.86), 2.5)
-				draw_arc(center, radius * 0.56, 0.0, TAU, 28, Color(0.91, 0.78, 1.0, life * 0.82), 1.6)
-				_draw_lightning_bolt(center + Vector2(-radius * 0.28, -radius * 1.15), center + Vector2(-radius * 0.06, radius * 0.12), life, 0.7)
-				_draw_lightning_bolt(center + Vector2(radius * 0.26, -radius * 1.08), center + Vector2(radius * 0.08, radius * 0.12), life, 2.1)
-				_draw_lightning_bolt(center + Vector2(-radius * 0.05, -radius * 0.7), center + Vector2(radius * 0.18, radius * 0.16), life * 0.8, 3.8)
+				var impact_radius := radius * (0.34 + progress * 0.66)
+				draw_circle(center, impact_radius * 0.52, Color("#713bd0", life * 0.24))
+				draw_arc(center, impact_radius, 0.0, TAU, 40, Color("#9c6cff", life * 0.94), 3.0, true)
+				draw_arc(center, impact_radius * 0.58, 0.0, TAU, 32, Color("#e7d9ff", life * 0.9), 1.8, true)
+				draw_circle(center, radius * 0.12, Color("#f4edff", life * 0.76))
+				for spark_index in range(6):
+					var spark_angle := TAU * float(spark_index) / 6.0 + elapsed_seconds * 2.8
+					var spark_direction := Vector2(cos(spark_angle), sin(spark_angle))
+					var spark_start := center + spark_direction * impact_radius * 0.48
+					var spark_end := center + spark_direction * impact_radius * 0.82
+					draw_line(spark_start, spark_end, Color("#b58cff", life * 0.92), 2.2, true)
+					draw_line(spark_start.lerp(spark_end, 0.25), spark_end, Color("#f2eaff", life * 0.86), 0.9, true)
 			"lightning_chain", "metal_chain", "wood_chain":
 				var chain_start: Vector2 = effect.get("from", center)
 				var chain_end: Vector2 = effect.get("to", center)
@@ -1773,10 +1780,22 @@ func _draw_skill_effects() -> void:
 					draw_line(chain_start, chain_end, Color(0.14, 0.52, 0.29, life * 0.78), 4.0, true)
 					draw_line(chain_start, chain_end, Color(0.72, 0.96, 0.61, life), 1.4, true)
 				else:
-					_draw_lightning_bolt(chain_start, chain_end, life, progress * 4.0)
-					var chain_mid := chain_start.lerp(chain_end, 0.55)
-					var chain_side := Vector2(-(chain_end - chain_start).y, (chain_end - chain_start).x).normalized()
-					_draw_lightning_bolt(chain_mid, chain_mid + chain_side * minf(20.0, radius * 0.12), life * 0.58, progress * 7.0)
+					var chain_alpha := minf(smoothstep(0.0, 0.2, progress), clampf(life / 0.24, 0.0, 1.0))
+					var chain_progress := smoothstep(0.0, 0.82, progress)
+					var visible_end := chain_start.lerp(chain_end, chain_progress)
+					if visible_end.distance_squared_to(chain_start) > 4.0:
+						_draw_lightning_bolt(chain_start, visible_end, chain_alpha, progress * 5.0)
+						var chain_axis := visible_end - chain_start
+						var chain_side := Vector2(-chain_axis.y, chain_axis.x).normalized()
+						for branch_index in range(2):
+							var branch_t := 0.34 if branch_index == 0 else 0.72
+							var branch_start := chain_start.lerp(visible_end, branch_t)
+							var branch_sign := -1.0 if branch_index == 0 else 1.0
+							var branch_length := minf(28.0, radius * 0.14)
+							var branch_end := branch_start + chain_side * branch_sign * branch_length
+							_draw_lightning_bolt(branch_start, branch_end, chain_alpha * 0.66, progress * 7.0 + float(branch_index) * 2.3)
+						draw_circle(visible_end, 3.6, Color("#a978ff", chain_alpha * 0.82))
+						draw_circle(visible_end, 1.6, Color("#f4edff", chain_alpha))
 			"talisman_seal", "thunder_seal", "sword_manual", "body_jade", "cold_relic", "formation_seal":
 				_draw_artifact_sigil(center, radius, life, kind)
 			"cultivation_metal", "cultivation_wood", "cultivation_water", "cultivation_fire", "cultivation_earth", "cultivation_thunder":
@@ -1923,19 +1942,23 @@ func _draw_water_formation_effect(center: Vector2, radius: float, life: float, p
 
 func _draw_lightning_bolt(start_position: Vector2, end_position: Vector2, alpha: float, seed_offset: float = 0.0) -> void:
 	var axis := end_position - start_position
-	if axis.length_squared() < 1.0:
+	if axis.length_squared() < 1.0 or alpha <= 0.01:
 		return
 	var normal := Vector2(-axis.y, axis.x).normalized()
 	var points: Array[Vector2] = [start_position]
-	for i in range(1, 6):
-		var t := float(i) / 6.0
-		var jitter := sin(float(i) * 8.7 + seed_offset + elapsed_seconds * 35.0) * minf(12.0, axis.length() * 0.07)
+	var jitter_limit := minf(19.0, axis.length() * 0.105)
+	for i in range(1, 8):
+		var t := float(i) / 8.0
+		var envelope := sin(t * PI)
+		var wave_a := sin(float(i) * 12.989 + seed_offset + elapsed_seconds * 34.0)
+		var wave_b := cos(float(i) * 5.173 - seed_offset * 0.73 + elapsed_seconds * 22.0)
+		var jitter := (wave_a * 0.68 + wave_b * 0.32) * jitter_limit * envelope
 		points.append(start_position + axis * t + normal * jitter)
 	points.append(end_position)
 	for i in range(points.size() - 1):
-		draw_line(points[i], points[i + 1], Color(0.34, 0.10, 0.78, alpha * 0.62), 6.0, true)
-		draw_line(points[i], points[i + 1], Color(0.72, 0.46, 1.0, alpha * 0.96), 2.7, true)
-		draw_line(points[i], points[i + 1], Color(0.98, 0.95, 1.0, alpha), 1.1, true)
+		draw_line(points[i], points[i + 1], Color("#6030b7", alpha * 0.34), 10.5, true)
+		draw_line(points[i], points[i + 1], Color("#a46aff", alpha * 0.98), 4.2, true)
+		draw_line(points[i], points[i + 1], Color("#f6efff", alpha), 1.55, true)
 
 
 func _draw_fire_zones() -> void:
