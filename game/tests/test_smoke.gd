@@ -108,7 +108,7 @@ func _test_sprite_assets(main: Variant) -> void:
 	_check(front != null and side_left != null and back != null and side_right != null, "主角四向背剑 AtlasTexture 资源全部可加载")
 	_check(front.get_size() == Vector2(48.0, 86.0) and side_left.get_size() == Vector2(48.0, 86.0) and back.get_size() == Vector2(48.0, 86.0) and side_right.get_size() == Vector2(48.0, 86.0), "高清主角四向视图使用统一 48×86 区域")
 	_check(main.player.PLAYER_IDLE_TEXTURE == front and main.player.PLAYER_WALK_TEXTURE == side_right, "主角运行时引用新背剑视图，而非旧 SVG")
-	_check(main.player.PLAYER_DRAW_SIZE.x >= 70.0 and main.player.PLAYER_DRAW_SIZE.x <= 82.0 and main.player.PLAYER_DRAW_SIZE.y >= 130.0 and main.player.PLAYER_DRAW_SIZE.y <= 145.0, "主角整体比例适当缩小，避免遮挡场景挂物")
+	_check(main.player.PLAYER_DRAW_SIZE.x >= 50.0 and main.player.PLAYER_DRAW_SIZE.x <= 54.0 and main.player.PLAYER_DRAW_SIZE.y >= 70.0 and main.player.PLAYER_DRAW_SIZE.y <= 74.0, "主角绘制尺寸略小于普通行尸且保持统一比例")
 	main.player.facing = Vector2.DOWN
 	_check(main.player._player_sprite_texture() == front, "向下朝向选择主角正面")
 	main.player.facing = Vector2.LEFT
