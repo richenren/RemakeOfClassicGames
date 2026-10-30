@@ -740,6 +740,7 @@ func _test_combat_visuals(main: Variant) -> void:
 		old_projectile.queue_free()
 	main.projectiles.clear()
 	main.skills.clear()
+	main.skill_effects.clear()
 	main.skills["thunder_talisman"] = {"level": 1, "branch": "chain", "evolved": ""}
 	temp_enemy.hp = temp_enemy.max_hp
 	var projectiles_before_thunder: int = main.projectiles.size()
