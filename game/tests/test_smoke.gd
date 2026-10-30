@@ -546,10 +546,16 @@ func _test_player_animation_frames() -> void:
 	player.animation_frame_index = 0
 	player.animation_frame_elapsed = 0.0
 	player.is_moving = true
+	player.velocity = Vector2.RIGHT * player.move_speed
+	var fast_walk_frame_duration := player._animation_frame_duration("walk")
+	player.velocity = Vector2.RIGHT * player.move_speed * 0.5
+	var slow_walk_frame_duration := player._animation_frame_duration("walk")
+	_check(fast_walk_frame_duration < slow_walk_frame_duration, "行走帧播放速度随移动速度变化")
+	player.velocity = Vector2.RIGHT * player.move_speed
 	player._update_animation(0.01)
 	_check(player.animation_state == "walk", "移动输入切换到四向逐帧行走动画")
-	player._update_animation(0.12)
-	_check(player.animation_frame_index == 1, "行走状态按帧时长推进真实步态帧")
+	player._update_animation(0.14)
+	_check(player.animation_frame_index == 1, "行走动画在最高移动速度下与步态周期同步")
 	player.trigger_attack(Vector2.RIGHT)
 	player._update_animation(0.01)
 	_check(player.animation_state == "attack", "自动攻击触发独立符箓攻击动画")
