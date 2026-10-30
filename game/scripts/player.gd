@@ -293,7 +293,7 @@ func _draw_cast_pose() -> void:
 	draw_rect(Rect2(-2.6, -4.8, 5.2, 9.6), Color("#8f382d", 0.96), false, 0.85)
 	if cast_element == "lightning":
 		var seal_bolt := PackedVector2Array([Vector2(-0.8, -3.0), Vector2(0.8, -1.0), Vector2(-0.7, 0.7), Vector2(0.8, 3.0)])
-		draw_polyline(seal_bolt, Color("#7043bd", 0.98), 1.15, true)
+		draw_polyline(seal_bolt, Color("#dcefff", 0.98), 1.15, true)
 	else:
 		draw_line(Vector2(0.0, -3.0), Vector2(0.0, 3.0), Color("#a22d26", 0.92), 0.85, true)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
@@ -327,12 +327,12 @@ func _draw_cast_element_effect(center: Vector2, direction: Vector2, progress: fl
 				draw_circle(center + offset, 1.0 + pulse * 0.45, ember)
 				draw_circle(center + offset - direction * 1.2, 0.55, Color("#ffe7a6", 0.76 * pulse))
 		"lightning":
-			var electric := Color("#a98aff", 0.9 * pulse)
+			var electric := Color("#e8f6ff", 0.94 * pulse)
 			var bolt := PackedVector2Array([center - direction * 6.0 - side * 2.5, center - direction * 2.0 + side * 2.0, center + direction * 1.0 - side * 1.8, center + direction * 5.0 + side * 2.5])
-			draw_arc(center, 8.0 + pulse * 2.0, direction.angle() - 1.05, direction.angle() + 1.05, 18, Color("#9d70ff", 0.72 * pulse), 1.45, true)
+			draw_arc(center, 8.0 + pulse * 2.0, direction.angle() - 1.05, direction.angle() + 1.05, 18, Color("#bfd9e8", 0.82 * pulse), 1.45, true)
 			draw_polyline(bolt, electric, 2.0, true)
-			draw_circle(center + direction * 5.0 + side * 2.5, 1.35, Color("#f5efff", 0.98 * pulse))
-			draw_circle(center - direction * 5.0 - side * 1.5, 1.0, Color("#d4c0ff", 0.86 * pulse))
+			draw_circle(center + direction * 5.0 + side * 2.5, 1.35, Color("#ffffff", 1.0 * pulse))
+			draw_circle(center - direction * 5.0 - side * 1.5, 1.0, Color("#dcefff", 0.92 * pulse))
 		_:
 			pass
 
