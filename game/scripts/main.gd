@@ -1787,7 +1787,7 @@ func _draw_skill_effects() -> void:
 						# One continuous jagged trunk only. Do not draw lateral branches on the primary bolt.
 						_draw_lightning_bolt(chain_start, visible_end, chain_alpha, progress * 5.0)
 						draw_circle(visible_end, 3.6, Color("#dcefff", chain_alpha * 0.92))
-						draw_circle(visible_end, 1.6, Color("#f4edff", chain_alpha))
+						draw_circle(visible_end, 1.6, Color("#ffffff", chain_alpha))
 			"talisman_seal", "thunder_seal", "sword_manual", "body_jade", "cold_relic", "formation_seal":
 				_draw_artifact_sigil(center, radius, life, kind)
 			"cultivation_metal", "cultivation_wood", "cultivation_water", "cultivation_fire", "cultivation_earth", "cultivation_thunder":
