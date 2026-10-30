@@ -2056,8 +2056,6 @@ func _draw_support_array(center: Vector2, radius: float, life: float, progress: 
 
 func _ground_effect_cells(effect_kind: String) -> PackedVector2Array:
 	match effect_kind:
-		"fire":
-			return PackedVector2Array([Vector2(-1.0, -1.0), Vector2(0.0, -1.0), Vector2(1.0, -1.0), Vector2(-1.0, 0.0), Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, 1.0)])
 		"earth":
 			return PackedVector2Array([Vector2(-1.0, 0.0), Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, -1.0), Vector2(0.0, 1.0)])
 		_:
@@ -2140,30 +2138,45 @@ func _draw_earth_spikes(center: Vector2, radius: float, life: float, progress: f
 			var debris := PackedVector2Array([debris_center + Vector2(-2.0, 1.0), debris_center + Vector2(2.8, -1.2), debris_center + Vector2(1.0, 2.2)])
 			draw_colored_polygon(debris, Color(0.45, 0.38, 0.28, life * 0.86))
 
-func _draw_fire_ground_cell(center: Vector2, cell_size: Vector2, cell_index: int, alpha: float) -> void:
-	var tile := _ground_tile_polygon(center, cell_size, cell_index)
-	draw_colored_polygon(tile, Color(0.08, 0.025, 0.012, alpha * 0.78))
-	_draw_ground_tile_outline(tile, Color(0.58, 0.12, 0.025, alpha * 0.78), 1.25)
-	var inner_tile := _ground_tile_polygon(center + Vector2(0.0, 1.0), cell_size * 0.76, cell_index + 1)
-	draw_colored_polygon(inner_tile, Color(0.25, 0.035, 0.008, alpha * 0.52))
-	var phase := elapsed_seconds * 7.4 + float(cell_index) * 1.63
-	var crack_start := center + Vector2(-cell_size.x * 0.34, cell_size.y * 0.22)
-	var crack_joint := center + Vector2(-cell_size.x * 0.02, -cell_size.y * 0.08)
-	var crack_end := center + Vector2(cell_size.x * 0.31, cell_size.y * 0.2)
-	draw_line(crack_start, crack_joint, Color(0.78, 0.16, 0.018, alpha * 0.78), 1.8, true)
-	draw_line(crack_joint, crack_end, Color(1.0, 0.39, 0.035, alpha * 0.82), 1.4, true)
-	var flame_count := 1 if cell_index % 2 == 0 else 2
-	for flame_index in range(flame_count):
-		var base := center + Vector2((float(flame_index) - float(flame_count - 1) * 0.5) * cell_size.x * 0.34, cell_size.y * 0.12)
-		var flame_height := cell_size.y * (0.36 + 0.18 * (0.5 + 0.5 * sin(phase + float(flame_index))))
-		var tip := base + Vector2(1.8 * sin(phase + float(flame_index) * 1.7), -flame_height)
-		var flame_width := 2.7 + 0.7 * sin(phase * 0.8 + float(flame_index))
-		draw_colored_polygon(PackedVector2Array([base + Vector2(-flame_width, 2.0), tip, base + Vector2(flame_width, 2.0)]), Color(1.0, 0.24, 0.025, alpha * 0.88))
-		draw_line(base + Vector2(0.0, 1.0), tip.lerp(base, 0.24), Color(1.0, 0.82, 0.32, alpha * 0.9), 1.1, true)
-	for ember_index in range(2):
-		var ember_phase := fposmod(elapsed_seconds * 0.72 + float(cell_index) * 0.19 + float(ember_index) * 0.43, 1.0)
-		var ember_position := center + Vector2(-cell_size.x * 0.22 + float(ember_index) * cell_size.x * 0.42, -cell_size.y * 0.14 - ember_phase * 8.0)
-		draw_circle(ember_position, 1.0 + (1.0 - ember_phase) * 0.7, Color(1.0, 0.7, 0.24, alpha * (1.0 - ember_phase) * 0.86))
+func _fire_field_outline(center: Vector2, half_extents: Vector2, phase: float, inset: float = 0.0) -> PackedVector2Array:
+	# One connected burn scar with a gently broken shoreline; no tile-shaped islands or cell borders.
+	var points := PackedVector2Array()
+	var safe_extents := Vector2(maxf(2.0, half_extents.x - inset), maxf(2.0, half_extents.y - inset * 0.72))
+	for point_index in range(64):
+		var angle := TAU * float(point_index) / 64.0
+		var radius_wave := 1.0 + 0.075 * sin(angle * 3.0 + phase * 0.32) + 0.042 * sin(angle * 7.0 - phase * 0.24) + 0.018 * sin(angle * 11.0 + phase * 0.18)
+		var height_wave := 1.0 + 0.025 * sin(angle * 2.0 + phase * 0.25)
+		points.append(center + Vector2(cos(angle) * safe_extents.x * radius_wave, sin(angle) * safe_extents.y * radius_wave * height_wave))
+	return points
+
+
+func _draw_fire_tongue(base: Vector2, flame_width: float, flame_height: float, phase: float, alpha: float) -> void:
+	# Layered, bent flame tongues are deliberately soft and uneven rather than repeated triangular markers.
+	var sway := sin(phase) * flame_width * 0.46
+	var tip := base + Vector2(sway, -flame_height)
+	var outer := PackedVector2Array([
+		base + Vector2(-flame_width, 2.0),
+		base + Vector2(-flame_width * 0.76, -flame_height * 0.28),
+		tip + Vector2(-flame_width * 0.2, flame_height * 0.16),
+		tip,
+		tip + Vector2(flame_width * 0.2, flame_height * 0.2),
+		base + Vector2(flame_width * 0.68, -flame_height * 0.34),
+		base + Vector2(flame_width, 2.0)
+	])
+	draw_colored_polygon(outer, Color(1.0, 0.19, 0.018, alpha * 0.82))
+	var core_width := flame_width * 0.43
+	var core_height := flame_height * 0.62
+	var core_tip := base + Vector2(sway * 0.72, -core_height)
+	var core := PackedVector2Array([
+		base + Vector2(-core_width, 1.0),
+		base + Vector2(-core_width * 0.52, -core_height * 0.28),
+		core_tip + Vector2(-0.7, 1.0),
+		core_tip + Vector2(0.8, 1.4),
+		base + Vector2(core_width, 1.0)
+	])
+	draw_colored_polygon(core, Color(1.0, 0.64, 0.13, alpha * 0.88))
+	draw_line(base + Vector2(0.0, 0.0), core_tip.lerp(base, 0.22), Color(1.0, 0.91, 0.48, alpha * 0.72), 0.9, true)
+
 
 func _draw_fire_zones() -> void:
 	for zone in fire_zones:
@@ -2172,13 +2185,61 @@ func _draw_fire_zones() -> void:
 		var duration := maxf(0.01, float(zone.get("duration", 3.0)))
 		var life := clampf(float(zone.get("time", 0.0)) / duration, 0.0, 1.0)
 		var fade := clampf(life * 1.35, 0.0, 1.0)
-		# A persistent fire patch occupies distinct floor cells, each with its own scorch and flame tongues.
-		var cell_size := Vector2(clampf(radius * 0.56, 38.0, 45.0), clampf(radius * 0.42, 27.0, 34.0))
-		var spacing := cell_size + Vector2(4.0, 4.0)
-		var cells := _ground_effect_cells("fire")
-		for i in range(cells.size()):
-			var cell_center := center + Vector2(cells[i].x * spacing.x, cells[i].y * spacing.y)
-			_draw_fire_ground_cell(cell_center, cell_size, i, fade)
+		var phase := elapsed_seconds * 0.48
+		var half_extents := Vector2(clampf(radius * 1.08, 76.0, 96.0), clampf(radius * 0.78, 54.0, 68.0))
+
+		# A continuous scorched patch with soft overlapping layers replaces the old seven-cell cross.
+		var shadow := _fire_field_outline(center + Vector2(0.0, 4.0), half_extents + Vector2(9.0, 7.0), phase * 0.7)
+		draw_colored_polygon(shadow, Color(0.012, 0.006, 0.004, fade * 0.52))
+		var scorch := _fire_field_outline(center, half_extents, phase)
+		draw_colored_polygon(scorch, Color(0.055, 0.018, 0.008, fade * 0.86))
+		var hot_ground := _fire_field_outline(center + Vector2(-2.0, 1.0), half_extents * 0.78, phase + 0.42, 2.0)
+		draw_colored_polygon(hot_ground, Color(0.23, 0.038, 0.008, fade * 0.5))
+		var heat_core := _fire_field_outline(center + Vector2(-4.0, -2.0), half_extents * 0.48, phase + 0.9, 1.5)
+		draw_colored_polygon(heat_core, Color(0.48, 0.075, 0.008, fade * 0.2))
+
+		# Irregular ember cracks branch through the same ground patch instead of repeating per tile.
+		var crack_paths := [
+			PackedVector2Array([Vector2(-0.82, -0.08), Vector2(-0.55, -0.02), Vector2(-0.34, -0.24), Vector2(-0.12, -0.18)]),
+			PackedVector2Array([Vector2(-0.38, 0.62), Vector2(-0.22, 0.32), Vector2(0.02, 0.22), Vector2(0.2, -0.02)]),
+			PackedVector2Array([Vector2(0.08, -0.68), Vector2(0.02, -0.42), Vector2(0.24, -0.22), Vector2(0.56, -0.18)]),
+			PackedVector2Array([Vector2(0.78, 0.18), Vector2(0.52, 0.12), Vector2(0.36, 0.34), Vector2(0.12, 0.42)]),
+			PackedVector2Array([Vector2(-0.72, -0.48), Vector2(-0.48, -0.34), Vector2(-0.42, -0.1)])
+		]
+		for crack_index in range(crack_paths.size()):
+			var crack_points := PackedVector2Array()
+			for local_point in crack_paths[crack_index]:
+				crack_points.append(center + Vector2(local_point.x * half_extents.x, local_point.y * half_extents.y))
+			draw_polyline(crack_points, Color(0.025, 0.008, 0.003, fade * 0.9), 2.0, true)
+			draw_polyline(crack_points, Color(0.92, 0.19, 0.018, fade * (0.36 + 0.12 * sin(elapsed_seconds * 4.0 + float(crack_index)))), 0.8, true)
+
+		# Several staggered flame clusters create a continuous burning bed, not a checkerboard.
+		var flame_positions := PackedVector2Array([
+			Vector2(-0.78, -0.12), Vector2(-0.62, 0.38), Vector2(-0.48, -0.48),
+			Vector2(-0.28, 0.02), Vector2(-0.12, -0.62), Vector2(0.08, 0.32),
+			Vector2(0.3, -0.24), Vector2(0.48, 0.48), Vector2(0.64, -0.42),
+			Vector2(0.8, 0.08), Vector2(0.02, 0.68)
+		])
+		for flame_index in range(flame_positions.size()):
+			var offset := flame_positions[flame_index]
+			var base := center + Vector2(offset.x * half_extents.x * 0.86, offset.y * half_extents.y * 0.76)
+			var flame_phase := elapsed_seconds * 7.2 + float(flame_index) * 1.47
+			var flame_height := 12.0 + 7.0 * (0.5 + 0.5 * sin(flame_phase))
+			var flame_width := 4.2 + 1.4 * (0.5 + 0.5 * sin(flame_phase * 0.73 + 0.8))
+			_draw_fire_tongue(base, flame_width, flame_height, flame_phase, fade)
+			if flame_index % 3 == 1:
+				var small_base := base + Vector2(6.0 * sin(flame_phase), 2.0)
+				_draw_fire_tongue(small_base, flame_width * 0.56, flame_height * 0.64, flame_phase + 1.1, fade * 0.78)
+
+		# Embers rise and fade across the whole patch; their positions are independent of any cell layout.
+		for ember_index in range(10):
+			var ember_phase := fposmod(elapsed_seconds * (0.52 + float(ember_index % 3) * 0.08) + float(ember_index) * 0.173, 1.0)
+			var ember_x := sin(elapsed_seconds * 0.63 + float(ember_index) * 2.17) * half_extents.x * 0.78
+			var ember_y := cos(float(ember_index) * 1.71) * half_extents.y * 0.5 - ember_phase * 17.0
+			var ember_position := center + Vector2(ember_x, ember_y)
+			var ember_alpha := fade * (1.0 - ember_phase) * 0.78
+			draw_circle(ember_position, 2.1, Color(1.0, 0.28, 0.025, ember_alpha * 0.22))
+			draw_circle(ember_position, 0.9 + (1.0 - ember_phase) * 0.55, Color(1.0, 0.72, 0.24, ember_alpha))
 
 
 func cast_active_skill() -> void:

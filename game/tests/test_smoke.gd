@@ -696,6 +696,13 @@ func _test_combat_visuals(main: Variant) -> void:
 	_check(main.fire_zones.size() == 1, "火符按固定间隔自动生成持续火焰区域")
 	_check(main.has_method("_draw_fire_zones") and main.has_method("_draw_water_field"), "火场与寒潮水域使用独立的持续效果绘制器")
 	var fire_cells: PackedVector2Array = main._ground_effect_cells("fire")
+	var fire_outline: PackedVector2Array = main._fire_field_outline(Vector2.ZERO, Vector2(82.0, 60.0), 0.0)
+	var fire_radius_min := 1.0e20
+	var fire_radius_max := -1.0e20
+	for fire_point in fire_outline:
+		var normalized_radius := Vector2(fire_point.x / 82.0, fire_point.y / 60.0).length()
+		fire_radius_min = minf(fire_radius_min, normalized_radius)
+		fire_radius_max = maxf(fire_radius_max, normalized_radius)
 	var water_cells: PackedVector2Array = main._ground_effect_cells("water")
 	var water_outline: PackedVector2Array = main._water_field_outline(Vector2.ZERO, Vector2(112.0, 56.0), 0.0)
 	var water_min_x := 1.0e20
@@ -710,7 +717,8 @@ func _test_combat_visuals(main: Variant) -> void:
 	var water_width := water_max_x - water_min_x
 	var water_height := water_max_y - water_min_y
 	var earth_cells: PackedVector2Array = main._ground_effect_cells("earth")
-	_check(fire_cells.size() == 7 and water_cells.is_empty() and water_outline.size() == 64 and water_width > water_height * 1.8, "火场保留七格布局，水域使用无格线的横向长方形连续水面")
+	_check(fire_cells.is_empty() and fire_outline.size() == 64 and fire_radius_max - fire_radius_min > 0.04, "火场使用单一不规则连续燃烧轮廓，不再依赖七格布局")
+	_check(water_cells.is_empty() and water_outline.size() == 64 and water_width > water_height * 1.8, "水域使用无格线的横向长方形连续水面")
 	_check(earth_cells.size() == 5, "土系地刺以敌人脚下为中心生成五格突刺布局")
 	_check(main.AUTO_SKILL_DEFS.has("earth_formation") and main.AUTO_SKILL_DEFS["earth_formation"].get("name", "") == "地刺", "土系保留内部技能 ID 并将显示名称调整为地刺")
 	_check(main.has_method("_draw_support_array"), "通用辅助阵拥有独立的金色几何阵纹绘制器")
