@@ -126,6 +126,13 @@
 
 ## 2026-10-30：主角四向八帧行走与比例校准
 
-- 新增 `player_taoist_walk_cycle_8f.png`，由四向行走参考图切分、去除透明留白并统一脚底锚点；4 行×8 列，行序为正面/左侧/背面/右侧。每帧均保留背剑轮廓、剑鞘和右肩附近的剑柄，不再使用旧四帧图集。
+- 新增四张独立方向图集 `player_taoist_walk_front_8f.png`、`player_taoist_walk_side_left_8f.png`、`player_taoist_walk_back_8f.png`、`player_taoist_walk_side_right_8f.png`，每张 1 行×8 列、每帧 48×64；去除透明留白并统一脚底锚点。四个方向均保留背剑轮廓、剑鞘和肩部剑柄。
 - `player.gd` 行走帧区域改为 48×64，完整循环 8 帧；待机与行走绘制尺寸统一为 52×72，普通行尸为 56×76，主角视觉上略小于普通行尸，切换行走时不再放大。
 - 旧 `player_taoist_walk_cycle.png` 保留作为回滚素材，不覆盖、不删除；本次不修改碰撞半径、移动速度、伤害或战斗逻辑。
+
+
+## 2026-10-30：背剑八帧素材实际接入
+
+- 由确认的四向行走设计图制作四张透明背景方向图集，每张 384×64（8 帧×48×64），分别对应正面、左侧、背面、右侧；Sword/sheath silhouette and shoulder hilt remain visible across all four directions.
+- 运行时代码按 facing 选择对应方向图集，不再依赖合并图集的行裁切；保留原有四向静态待机图和旧行走图集用于回滚。
+- 待机/行走尺寸统一为 52×72，普通行尸为 56×76；主角略小于普通行尸。无战斗逻辑、碰撞或移动速度变更。

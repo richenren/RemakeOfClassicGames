@@ -8,14 +8,19 @@ const PLAYER_BACK_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoi
 const PLAYER_SIDE_RIGHT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_side_right.tres")
 const PLAYER_IDLE_TEXTURE: Texture2D = PLAYER_FRONT_TEXTURE
 const PLAYER_WALK_TEXTURE: Texture2D = PLAYER_SIDE_RIGHT_TEXTURE
-const PLAYER_WALK_ATLAS: Texture2D = preload("res://assets/sprites/player_taoist_walk_cycle_8f.png")
+const PLAYER_WALK_ATLASES = [
+	preload("res://assets/sprites/player_taoist_walk_front_8f.png"),
+	preload("res://assets/sprites/player_taoist_walk_side_left_8f.png"),
+	preload("res://assets/sprites/player_taoist_walk_back_8f.png"),
+	preload("res://assets/sprites/player_taoist_walk_side_right_8f.png")
+]
 const PLAYER_WALK_FRAME_SIZE := Vector2(48.0, 64.0)
 const PLAYER_WALK_DRAW_SIZE := Vector2(52.0, 72.0)
 const PLAYER_DRAW_SIZE := Vector2(52.0, 72.0)
 const PLAYER_DEATH_DRAW_SIZE := Vector2(58.0, 48.0)
 
-# Idle/attack/hit currently use the approved directional stills. Walking uses a dedicated
-# 4-row x 8-column atlas: front, left, back, right; each row is one complete eight-frame gait cycle.
+# Idle/attack/hit currently use the approved directional stills. Walking uses four dedicated
+# 8-frame row atlases in front/left/back/right order; all views keep the sheathed sword visible.
 const PLAYER_IDLE_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
 const PLAYER_WALK_FRAMES = [0, 1, 2, 3, 4, 5, 6, 7]
 const PLAYER_ATTACK_FRAMES = [PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE, PLAYER_FRONT_TEXTURE]
@@ -140,8 +145,11 @@ func _walk_direction_row() -> int:
 
 func _walk_frame_region() -> Rect2:
 	var frame_index := clampi(animation_frame_index, 0, PLAYER_WALK_FRAMES.size() - 1)
-	var row_index := _walk_direction_row()
-	return Rect2(float(frame_index) * PLAYER_WALK_FRAME_SIZE.x, float(row_index) * PLAYER_WALK_FRAME_SIZE.y, PLAYER_WALK_FRAME_SIZE.x, PLAYER_WALK_FRAME_SIZE.y)
+	return Rect2(float(frame_index) * PLAYER_WALK_FRAME_SIZE.x, 0.0, PLAYER_WALK_FRAME_SIZE.x, PLAYER_WALK_FRAME_SIZE.y)
+
+
+func _walk_atlas_for_direction() -> Texture2D:
+	return PLAYER_WALK_ATLASES[_walk_direction_row()] as Texture2D
 
 
 func _animation_frames_for_state(state: String) -> Array:
@@ -273,7 +281,7 @@ func _draw() -> void:
 	# Directional artwork is already oriented; never mirror the sword onto the wrong shoulder.
 	draw_set_transform(attack_offset + Vector2(0.0, bob), sprite_tilt, Vector2.ONE)
 	if animation_state == "walk":
-		draw_texture_rect_region(PLAYER_WALK_ATLAS, sprite_rect, _walk_frame_region(), tint, false)
+		draw_texture_rect_region(_walk_atlas_for_direction(), sprite_rect, _walk_frame_region(), tint, false)
 	else:
 		draw_texture_rect(_current_animation_texture(), sprite_rect, false, tint)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

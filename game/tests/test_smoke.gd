@@ -520,17 +520,21 @@ func _test_player_animation_frames() -> void:
 	var player: Variant = PLAYER_SCRIPT.new()
 	root.add_child(player)
 	_check(player.PLAYER_IDLE_FRAMES.size() == 4, "主角待机状态保留 4 帧节奏槽，画面由四向视图决定")
-	_check(player.PLAYER_WALK_FRAMES.size() == 8 and player.PLAYER_WALK_ATLAS != null, "主角移动状态接入四向八帧完整行走图集")
-	_check(player.PLAYER_WALK_ATLAS.get_size() == Vector2(384.0, 256.0), "四向八帧图集尺寸与 48×64 帧区域匹配")
+	_check(player.PLAYER_WALK_FRAMES.size() == 8 and player.PLAYER_WALK_ATLASES.size() == 4, "主角移动状态接入四向独立八帧行走图集")
+	var walk_atlases_valid := true
+	for walk_atlas in player.PLAYER_WALK_ATLASES:
+		if walk_atlas == null or walk_atlas.get_size() != Vector2(384.0, 64.0):
+			walk_atlases_valid = false
+	_check(walk_atlases_valid, "四个方向各自拥有 8 帧、48×64 的透明行走图集")
 	player.animation_frame_index = 6
 	player.facing = Vector2.DOWN
-	_check(player._walk_frame_region() == Rect2(288.0, 0.0, 48.0, 64.0), "朝下移动选取正面第七帧")
+	_check(player._walk_atlas_for_direction() == player.PLAYER_WALK_ATLASES[0] and player._walk_frame_region() == Rect2(288.0, 0.0, 48.0, 64.0), "朝下移动选取保留背剑的正面第七帧")
 	player.facing = Vector2.LEFT
-	_check(player._walk_frame_region() == Rect2(288.0, 64.0, 48.0, 64.0), "朝左移动选取左侧第七帧")
+	_check(player._walk_atlas_for_direction() == player.PLAYER_WALK_ATLASES[1] and player._walk_frame_region() == Rect2(288.0, 0.0, 48.0, 64.0), "朝左移动选取保留背剑的左侧第七帧")
 	player.facing = Vector2.UP
-	_check(player._walk_frame_region() == Rect2(288.0, 128.0, 48.0, 64.0), "朝上移动选取背面第七帧")
+	_check(player._walk_atlas_for_direction() == player.PLAYER_WALK_ATLASES[2] and player._walk_frame_region() == Rect2(288.0, 0.0, 48.0, 64.0), "朝上移动选取保留背剑的背面第七帧")
 	player.facing = Vector2.RIGHT
-	_check(player._walk_frame_region() == Rect2(288.0, 192.0, 48.0, 64.0), "朝右移动选取右侧第七帧")
+	_check(player._walk_atlas_for_direction() == player.PLAYER_WALK_ATLASES[3] and player._walk_frame_region() == Rect2(288.0, 0.0, 48.0, 64.0), "朝右移动选取保留背剑的右侧第七帧")
 	var walker_size: Vector2 = ENEMY_SCRIPT.WALKER_DRAW_SIZE
 	_check(player.PLAYER_DRAW_SIZE.x < walker_size.x and player.PLAYER_DRAW_SIZE.y < walker_size.y, "主角绘制尺寸略小于普通行尸")
 	_check(player.PLAYER_WALK_DRAW_SIZE == player.PLAYER_DRAW_SIZE, "待机与行走尺寸完全一致，切换时不缩放跳变")
@@ -542,7 +546,7 @@ func _test_player_animation_frames() -> void:
 		for texture in frames:
 			if texture == null or texture.get_width() <= 0 or texture.get_height() <= 0:
 				all_frames_load = false
-	_check(all_frames_load and player.PLAYER_WALK_ATLAS != null, "主角待机/攻击/受击/倒地帧及行走图集均可加载")
+	_check(all_frames_load and walk_atlases_valid, "主角待机/攻击/受击/倒地帧及行走图集均可加载")
 	player.facing = Vector2.DOWN
 	player.animation_state = "idle"
 	player.animation_frame_index = 0
