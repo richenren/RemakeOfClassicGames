@@ -50,7 +50,7 @@
 - 导入/解析检查：`godot --headless --editor --path game --quit`。
 - 主场景启动检查：`godot --headless --path game --quit-after 5`。
 
-本轮已修正角色/怪物裁切、接入独立全身 SVG 姿态、恢复主角 76×96 与普通行尸 56×76 等可辨认比例，并使用多层柔和地面阴影和暖色反光减少贴纸感；技能战斗表现已分阶段实现火球/水球/瞬时雷击、铜钱剑贯穿/回旋、桃木追邪剑与地脉预兆；Godot 4.5.1 Headless CI 已通过 **306 项自动化检查、0 项失败**（[查看本轮 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41012648362)）。Windows 独立窗口仍需目视验收真实画面与战斗手感，Android 真机测试不属于本轮范围。
+本轮已修正角色/怪物裁切、接入独立全身 SVG 姿态、恢复主角 76×96 与普通行尸 56×76 等可辨认比例，并使用多层柔和地面阴影和暖色反光减少贴纸感；技能战斗表现已分阶段实现火球/水球/瞬时雷击、铜钱剑贯穿/回旋、桃木追邪剑与地脉预兆；Godot 4.5.1 Headless CI 已通过 **317 项自动化检查、0 项失败**（[查看本轮 CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41014344678)）。Windows 独立窗口仍需目视验收真实画面与战斗手感，Android 真机测试不属于本轮范围。
 
 ## 已知问题
 
@@ -111,6 +111,6 @@
 - [x] 自动基础符箓、六系自动技能与主动镇尸诀触发施法表现；施法期间朝向锁定释放方向，避免移动时角色突然转面。
 - [x] 怪物绘制增加分类型细节：行尸朱砂尸火/残布、跳僵冷光眼与爪痕、铁甲尸鎏金铆钉/胸纹、尸王环绕符印和二阶段赤焰轮廓。未改 AI、属性、攻击判定。
 - [x] 飞行投射物视觉缩放从 1.45 降为 0.92 基准；火球/水球系数 0.86，铜钱剑/桃木剑 0.98，雷符 0.82。碰撞半径、速度、伤害、范围、冷却均保持不变。
-- [x] Godot 4.5.1 CI：306 项通过、0 项失败（[CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41012648362)）。
+- [x] Godot 4.5.1 CI：317 项通过、0 项失败（[CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41014344678)）。
 - [ ] Windows 实际窗口仍需检查施法动作可读性、怪物细节是否过密及投射物是否清晰。
 

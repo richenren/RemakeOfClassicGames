@@ -5,7 +5,7 @@
 - 主角背剑四向静态视图已接入；行走使用四张独立方向 PNG，每个方向 8 帧（每张 384×64，单帧 48×64）。
 - 待机/行走绘制尺寸统一为 52×72；普通行尸为 56×76。
 - 用户已在 Windows 实机确认：人物大小合适，走路动画勉强够用。本阶段先接受并冻结，不继续调整人物大小或步态。
-- [Godot 4.5.1 CI：306 项通过，0 项失败](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41012648362)。
+- [Godot 4.5.1 CI：317 项通过，0 项失败](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41014344678)。
 - 本次反馈只确认人物尺寸与基本行走可用，不代表待机、施法、受击、死亡、背剑细节、其他视口和整套场景 UI 均已完成视觉验收。
 
 
@@ -106,7 +106,7 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 - [x] 四张主角方向行走 PNG 均可导入；每张 384×64，8 帧，单帧 48×64。
 - [x] `player.gd` 按正面/左侧/背面/右侧分别选择图集；帧区域、索引和动画速度检查通过。
 - [x] 待机/行走尺寸 52×72、普通行尸 56×76 的尺寸断言通过。
-- [x] 游戏逻辑自动化测试：306 项通过，0 项失败；主场景 Headless 启动通过。
+- [x] 游戏逻辑自动化测试：317 项通过，0 项失败；主场景 Headless 启动通过。
 - [x] 用户实机反馈：人物尺寸合适，走路勉强够用，当前阶段冻结。
 - [ ] 待机/施法/受击专用动作、死亡素材和进一步动画润色暂缓；其他场景/UI 视觉复测与 Android 真机测试仍待后续。
 
@@ -119,7 +119,7 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 - [x] 怪物绘制增加分类型细节：行尸朱砂尸火/残布、跳僵冷光眼与爪痕、铁甲尸鎏金铆钉/胸纹、尸王环绕符印和二阶段赤焰轮廓。未改 AI、属性、攻击判定。
 - [x] 飞行投射物视觉缩放从 1.45 降为 0.92 基准；火球/水球系数 0.86，铜钱剑/桃木剑 0.98，雷符 0.82。碰撞半径、速度、伤害、范围、冷却均保持不变。
 - [x] 新怪物 WebP 图集导入、四类 AtlasTexture 映射、施法状态触发、投射物缩放断言通过。
-- [x] Godot 4.5.1 CI：306 项通过、0 项失败（[CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41012648362)）。
+- [x] Godot 4.5.1 CI：317 项通过、0 项失败（[CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41014344678)）。
 - [ ] Windows 实际窗口仍需检查施法动作可读性、怪物细节是否过密及投射物是否清晰。
 
 ## 2026-10-30：施法姿态与战斗射程修正
@@ -128,5 +128,6 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 - [x] 基础自动符箓索敌距离设为 420 世界像素；六系自动技能索敌距离设为 460 世界像素，不再使用原先 620/700 的大范围索敌。
 - [x] 基础弹体最大飞行距离 500，技能弹体最大飞行距离 540；贯穿弹体同样受距离上限约束，桃木追击、雷电/剑气连锁限制在玩家周边 520 范围内。
 - [x] 主动镇尸诀仍以玩家为中心，按技能半径（基础 155，随等级成长）生效；水阵/地脉/火焰等范围伤害仍保留各自明确的局部半径，不会全屏结算。
-- [ ] Godot 4.5.1 CI 与 Windows 实机视觉复测待本轮提交后完成。
+- [x] Godot 4.5.1 CI：317 项通过、0 项失败（[CI](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41014344678)）。
+- [ ] Windows 实机视觉复测仍待用户拉取后确认；Headless CI 不替代实际画面验收。
 
