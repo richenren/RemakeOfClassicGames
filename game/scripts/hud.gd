@@ -792,7 +792,7 @@ func _upgrade_color(upgrade_id: String) -> Color:
 	if normalized.contains("wood"):
 		return Color("#80b98a")
 	if normalized.contains("thunder") or normalized.contains("five_thunder"):
-		return Color("#7988ff")
+		return Color("#dcefff")
 	if normalized.contains("copper_coin") or normalized.contains("peachwood") or normalized.contains("sword_manual"):
 		return Color("#c9a66a")
 	if normalized.contains("water") or normalized.contains("ice") or normalized.contains("cold_relic"):
