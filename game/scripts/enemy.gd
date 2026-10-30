@@ -8,6 +8,7 @@ const ARMORED_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_armo
 const BOSS_IDLE_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss.svg")
 const BOSS_WALK_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss_walk.svg")
 const BOSS_PHASE2_TEXTURE: Texture2D = preload("res://assets/sprites/enemy_boss_phase2.svg")
+const ENEMY_CONCEPT_ATLAS: Texture2D = preload("res://assets/sprites/enemy_concept_atlas.webp")
 const WALKER_DRAW_SIZE := Vector2(56.0, 76.0)
 const JUMPER_DRAW_SIZE := Vector2(56.0, 64.0)
 const ARMORED_DRAW_SIZE := Vector2(62.0, 80.0)
@@ -44,6 +45,7 @@ var boss_last_action: String = ""
 var boss_charge_direction: Vector2 = Vector2.LEFT
 var boss_attack_target: Vector2 = Vector2.ZERO
 var boss_attack_event: String = ""
+static var _concept_enemy_textures: Array[Texture2D] = []
 
 
 func setup(enemy_kind: String) -> void:
@@ -275,6 +277,9 @@ func apply_burn(duration: float, damage_per_second: float) -> void:
 
 
 func _sprite_texture_for_kind(enemy_kind: String) -> Texture2D:
+	var concept_texture := _concept_texture_for_kind(enemy_kind)
+	if concept_texture != null:
+		return concept_texture
 	match enemy_kind:
 		"jumper":
 			return JUMPER_TEXTURE
@@ -286,6 +291,30 @@ func _sprite_texture_for_kind(enemy_kind: String) -> Texture2D:
 			return BOSS_WALK_TEXTURE if is_moving else BOSS_IDLE_TEXTURE
 		_:
 			return WALKER_WALK_TEXTURE if is_moving else WALKER_IDLE_TEXTURE
+
+
+func _concept_texture_for_kind(enemy_kind: String) -> Texture2D:
+	if _concept_enemy_textures.is_empty():
+		var atlas_regions := [
+			Rect2(0.0, 0.0, 64.0, 80.0),
+			Rect2(64.0, 0.0, 64.0, 80.0),
+			Rect2(0.0, 80.0, 64.0, 80.0),
+			Rect2(64.0, 80.0, 64.0, 80.0)
+		]
+		for region in atlas_regions:
+			var atlas_view := AtlasTexture.new()
+			atlas_view.atlas = ENEMY_CONCEPT_ATLAS
+			atlas_view.region = region
+			_concept_enemy_textures.append(atlas_view)
+	match enemy_kind:
+		"jumper":
+			return _concept_enemy_textures[1]
+		"armored":
+			return _concept_enemy_textures[2]
+		"boss":
+			return _concept_enemy_textures[3]
+		_:
+			return _concept_enemy_textures[0]
 
 
 func _draw_enemy_signature() -> void:
