@@ -1767,6 +1767,20 @@ func _draw_skill_effects() -> void:
 				_draw_support_array(center, radius, life, progress)
 
 func _draw_artifact_sigil(center: Vector2, radius: float, life: float, kind: String) -> void:
+	if kind == "formation_seal":
+		# The earth artifact is a carved stone marker; keep circular geomancy for the general support array only.
+		var slab := PackedVector2Array([
+			center + Vector2(-radius * 0.3, -radius * 0.36),
+			center + Vector2(radius * 0.24, -radius * 0.42),
+			center + Vector2(radius * 0.34, radius * 0.28),
+			center + Vector2(0.0, radius * 0.43),
+			center + Vector2(-radius * 0.34, radius * 0.22)
+		])
+		draw_colored_polygon(slab, Color(0.28, 0.27, 0.23, life * 0.72))
+		_draw_ground_tile_outline(slab, Color(0.76, 0.64, 0.42, life * 0.86), 1.8)
+		draw_line(center + Vector2(-radius * 0.1, -radius * 0.24), center + Vector2(radius * 0.08, radius * 0.2), Color(0.9, 0.76, 0.5, life * 0.88), 1.8, true)
+		draw_line(center + Vector2(radius * 0.08, radius * 0.2), center + Vector2(radius * 0.26, radius * 0.04), Color(0.9, 0.76, 0.5, life * 0.76), 1.3, true)
+		return
 	var gold := Color(0.9, 0.7, 0.35, life * 0.82)
 	var pale := Color(1.0, 0.9, 0.62, life * 0.9)
 	draw_circle(center, radius * 0.42, Color(0.5, 0.32, 0.12, life * 0.1))
@@ -1798,12 +1812,6 @@ func _draw_artifact_sigil(center: Vector2, radius: float, life: float, kind: Str
 				var tip := center + direction * radius * 0.5
 				var tangent := Vector2(-direction.y, direction.x)
 				draw_colored_polygon(PackedVector2Array([tip, tip - direction * 6.0 + tangent * 2.5, tip - direction * 6.0 - tangent * 2.5]), Color(0.65, 0.9, 1.0, life * 0.9))
-		"formation_seal":
-			for i in range(4):
-				var angle := TAU * float(i) / 4.0 + PI * 0.25
-				var direction := Vector2(cos(angle), sin(angle))
-				draw_line(center, center + direction * radius * 0.42, gold, 1.2, true)
-			draw_circle(center, radius * 0.12, pale)
 
 
 func _draw_cultivation_feedback(center: Vector2, radius: float, life: float, element_id: String) -> void:
