@@ -697,8 +697,20 @@ func _test_combat_visuals(main: Variant) -> void:
 	_check(main.has_method("_draw_fire_zones") and main.has_method("_draw_water_field"), "火场与寒潮水域使用独立的持续效果绘制器")
 	var fire_cells: PackedVector2Array = main._ground_effect_cells("fire")
 	var water_cells: PackedVector2Array = main._ground_effect_cells("water")
+	var water_outline: PackedVector2Array = main._water_field_outline(Vector2.ZERO, Vector2(112.0, 56.0), 0.0)
+	var water_min_x := 1.0e20
+	var water_max_x := -1.0e20
+	var water_min_y := 1.0e20
+	var water_max_y := -1.0e20
+	for water_point in water_outline:
+		water_min_x = minf(water_min_x, water_point.x)
+		water_max_x = maxf(water_max_x, water_point.x)
+		water_min_y = minf(water_min_y, water_point.y)
+		water_max_y = maxf(water_max_y, water_point.y)
+	var water_width := water_max_x - water_min_x
+	var water_height := water_max_y - water_min_y
 	var earth_cells: PackedVector2Array = main._ground_effect_cells("earth")
-	_check(fire_cells.size() == 7 and water_cells.size() == 7 and fire_cells[2] != water_cells[2], "火场与水域使用轮廓不同的七格地面单元布局")
+	_check(fire_cells.size() == 7 and water_cells.is_empty() and water_outline.size() == 64 and water_width > water_height * 1.8, "火场保留七格布局，水域使用无格线的横向长方形连续水面")
 	_check(earth_cells.size() == 5, "土系地刺以敌人脚下为中心生成五格突刺布局")
 	_check(main.AUTO_SKILL_DEFS.has("earth_formation") and main.AUTO_SKILL_DEFS["earth_formation"].get("name", "") == "地刺", "土系保留内部技能 ID 并将显示名称调整为地刺")
 	_check(main.has_method("_draw_support_array"), "通用辅助阵拥有独立的金色几何阵纹绘制器")

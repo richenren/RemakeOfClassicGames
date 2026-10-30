@@ -1887,47 +1887,89 @@ func _draw_water_splash(center: Vector2, radius: float, life: float, progress: f
 			draw_line(drop_position, tip, pale, 1.2, true)
 
 
+func _water_field_outline(center: Vector2, half_extents: Vector2, phase: float, inset: float = 0.0) -> PackedVector2Array:
+	# A soft superellipse keeps the pool broadly rectangular while its edge drifts like real water.
+	var points := PackedVector2Array()
+	var safe_extents := Vector2(maxf(2.0, half_extents.x - inset), maxf(2.0, half_extents.y - inset * 0.52))
+	for point_index in range(64):
+		var angle := TAU * float(point_index) / 64.0
+		var cosine := cos(angle)
+		var sine := sin(angle)
+		var sign_x := -1.0 if cosine < 0.0 else 1.0
+		var sign_y := -1.0 if sine < 0.0 else 1.0
+		var shape_x := sign_x * pow(absf(cosine), 0.58)
+		var shape_y := sign_y * pow(absf(sine), 0.58)
+		var edge_wave := 1.0 + 0.018 * sin(angle * 5.0 + phase) + 0.011 * sin(angle * 9.0 - phase * 0.7)
+		var height_wave := 1.0 + 0.014 * sin(angle * 4.0 - phase * 0.55)
+		points.append(center + Vector2(shape_x * safe_extents.x * edge_wave, shape_y * safe_extents.y * edge_wave * height_wave))
+	return points
+
+
 func _draw_water_field(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
-	# Water is a connected group of shallow pools on separate floor cells, never a circular rune.
-	var cells := _ground_effect_cells("water")
-	var cell_size := Vector2(clampf(radius * 0.5, 38.0, 46.0), clampf(radius * 0.37, 27.0, 34.0))
-	var spacing := cell_size + Vector2(4.0, 4.0)
+	# One shallow, horizontally stretched pool: blended surface layers replace visible floor-cell borders.
 	var fade := clampf(life * 1.4, 0.0, 1.0)
-	for i in range(cells.size()):
-		for j in range(i + 1, cells.size()):
-			var cell_delta := cells[i] - cells[j]
-			if absf(cell_delta.x) + absf(cell_delta.y) == 1.0:
-				var from_center := center + Vector2(cells[i].x * spacing.x, cells[i].y * spacing.y)
-				var to_center := center + Vector2(cells[j].x * spacing.x, cells[j].y * spacing.y)
-				draw_line(from_center, to_center, Color(0.03, 0.25, 0.4, fade * 0.42), cell_size.y * 0.3, true)
-	for i in range(cells.size()):
-		var cell_center := center + Vector2(cells[i].x * spacing.x, cells[i].y * spacing.y)
-		var tile := _ground_tile_polygon(cell_center, cell_size, i + 1)
-		draw_colored_polygon(tile, Color(0.015, 0.16, 0.26, fade * 0.62))
-		var inner_tile := _ground_tile_polygon(cell_center + Vector2(0.0, -1.0), cell_size * 0.78, i + 3)
-		draw_colored_polygon(inner_tile, Color(0.06, 0.36, 0.5, fade * 0.3))
-		_draw_ground_tile_outline(tile, Color(0.25, 0.72, 0.92, fade * 0.84), 1.45)
-		_draw_ground_tile_outline(inner_tile, Color(0.64, 0.9, 1.0, fade * 0.38), 0.9)
+	var phase := elapsed_seconds * 0.62 + progress * 0.32
+	var half_extents := Vector2(clampf(radius * 1.34, 96.0, 126.0), clampf(radius * 0.66, 48.0, 64.0))
+	var shadow := _water_field_outline(center + Vector2(0.0, 5.0), half_extents + Vector2(9.0, 6.0), phase)
+	draw_colored_polygon(shadow, Color(0.004, 0.035, 0.055, fade * 0.38))
+	var outer_water := _water_field_outline(center, half_extents + Vector2(4.0, 3.0), phase + 0.12)
+	draw_colored_polygon(outer_water, Color(0.012, 0.16, 0.25, fade * 0.5))
+	var pool := _water_field_outline(center + Vector2(0.0, -1.0), half_extents, phase + 0.28)
+	draw_colored_polygon(pool, Color(0.035, 0.31, 0.44, fade * 0.56))
+	var inner_surface := _water_field_outline(center + Vector2(-2.0, -2.0), half_extents * 0.86, phase + 0.72, 2.0)
+	draw_colored_polygon(inner_surface, Color(0.075, 0.46, 0.58, fade * 0.3))
+	var soft_highlight := _water_field_outline(center + Vector2(-7.0, -5.0), half_extents * 0.58, phase + 1.05, 1.5)
+	draw_colored_polygon(soft_highlight, Color(0.19, 0.64, 0.74, fade * 0.13))
+	var edge := _water_field_outline(center, half_extents, phase + 0.28)
+	edge.append(edge[0])
+	draw_polyline(edge, Color(0.32, 0.78, 0.93, fade * 0.46), 1.35, true)
+
+	# Long, broken surface currents merge the whole patch instead of outlining individual cells.
+	for flow_index in range(4):
+		var flow_points := PackedVector2Array()
+		var flow_y := (float(flow_index) - 1.5) * half_extents.y * 0.31
+		for step in range(31):
+			var t := float(step) / 30.0
+			var x := lerpf(-half_extents.x * 0.78, half_extents.x * 0.78, t)
+			var y := flow_y + sin(t * TAU * 1.1 + phase + float(flow_index) * 0.74) * 3.2 + sin(t * TAU * 2.0 - phase) * 1.25
+			flow_points.append(center + Vector2(x, y))
+		draw_polyline(flow_points, Color(0.35, 0.8, 0.94, fade * 0.24), 1.25, true)
+
+	# Three staggered ripple sources give the water motion without recreating a tiled pattern.
+	var ripple_centers := PackedVector2Array([Vector2(-0.48, -0.08), Vector2(0.04, 0.16), Vector2(0.49, -0.04)])
+	for ripple_index in range(ripple_centers.size()):
+		var ripple_center := center + Vector2(ripple_centers[ripple_index].x * half_extents.x, ripple_centers[ripple_index].y * half_extents.y)
+		var pulse := sin(elapsed_seconds * 2.1 + float(ripple_index) * 1.7 + progress)
 		for ring_index in range(2):
-			var phase := elapsed_seconds * (1.25 + float(ring_index) * 0.2) + float(i) * 0.83 + progress * 0.7
-			var ripple_radius := minf(cell_size.x, cell_size.y) * (0.16 + float(ring_index) * 0.17 + 0.025 * sin(phase))
+			var ripple_x := 9.0 + float(ring_index) * 6.5 + pulse * 1.4
+			var ripple_y := ripple_x * 0.44
 			var ripple_points := PackedVector2Array()
-			for step in range(19):
-				var t := float(step) / 18.0
-				var angle := -PI * 0.82 + t * PI * 1.64 + phase * 0.12
-				var wobble := sin(angle * 3.0 + phase) * 1.1
-				ripple_points.append(cell_center + Vector2(cos(angle) * (ripple_radius + wobble), sin(angle) * (ripple_radius * 0.48 + wobble * 0.35)))
-			draw_polyline(ripple_points, Color(0.58, 0.9, 1.0, fade * (0.68 - float(ring_index) * 0.18)), 1.3 if ring_index == 0 else 1.0, true)
-		var droplet_phase := fposmod(elapsed_seconds * 0.72 + float(i) * 0.21, 1.0)
-		var droplet_position := cell_center + Vector2(cell_size.x * 0.27, -cell_size.y * (0.1 + droplet_phase * 0.22))
-		draw_circle(droplet_position, 1.35, Color(0.84, 0.97, 1.0, fade * (1.0 - droplet_phase) * 0.9))
-		if frozen and i % 2 == 0:
-			var crystal_base := cell_center + Vector2(cell_size.x * 0.42, -cell_size.y * 0.24)
-			var crystal_tip := crystal_base + Vector2(2.0, -8.0 - 2.0 * sin(elapsed_seconds * 3.0 + float(i)))
-			draw_colored_polygon(PackedVector2Array([
-				crystal_base + Vector2(-3.0, 1.0), crystal_tip, crystal_base + Vector2(3.0, 1.0)
-			]), Color(0.68, 0.9, 1.0, fade * 0.76))
-			draw_line(crystal_base, crystal_tip, Color(0.9, 0.98, 1.0, fade * 0.92), 1.1, true)
+			for step in range(27):
+				var t := float(step) / 26.0
+				var angle := -PI * 0.88 + t * PI * 1.76 + phase * 0.08
+				var wobble := sin(angle * 3.0 + phase + float(ripple_index)) * 0.8
+				ripple_points.append(ripple_center + Vector2(cos(angle) * (ripple_x + wobble), sin(angle) * (ripple_y + wobble * 0.32)))
+			draw_polyline(ripple_points, Color(0.62, 0.92, 1.0, fade * (0.44 if ring_index == 0 else 0.24)), 1.35 if ring_index == 0 else 0.95, true)
+
+	# Small moving glints sit on the shared surface; they are not independent tile markers.
+	for glint_index in range(7):
+		var glint_phase := elapsed_seconds * 1.6 + float(glint_index) * 1.91
+		var glint_position := center + Vector2(sin(glint_phase * 0.63) * half_extents.x * 0.76, cos(glint_phase * 0.87) * half_extents.y * 0.54)
+		var glint_alpha := fade * (0.34 + 0.18 * sin(glint_phase))
+		draw_line(glint_position + Vector2(-2.2, 0.0), glint_position + Vector2(2.2, 0.0), Color(0.7, 0.96, 1.0, glint_alpha), 1.0, true)
+		draw_circle(glint_position, 1.0, Color(0.86, 0.98, 1.0, glint_alpha))
+
+	if frozen:
+		var ice_offsets := PackedVector2Array([Vector2(-0.82, -0.34), Vector2(-0.36, 0.76), Vector2(0.42, -0.74), Vector2(0.84, 0.2)])
+		for ice_index in range(ice_offsets.size()):
+			var offset := ice_offsets[ice_index]
+			var outward := Vector2(offset.x, offset.y * 0.9).normalized()
+			var tangent := Vector2(-outward.y, outward.x)
+			var crystal_base := center + Vector2(offset.x * half_extents.x, offset.y * half_extents.y)
+			var crystal_tip := crystal_base + outward * (9.0 + 2.0 * sin(elapsed_seconds * 3.0 + float(ice_index)))
+			var crystal := PackedVector2Array([crystal_base - tangent * 3.2, crystal_tip, crystal_base + tangent * 3.2])
+			draw_colored_polygon(crystal, Color(0.68, 0.9, 1.0, fade * 0.7))
+			draw_line(crystal_base, crystal_tip, Color(0.92, 0.98, 1.0, fade * 0.88), 1.15, true)
 
 
 func _draw_water_formation_effect(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
@@ -2016,8 +2058,6 @@ func _ground_effect_cells(effect_kind: String) -> PackedVector2Array:
 	match effect_kind:
 		"fire":
 			return PackedVector2Array([Vector2(-1.0, -1.0), Vector2(0.0, -1.0), Vector2(1.0, -1.0), Vector2(-1.0, 0.0), Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, 1.0)])
-		"water":
-			return PackedVector2Array([Vector2(-1.0, -1.0), Vector2(0.0, -1.0), Vector2(-1.0, 0.0), Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, 1.0), Vector2(1.0, 1.0)])
 		"earth":
 			return PackedVector2Array([Vector2(-1.0, 0.0), Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, -1.0), Vector2(0.0, 1.0)])
 		_:
