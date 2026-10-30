@@ -149,7 +149,9 @@ func _cast_hand_anchor_local(direction: Vector2) -> Vector2:
 
 func cast_hand_world_position(direction: Vector2) -> Vector2:
 	var aim := direction.normalized() if direction.length_squared() > 0.001 else facing.normalized()
-	return global_position + _cast_hand_anchor_local(aim) + aim * CAST_TALISMAN_REACH
+	var progress := 1.0 - clampf(cast_animation_timer / CAST_DURATION, 0.0, 1.0)
+	var reach := lerpf(1.0, CAST_TALISMAN_REACH, smoothstep(0.08, 0.62, progress))
+	return global_position + _cast_hand_anchor_local(aim) + aim * reach
 
 
 func trigger_cast(direction: Vector2, duration: float = CAST_DURATION, element: String = "neutral") -> void:
