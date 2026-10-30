@@ -35,6 +35,7 @@ const AUTO_SKILL_PROJECTILE_MAX_RANGE := 540.0
 const CHAIN_HOP_RANGE := 150.0
 const MAX_CHAIN_DISTANCE_FROM_PLAYER := 520.0
 const SECONDARY_CHASE_RANGE := 180.0
+const WATER_FIELD_VISUAL_DURATION := 1.15
 const MAX_AUTO_SKILL_SLOTS := 4
 const MAX_ARTIFACT_SLOTS := 3
 const MIN_PRIMARY_BREAKTHROUGH_PLAYER_LEVEL := 6
@@ -1461,6 +1462,8 @@ func _resolve_projectile_hit(projectile) -> void:
 					_spawn_skill_effect("cold_relic", target.position, splash_radius * 0.68, 0.34)
 			if _cultivation_level("water") > 0:
 				_spawn_cultivation_feedback("water", target.position, 24.0)
+			# A short-lived visual-only pool clarifies the water impact without adding damage ticks.
+			_spawn_skill_effect("ice_field" if frozen else "water_field", target.position, splash_radius, WATER_FIELD_VISUAL_DURATION)
 		"copper_coin_sword":
 			var hit_damage := damage
 			if branch == "pierce" and int(projectile.pierce_hit_count) > 1:
@@ -1625,6 +1628,8 @@ func _draw_skill_effects() -> void:
 				_draw_water_splash(center, radius, life, progress, false)
 			"ice_splash":
 				_draw_water_splash(center, radius, life, progress, true)
+			"water_field", "ice_field":
+				_draw_water_field(center, radius, life, progress, kind == "ice_field")
 			"earth":
 				draw_arc(center, radius, 0.0, TAU, 48, Color(0.72, 0.61, 0.39, life * 0.8), 3.0)
 				draw_arc(center, radius * 0.58, 0.0, TAU, 40, Color(0.54, 0.48, 0.32, life * 0.55), 2.0)
@@ -1870,24 +1875,87 @@ func _draw_cultivation_feedback(center: Vector2, radius: float, life: float, ele
 
 
 func _draw_water_splash(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
-	var cyan := Color(0.25, 0.82, 1.0, life * 0.82)
+	# Water spreads as a low, flattened pool with broken wave fronts rather than a radial rune.
+	var cyan := Color(0.22, 0.78, 1.0, life * 0.82)
 	var pale := Color(0.84, 0.97, 1.0, life * 0.92)
 	var burst_radius := radius * (0.24 + progress * 0.76)
-	draw_circle(center, burst_radius * 0.38, Color(0.04, 0.27, 0.39, life * 0.18))
-	draw_arc(center, burst_radius * 0.82, 0.0, TAU, 48, cyan, 2.8)
-	draw_arc(center, burst_radius * 0.56, 0.0, TAU, 40, pale, 1.3)
-	for i in range(10):
-		var angle := TAU * float(i) / 10.0 + progress * 0.18
+	var pool_outline := PackedVector2Array()
+	for point_index in range(49):
+		var angle := TAU * float(point_index) / 48.0
+		var wobble := 1.0 + 0.035 * sin(angle * 5.0 + progress * 4.0)
+		pool_outline.append(center + Vector2(cos(angle) * burst_radius * 0.72 * wobble, sin(angle) * burst_radius * 0.46 * wobble))
+	pool_outline.append(pool_outline[0])
+	draw_colored_polygon(pool_outline, Color(0.04, 0.3, 0.43, life * 0.18))
+	draw_polyline(pool_outline, cyan, 2.4, true)
+	for wave_index in range(3):
+		var wave_progress := clampf(progress * 1.25 + float(wave_index) * 0.24, 0.0, 1.0)
+		var wave_radius := burst_radius * (0.18 + wave_progress * 0.56)
+		var wave_points := PackedVector2Array()
+		for step in range(33):
+			var t := float(step) / 32.0
+			var angle := -PI * 0.78 + t * PI * 1.56 + progress * 0.3
+			var wave_offset := sin(angle * 2.0 + elapsed_seconds * 2.4 + float(wave_index)) * 1.8
+			wave_points.append(center + Vector2(cos(angle) * (wave_radius + wave_offset), sin(angle) * (wave_radius * 0.52 + wave_offset * 0.5)))
+		draw_polyline(wave_points, Color(0.48, 0.88, 1.0, life * (0.66 - float(wave_index) * 0.12)), 1.7, true)
+	for i in range(7):
+		var angle := TAU * float(i) / 7.0 + progress * 0.18
 		var direction := Vector2(cos(angle), sin(angle))
-		var tangent := Vector2(-direction.y, direction.x)
-		var inner := center + direction * burst_radius * 0.42
-		var outer := center + direction * burst_radius * (0.82 + 0.12 * sin(progress * 7.0 + float(i)))
-		draw_line(inner, outer, cyan, 2.0, true)
-		draw_circle(outer, 1.8 if frozen else 1.4, pale)
+		var droplet_distance := burst_radius * (0.72 + 0.12 * sin(elapsed_seconds * 5.0 + float(i)))
+		var drop_position := center + Vector2(direction.x * droplet_distance, direction.y * droplet_distance * 0.52)
+		draw_circle(drop_position, 1.6 if frozen else 1.35, pale)
 		if frozen:
-			var tip := center + direction * burst_radius * (0.98 + 0.04 * sin(elapsed_seconds * 5.0 + float(i)))
-			draw_colored_polygon(PackedVector2Array([outer - tangent * 3.0, tip, outer + tangent * 3.0]), Color(0.69, 0.91, 1.0, life * 0.8))
-			draw_line(outer, tip, pale, 1.2, true)
+			var tangent := Vector2(-direction.y, direction.x)
+			var tip := drop_position + direction * 6.0
+			draw_colored_polygon(PackedVector2Array([drop_position - tangent * 2.6, tip, drop_position + tangent * 2.6]), Color(0.65, 0.9, 1.0, life * 0.78))
+			draw_line(drop_position, tip, pale, 1.2, true)
+
+
+func _draw_water_field(center: Vector2, radius: float, life: float, progress: float, frozen: bool) -> void:
+	# Lingering water is a shallow pool with moving ripples and curved currents.
+	# It is presentation only; all damage and status application happen on impact.
+	var cyan := Color(0.22, 0.76, 0.98, life * 0.78)
+	var pale := Color(0.78, 0.94, 1.0, life * 0.86)
+	var pool_radius := radius * (0.76 + 0.035 * sin(elapsed_seconds * 2.4 + progress * PI))
+	var pool_outline := PackedVector2Array()
+	for point_index in range(57):
+		var angle := TAU * float(point_index) / 56.0
+		var wobble := 1.0 + 0.025 * sin(angle * 4.0 + elapsed_seconds * 1.1)
+		pool_outline.append(center + Vector2(cos(angle) * pool_radius * wobble, sin(angle) * pool_radius * 0.54 * wobble))
+	pool_outline.append(pool_outline[0])
+	draw_colored_polygon(pool_outline, Color(0.02, 0.17, 0.29, life * 0.28))
+	draw_polyline(pool_outline, cyan, 2.2, true)
+	for ring_index in range(3):
+		var phase := elapsed_seconds * (1.0 + 0.18 * float(ring_index)) + float(ring_index) * 1.7
+		var ring_radius := radius * (0.24 + float(ring_index) * 0.22) * (0.94 + 0.06 * sin(phase))
+		var ripple_points := PackedVector2Array()
+		for step in range(39):
+			var t := float(step) / 38.0
+			var angle := -PI * 0.14 + t * PI * 1.28 + phase * 0.08
+			var ripple := sin(angle * 3.0 + phase) * 2.0
+			ripple_points.append(center + Vector2(cos(angle) * (ring_radius + ripple), sin(angle) * (ring_radius * 0.52 + ripple * 0.35)))
+		draw_polyline(ripple_points, Color(0.48, 0.86, 1.0, life * (0.7 - float(ring_index) * 0.12)), 1.8 if ring_index == 0 else 1.3, true)
+	for stream_index in range(2):
+		var current_points := PackedVector2Array()
+		for step in range(33):
+			var t := float(step) / 32.0
+			var angle := elapsed_seconds * 0.65 + float(stream_index) * PI + t * TAU * 0.82
+			var spiral_radius := radius * (0.14 + t * 0.52)
+			current_points.append(center + Vector2(cos(angle) * spiral_radius, sin(angle) * spiral_radius * 0.5))
+		draw_polyline(current_points, Color(0.36, 0.78, 0.98, life * 0.68), 1.8, true)
+	for drop_index in range(5):
+		var drop_angle := TAU * float(drop_index) / 5.0 + elapsed_seconds * 0.6
+		var drop_radius := radius * (0.22 + 0.08 * sin(elapsed_seconds * 2.2 + float(drop_index)))
+		var drop_position := center + Vector2(cos(drop_angle) * drop_radius, sin(drop_angle) * drop_radius * 0.48)
+		draw_circle(drop_position, 1.8, pale)
+	if frozen:
+		for crystal_index in range(8):
+			var angle := TAU * float(crystal_index) / 8.0 + progress * 0.12
+			var direction := Vector2(cos(angle), sin(angle))
+			var tangent := Vector2(-direction.y, direction.x)
+			var base := center + Vector2(direction.x * radius * 0.72, direction.y * radius * 0.42)
+			var tip := base + direction * (8.0 + 2.0 * sin(elapsed_seconds * 3.0 + float(crystal_index)))
+			draw_colored_polygon(PackedVector2Array([base - tangent * 3.2, tip, base + tangent * 3.2]), Color(0.6, 0.87, 1.0, life * 0.72))
+			draw_line(base, tip, pale, 1.2, true)
 
 
 
@@ -1959,24 +2027,38 @@ func _draw_fire_zones() -> void:
 		var radius := float(zone.get("radius", 78.0))
 		var duration := maxf(0.01, float(zone.get("duration", 3.0)))
 		var life := clampf(float(zone.get("time", 0.0)) / duration, 0.0, 1.0)
-		var pulse := 0.5 + 0.5 * sin(elapsed_seconds * 7.0)
-		draw_circle(center, radius * 0.78, Color(0.72, 0.12, 0.025, 0.12 * life))
-		draw_arc(center, radius * (0.9 + pulse * 0.04), 0.0, TAU, 56, Color(1.0, 0.26, 0.035, life * 0.78), 3.0)
-		draw_arc(center, radius * 0.64, 0.0, TAU, 48, Color(1.0, 0.52, 0.12, life * 0.48), 1.8)
-		for i in range(9):
-			var angle := TAU * float(i) / 9.0 + elapsed_seconds * 0.38
+		# Fire reads as an irregular scorched patch, not a clean circular magic array.
+		var scorch_outline := PackedVector2Array()
+		for point_index in range(65):
+			var angle := TAU * float(point_index) / 64.0
+			var edge := 0.91 + 0.045 * sin(angle * 5.0 + elapsed_seconds * 0.55) + 0.025 * sin(angle * 9.0 - elapsed_seconds * 0.9)
+			scorch_outline.append(center + Vector2(cos(angle) * radius * edge, sin(angle) * radius * edge * 0.84))
+		scorch_outline.append(scorch_outline[0])
+		draw_colored_polygon(scorch_outline, Color(0.12, 0.025, 0.012, life * 0.24))
+		draw_polyline(scorch_outline, Color(0.82, 0.16, 0.025, life * 0.72), 3.0, true)
+		var inner_scorch := PackedVector2Array()
+		for point_index in range(49):
+			var angle := TAU * float(point_index) / 48.0
+			var inner_edge := 0.62 + 0.035 * sin(angle * 6.0 + elapsed_seconds * 0.8)
+			inner_scorch.append(center + Vector2(cos(angle) * radius * inner_edge, sin(angle) * radius * inner_edge * 0.78))
+		inner_scorch.append(inner_scorch[0])
+		draw_polyline(inner_scorch, Color(0.55, 0.075, 0.012, life * 0.48), 1.5, true)
+		for i in range(11):
+			var angle := TAU * float(i) / 11.0 + elapsed_seconds * 0.08
 			var direction := Vector2(cos(angle), sin(angle))
 			var tangent := Vector2(-direction.y, direction.x)
-			var base := center + direction * radius * 0.66
-			var flame_length := radius * (0.15 + 0.07 * (0.5 + 0.5 * sin(elapsed_seconds * 8.0 + float(i) * 1.9)))
+			var base := center + direction * radius * (0.66 + 0.025 * sin(elapsed_seconds * 2.0 + float(i)))
+			var flame_length := radius * (0.14 + 0.12 * (0.5 + 0.5 * sin(elapsed_seconds * 8.0 + float(i) * 1.7)))
 			var tip := base + direction * flame_length
-			draw_colored_polygon(PackedVector2Array([base - tangent * 5.0, tip, base + tangent * 5.0]), Color(1.0, 0.30, 0.025, life * 0.68))
-			draw_line(base, tip, Color(1.0, 0.78, 0.24, life * 0.9), 1.7, true)
-		for i in range(8):
-			var rune_angle := TAU * float(i) / 8.0
-			var rune_start := center + Vector2(cos(rune_angle), sin(rune_angle)) * radius * 0.48
-			var rune_end := center + Vector2(cos(rune_angle), sin(rune_angle)) * radius * 0.55
-			draw_line(rune_start, rune_end, Color(1.0, 0.68, 0.2, life * 0.55), 1.6, true)
+			var flame_width := 3.6 + 1.1 * sin(elapsed_seconds * 6.0 + float(i))
+			draw_colored_polygon(PackedVector2Array([base - tangent * flame_width, tip, base + tangent * flame_width]), Color(1.0, 0.28, 0.025, life * 0.76))
+			draw_line(base, tip, Color(1.0, 0.82, 0.3, life * 0.9), 1.6, true)
+		for ember_index in range(8):
+			var ember_phase := fposmod(elapsed_seconds * 0.45 + float(ember_index) * 0.13, 1.0)
+			var ember_angle := TAU * float(ember_index) / 8.0 - elapsed_seconds * 0.12
+			var ember_distance := radius * (0.34 + ember_phase * 0.5)
+			var ember_position := center + Vector2(cos(ember_angle) * ember_distance, sin(ember_angle) * ember_distance * 0.78 - ember_phase * 4.0)
+			draw_circle(ember_position, 1.1 + (1.0 - ember_phase) * 0.8, Color(1.0, 0.72, 0.24, life * (1.0 - ember_phase) * 0.86))
 
 
 func cast_active_skill() -> void:

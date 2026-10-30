@@ -694,6 +694,7 @@ func _test_combat_visuals(main: Variant) -> void:
 	main.fire_zones.clear()
 	main._tick_fire_zones(0.02)
 	_check(main.fire_zones.size() == 1, "火符按固定间隔自动生成持续火焰区域")
+	_check(main.has_method("_draw_fire_zones") and main.has_method("_draw_water_field"), "火场与寒潮水域使用独立的持续效果绘制器")
 	var hp_before_zone: float = temp_enemy.hp
 	main._tick_fire_zones(0.3)
 	_check(temp_enemy.hp < hp_before_zone, "持续火焰区域周期性灼烧范围内敌人")
@@ -736,6 +737,17 @@ func _test_combat_visuals(main: Variant) -> void:
 		if str(effect.get("kind", "")) == "water_splash":
 			saw_water_splash = true
 	_check(saw_water_splash, "水球命中后显示独立水花溅射特效")
+	var saw_water_field := false
+	var water_field_duration := 0.0
+	for effect in main.skill_effects:
+		if str(effect.get("kind", "")) == "water_field":
+			saw_water_field = true
+			water_field_duration = float(effect.get("duration", 0.0))
+	_check(saw_water_field, "寒潮命中后留下独立的持续水域波纹视觉")
+	_check(is_equal_approx(water_field_duration, main.WATER_FIELD_VISUAL_DURATION), "水域残留时长由独立视觉参数控制")
+	var hp_after_water_impact: float = temp_enemy.hp
+	main._tick_skill_effects(main.WATER_FIELD_VISUAL_DURATION)
+	_check(is_equal_approx(temp_enemy.hp, hp_after_water_impact), "持续水域残留只负责视觉，不追加伤害结算")
 	for old_projectile in main.projectiles:
 		old_projectile.queue_free()
 	main.projectiles.clear()
@@ -907,7 +919,7 @@ func _test_combat_visuals(main: Variant) -> void:
 	if not main.projectiles.is_empty():
 		main.projectiles[0].speed = 10000.0
 		main._tick_projectiles(0.1)
-	_check(temp_enemy.freeze_timer > 0.0 and _has_skill_effect(main, "ice_splash") and _has_skill_effect(main, "cold_relic"), "冰魄阵实际冻结普通敌人并显示寒魄法器反馈")
+	_check(temp_enemy.freeze_timer > 0.0 and _has_skill_effect(main, "ice_splash") and _has_skill_effect(main, "ice_field") and _has_skill_effect(main, "cold_relic"), "冰魄阵实际冻结普通敌人并显示冰晶水域与寒魄法器反馈")
 
 	for old_projectile in main.projectiles:
 		old_projectile.queue_free()
