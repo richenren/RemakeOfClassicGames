@@ -7,11 +7,11 @@ const XP_ORB_SCRIPT = preload("res://scripts/xp_orb.gd")
 const HUD_SCRIPT = preload("res://scripts/hud.gd")
 const GRAVEYARD_BACKGROUND: Texture2D = preload("res://assets/sprites/graveyard_background.svg")
 const FIRE_FIELD_TEXTURE: Texture2D = preload("res://assets/sprites/fire_field_prototype.png")
-# Four 160x128 frames made from the approved fire-field artwork; the original image remains untouched.
+# Sixteen 160x128 frames from the approved artwork. The ground silhouette, alpha and palette stay stable.
 const FIRE_FIELD_ANIMATION: Texture2D = preload("res://assets/sprites/fire_field_animation_sheet.png")
 const FIRE_FIELD_ANIMATION_FRAME_SIZE := Vector2(160.0, 128.0)
-const FIRE_FIELD_ANIMATION_FRAME_COUNT := 4
-const FIRE_FIELD_ANIMATION_FPS := 7.0
+const FIRE_FIELD_ANIMATION_FRAME_COUNT := 16
+const FIRE_FIELD_ANIMATION_FPS := 12.0
 
 const WORLD_SIZE := Vector2(2400.0, 1600.0)
 const MAX_ENEMIES := 100
@@ -2186,7 +2186,7 @@ func _draw_fire_zones() -> void:
 	for zone in fire_zones:
 		var center: Vector2 = zone.get("position", Vector2.ZERO)
 		var radius := float(zone.get("radius", 78.0))
-		# Keep the approved silhouette and proportions; only the internal flame highlights move.
+		# Keep the approved silhouette and proportions; smoothly animate the internal bright flames.
 		# The entire effect fades as a unit during the last 0.15s, exactly as before.
 		var fade := clampf(float(zone.get("time", 0.0)) / 0.15, 0.0, 1.0)
 		var frame_index := _fire_field_frame_index(zone)
