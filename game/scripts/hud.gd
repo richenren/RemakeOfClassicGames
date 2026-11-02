@@ -249,6 +249,15 @@ func _draw_level_up(view: Vector2) -> void:
 	_draw_cloud_motif(Vector2(panel_rect.end.x - 74.0 * scale, panel_rect.position.y + 49.0 * scale), scale, Color("#b39a6b", 0.45))
 	_center_text(Rect2(panel_rect.position.x + 24.0 * scale, panel_rect.position.y + 17.0 * scale, panel_rect.size.x - 48.0 * scale, 42.0 * scale), "修为精进 · 选择一项", header_title_size, Color("#f3d99a"))
 	_center_text(Rect2(panel_rect.position.x + 20.0 * scale, panel_rect.position.y + 59.0 * scale, panel_rect.size.x - 40.0 * scale, 25.0 * scale), "择一道法，改变本局构筑方向  ·  选择期间战斗与计时暂停", subtitle_size, Color("#cbbd9e"))
+	# Keep the refresh button below the existing panel, outside the card artwork.
+	var reroll_rect: Rect2 = layout["reroll"]
+	var can_reroll: bool = main_ref.can_reroll_level_cards()
+	var reroll_hovered := can_reroll and reroll_rect.has_point(get_viewport().get_mouse_position())
+	var reroll_tint := Color("#f2d18e") if can_reroll else Color("#817564")
+	draw_rect(reroll_rect, Color("#23190e", 0.98) if can_reroll else Color("#181715", 0.94))
+	draw_rect(reroll_rect, reroll_tint, false, 1.7 * scale if reroll_hovered else 1.05 * scale)
+	var reroll_label := "刷新选项  %d/%d  ·  F" % [main_ref.rerolls_remaining, main_ref.REROLLS_PER_STAGE] if can_reroll else "刷新不可用  ·  剩余 %d" % main_ref.rerolls_remaining
+	_center_text(reroll_rect, reroll_label, maxi(9, roundi(13.0 * scale)), reroll_tint)
 	var divider_y := panel_rect.position.y + float(layout["header_height"]) - 8.0 * scale
 	draw_line(Vector2(panel_rect.position.x + 28.0 * scale, divider_y), Vector2(panel_rect.end.x - 28.0 * scale, divider_y), Color("#b08d50", 0.78), 1.1 * scale)
 	draw_circle(Vector2(panel_rect.get_center().x, divider_y), 3.0 * scale, Color("#e6c779"))
@@ -478,7 +487,9 @@ func _level_up_layout(view: Vector2) -> Dictionary:
 	var cards: Array = []
 	for i in range(3):
 		cards.append(Rect2(panel_rect.position.x + inner_margin + float(i) * (card_width + gap), card_y, card_width, card_height))
-	return {"panel": panel_rect, "cards": cards, "header_height": header_height, "scale": scale}
+	var reroll_size := Vector2(minf(235.0 * scale, panel_width * 0.48), 31.0 * scale)
+	var reroll_rect := Rect2(Vector2(panel_rect.get_center().x - reroll_size.x * 0.5, panel_rect.end.y + 7.0 * scale), reroll_size)
+	return {"panel": panel_rect, "cards": cards, "reroll": reroll_rect, "header_height": header_height, "scale": scale}
 
 
 func _draw_cloud_motif(origin: Vector2, scale: float, color: Color) -> void:
@@ -895,6 +906,12 @@ func _draw_touch_controls(view: Vector2) -> void:
 	draw_circle(heal_center, heal_radius, Color(0.055, 0.05, 0.04, 0.84))
 	draw_arc(heal_center, heal_radius, 0.0, TAU, 32, Color("#c16b55"), 2.0 * scale)
 	_center_text(Rect2(heal_center.x - 20.0 * scale, heal_center.y - 10.0 * scale, 40.0 * scale, 20.0 * scale), "疗 %d" % main_ref.heal_charges, maxi(9, roundi(10.0 * scale)), TEXT_COLOR)
+
+func reroll_button_at(screen_position: Vector2) -> bool:
+	var layout := _level_up_layout(get_viewport_rect().size)
+	var rect: Rect2 = layout["reroll"]
+	return rect.has_point(screen_position)
+
 
 func card_index_at(screen_position: Vector2) -> int:
 	var view := get_viewport_rect().size

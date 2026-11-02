@@ -46,6 +46,8 @@ const SECONDARY_CHASE_RANGE := 180.0
 const WATER_FIELD_VISUAL_DURATION := 1.15
 const MAX_AUTO_SKILL_SLOTS := 4
 const MAX_ARTIFACT_SLOTS := 3
+# Three shared refreshes per stage, never per level-up popup.
+const REROLLS_PER_STAGE := 3
 const MIN_PRIMARY_BREAKTHROUGH_PLAYER_LEVEL := 6
 
 const AUTO_SKILL_DEFS := {
@@ -115,6 +117,7 @@ var water_recovery_accumulator: float = 0.0
 var heal_charges: int = 2
 var boss_spawned: bool = false
 var level_cards: Array[Dictionary] = []
+var rerolls_remaining: int = REROLLS_PER_STAGE
 var skills: Dictionary = {}
 var skill_cooldowns: Dictionary = {}
 var artifacts: Dictionary = {}
@@ -243,13 +246,20 @@ func _input(event: InputEvent) -> void:
 		if event.keycode == KEY_R and (state == "game_over" or state == "victory"):
 			get_tree().reload_current_scene()
 			return
+		if state == "level_up" and event.keycode == KEY_F:
+			_reroll_level_cards()
+			get_viewport().set_input_as_handled()
+			return
 		if state == "level_up" and event.keycode >= KEY_1 and event.keycode <= KEY_3:
 			_select_upgrade(int(event.keycode - KEY_1))
 			return
 
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if state == "level_up":
-			_select_upgrade(hud.card_index_at(event.position))
+			if hud.reroll_button_at(event.position):
+				_reroll_level_cards()
+			else:
+				_select_upgrade(hud.card_index_at(event.position))
 		elif state == "paused":
 			state = "playing"
 		elif state == "game_over" or state == "victory":
@@ -265,7 +275,10 @@ func _input(event: InputEvent) -> void:
 func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 	if event.pressed:
 		if state == "level_up":
-			_select_upgrade(hud.card_index_at(event.position))
+			if hud.reroll_button_at(event.position):
+				_reroll_level_cards()
+			else:
+				_select_upgrade(hud.card_index_at(event.position))
 			return
 		if state == "paused":
 			state = "playing"
@@ -527,6 +540,51 @@ func _maybe_level_up() -> void:
 	player.level += 1
 	player.xp_to_next = ceili(float(player.xp_to_next) * 1.14 + 1.0)
 	_open_upgrade_choices()
+
+
+func reset_rerolls_for_new_stage() -> void:
+	# Call on stage entry in the future chapter system, not on each level-up.
+	rerolls_remaining = REROLLS_PER_STAGE
+	if hud != null:
+		hud.queue_redraw()
+
+
+func can_reroll_level_cards() -> bool:
+	if state != "level_up" or rerolls_remaining <= 0 or level_cards.is_empty():
+		return false
+	# The forced Lv3 fork cannot be bypassed with refresh.
+	for card in level_cards:
+		if str(card.get("kind", "")) in ["skill_branch", "branch_required_info"]:
+			return false
+	return true
+
+
+func _level_card_set_signature(cards: Array[Dictionary]) -> String:
+	var card_ids: Array[String] = []
+	for card in cards:
+		card_ids.append(str(card.get("id", "")))
+	card_ids.sort()
+	return ",".join(card_ids)
+
+
+func _reroll_level_cards() -> bool:
+	if not can_reroll_level_cards():
+		return false
+	var previous: Array[Dictionary] = level_cards.duplicate(true)
+	var previous_signature := _level_card_set_signature(previous)
+	# Rebuild using the existing legal pool and mandatory breakthrough guarantees.
+	# Do not consume a reroll if no valid alternative can be generated.
+	for attempt in range(8):
+		_open_upgrade_choices()
+		if _level_card_set_signature(level_cards) != previous_signature:
+			rerolls_remaining -= 1
+			if hud != null:
+				hud.queue_redraw()
+			return true
+	level_cards = previous
+	if hud != null:
+		hud.queue_redraw()
+	return false
 
 
 func _open_upgrade_choices() -> void:

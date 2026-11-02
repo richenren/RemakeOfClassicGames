@@ -36,6 +36,7 @@ func _run_tests() -> void:
 	_test_render_hierarchy(main)
 	_test_hud_presentation(main)
 	_test_sprite_assets(main)
+	_test_upgrade_rerolls(main)
 	_test_skill_build_system(main)
 
 	if main.player != null and not main.enemies.is_empty():
@@ -164,6 +165,69 @@ func _test_sprite_assets(main: Variant) -> void:
 	_check(PLAYER_SCRIPT.cast_element_for_skill("thunder_talisman") == "lightning" and PLAYER_SCRIPT.cast_element_for_skill("five_thunder") == "lightning", "雷符与五雷敕令共用雷系聚气特效")
 	_check(PLAYER_SCRIPT.cast_element_for_skill("peachwood_sword") == "neutral" and PLAYER_SCRIPT.cast_element_for_skill("earth_formation") == "neutral", "木系与土系暂不套用本轮四系聚气特效")
 
+
+
+func _test_upgrade_rerolls(main: Variant) -> void:
+	main.reset_rerolls_for_new_stage()
+	_check(main.REROLLS_PER_STAGE == 3 and main.rerolls_remaining == 3, "每个关卡提供3次共享升级刷新机会")
+	_check(not main.can_reroll_level_cards() and not main._reroll_level_cards(), "非升级弹窗不能刷新或扣除次数")
+	main.player.level = 1
+	main.primary_element = ""
+	main.skills.clear()
+	main.artifacts.clear()
+	main.level_cards.clear()
+	main.state = "playing"
+	main._open_upgrade_choices()
+	_check(main.state == "level_up" and main.can_reroll_level_cards(), "普通升级三选一显示可用刷新")
+	var old_signature := main._level_card_set_signature(main.level_cards)
+	var input_refresh := InputEventMouseButton.new()
+	input_refresh.button_index = MOUSE_BUTTON_LEFT
+	input_refresh.pressed = true
+	input_refresh.position = main.hud._level_up_layout(main.get_viewport_rect().size)["reroll"].get_center()
+	_check(main.hud.reroll_button_at(input_refresh.position) and main.hud.card_index_at(input_refresh.position) == -1, "刷新按钮热区与三张升级卡互不重叠")
+	main._input(input_refresh)
+	_check(main.rerolls_remaining == 2 and main._level_card_set_signature(main.level_cards) != old_signature, "鼠标点击刷新后更换合法候选且消耗1次")
+	_check(main.state == "level_up" and main.skills.is_empty() and main.player.level == 1, "刷新不会选择卡片、升级技能或改变角色等级")
+	main._open_upgrade_choices()
+	_check(main.rerolls_remaining == 2, "普通升级弹窗重新生成不会重置关卡剩余刷新次数")
+	_check(main._reroll_level_cards() and main.rerolls_remaining == 1, "第二次刷新继续消耗共享次数")
+	_check(main._reroll_level_cards() and main.rerolls_remaining == 0, "第三次刷新耗尽当前关卡配额")
+	_check(not main.can_reroll_level_cards() and not main._reroll_level_cards() and main.rerolls_remaining == 0, "刷新次数耗尽后不允许第四次刷新")
+	main.reset_rerolls_for_new_stage()
+	_check(main.rerolls_remaining == 3, "进入下一关可重新获得3次刷新")
+
+	# Forced Lv3 skill branch is a real two-way choice, never refreshable.
+	main.level_cards.clear()
+	main.skills["fire_talisman"] = {"level": 2, "branch": "", "evolved": ""}
+	main.state = "playing"
+	main.player.level = 3
+	main._open_upgrade_choices()
+	var branch_signature := main._level_card_set_signature(main.level_cards)
+	_check(not main.can_reroll_level_cards() and not main._reroll_level_cards(), "Lv3强制分支不可刷新或跳过")
+	_check(main.rerolls_remaining == 3 and main._level_card_set_signature(main.level_cards) == branch_signature, "强制分支刷新拒绝后不会损失刷新次数或改变分支")
+	main.skills["fire_talisman"] = {"level": 3, "branch": "flame", "evolved": ""}
+	main.player.level = 6
+	main.state = "playing"
+	main._open_upgrade_choices()
+	var has_commit := false
+	for card in main.level_cards:
+		if str(card.get("name", "")).begins_with("立道突破"):
+			has_commit = true
+	_check(has_commit, "Lv6升级首轮出现必要主修突破")
+	main._reroll_level_cards()
+	var retained_commit := false
+	for card in main.level_cards:
+		if str(card.get("name", "")).begins_with("立道突破"):
+			retained_commit = true
+	_check(retained_commit, "Lv6普通候选刷新仍保留必要的主修突破")
+	# Restore the state expected by later build and combat tests.
+	main.skills.clear()
+	main.artifacts.clear()
+	main.primary_element = ""
+	main.player.level = 1
+	main.level_cards.clear()
+	main.state = "playing"
+	main.reset_rerolls_for_new_stage()
 
 
 func _test_skill_build_system(main: Variant) -> void:
@@ -393,6 +457,8 @@ func _test_responsive_layout() -> void:
 		var layout: Dictionary = hud._level_up_layout(view)
 		var panel: Rect2 = layout["panel"]
 		var cards: Array = layout["cards"]
+		var reroll_rect: Rect2 = layout["reroll"]
+		_check(reroll_rect.position.x >= 0.0 and reroll_rect.end.x <= view.x and reroll_rect.end.y <= view.y and reroll_rect.position.y >= panel.end.y, "刷新按钮在小屏幕布局中可见且位于升级卡下方")
 		_check(panel.position.x >= 0.0 and panel.position.y >= 0.0 and panel.end.x <= view.x + 0.1 and panel.end.y <= view.y + 0.1, "升级面板适配视口 %dx%d" % [roundi(view.x), roundi(view.y)])
 		_check(cards.size() == 3, "升级面板始终保留三张可选卡片")
 		var all_inside := true
