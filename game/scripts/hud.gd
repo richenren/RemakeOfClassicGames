@@ -955,7 +955,7 @@ func objective_data() -> Dictionary:
 		var boss = main_ref.get_boss()
 		if boss != null:
 			var progress := 1.0 - clampf(boss.hp / maxf(1.0, boss.max_hp), 0.0, 1.0)
-			return {"title":"当前目标 · 击败" + boss_name, "detail":"尸王降临 · 抓住输出时机", "progress":progress, "kind":"boss", "boss_name":boss_name}
+			return {"title":"当前目标 · 击败尸王", "detail":"尸王降临 · 抓住输出时机", "progress":progress, "kind":"boss", "boss_name":boss_name}
 		return {"title":"当前目标 · 清理战场", "detail":"尸王战斗正在收尾", "progress":0.9, "kind":"boss", "boss_name":boss_name}
 	var remaining := maxi(0, ceili(appearance - main_ref.elapsed_seconds))
 	return {
