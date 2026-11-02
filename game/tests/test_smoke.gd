@@ -179,7 +179,7 @@ func _test_upgrade_rerolls(main: Variant) -> void:
 	main.state = "playing"
 	main._open_upgrade_choices()
 	_check(main.state == "level_up" and main.can_reroll_level_cards(), "普通升级三选一显示可用刷新")
-	var old_signature := main._level_card_set_signature(main.level_cards)
+	var old_signature: String = main._level_card_set_signature(main.level_cards)
 	var input_refresh := InputEventMouseButton.new()
 	input_refresh.button_index = MOUSE_BUTTON_LEFT
 	input_refresh.pressed = true
@@ -202,7 +202,7 @@ func _test_upgrade_rerolls(main: Variant) -> void:
 	main.state = "playing"
 	main.player.level = 3
 	main._open_upgrade_choices()
-	var branch_signature := main._level_card_set_signature(main.level_cards)
+	var branch_signature: String = main._level_card_set_signature(main.level_cards)
 	_check(not main.can_reroll_level_cards() and not main._reroll_level_cards(), "Lv3强制分支不可刷新或跳过")
 	_check(main.rerolls_remaining == 3 and main._level_card_set_signature(main.level_cards) == branch_signature, "强制分支刷新拒绝后不会损失刷新次数或改变分支")
 	main.skills["fire_talisman"] = {"level": 3, "branch": "flame", "evolved": ""}
