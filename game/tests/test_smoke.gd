@@ -709,15 +709,15 @@ func _test_combat_visuals(main: Variant) -> void:
 		frame_regions_valid = frame_regions_valid and region.position == Vector2(float(frame_index) * 160.0, 0.0) and region.size == Vector2(160.0, 128.0)
 	_check(frame_regions_valid, "四帧贴图区域连续且完全一致，不会出现火场缩放与错位")
 	var sample_fire: Dictionary = {"position": world_fire_center, "radius": 78.0, "duration": 3.0, "time": 3.0}
-	var sample_frame_0 := main._fire_field_frame_index(sample_fire)
+	var sample_frame_0: int = main._fire_field_frame_index(sample_fire)
 	sample_fire["time"] = 2.85
-	var sample_frame_1 := main._fire_field_frame_index(sample_fire)
+	var sample_frame_1: int = main._fire_field_frame_index(sample_fire)
 	sample_fire["time"] = 2.70
-	var sample_frame_2 := main._fire_field_frame_index(sample_fire)
+	var sample_frame_2: int = main._fire_field_frame_index(sample_fire)
 	sample_fire["time"] = 2.55
-	var sample_frame_3 := main._fire_field_frame_index(sample_fire)
+	var sample_frame_3: int = main._fire_field_frame_index(sample_fire)
 	sample_fire["time"] = 2.40
-	var sample_frame_loop := main._fire_field_frame_index(sample_fire)
+	var sample_frame_loop: int = main._fire_field_frame_index(sample_fire)
 	_check(sample_frame_0 == 0 and sample_frame_1 == 1 and sample_frame_2 == 2 and sample_frame_3 == 3 and sample_frame_loop == 0, "火场按 7 FPS 播放 4 帧并无缝循环，不出现分阶段状态切换")
 	var water_cells: PackedVector2Array = main._ground_effect_cells("water")
 	var water_outline: PackedVector2Array = main._water_field_outline(Vector2.ZERO, Vector2(112.0, 48.0), 0.0)
