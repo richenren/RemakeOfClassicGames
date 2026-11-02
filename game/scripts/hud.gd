@@ -104,7 +104,7 @@ func _draw_reference_hud(view: Vector2) -> void:
 	draw_texture_rect(PLAYER_PORTRAIT_TEXTURE, Rect2(portrait_center - Vector2.ONE * 30.0 * unit, Vector2.ONE * 60.0 * unit), false)
 	var info_x := status.position.x + 86.0 * unit
 	_text(Vector2(info_x, status.position.y + 26.0 * unit), "镇邪录 · 破败义庄", maxi(9, roundi(16.0 * unit)), pale_gold)
-	var hp_rect := Rect2(info_x + Vector2(40.0, 39.0) * unit, Vector2(219.0, 10.0) * unit)
+	var hp_rect := Rect2(Vector2(info_x + 40.0 * unit, status.position.y + 39.0 * unit), Vector2(219.0, 10.0) * unit)
 	draw_rect(hp_rect, Color("#170d0b", 0.95))
 	_bar(hp_rect, player.hp / maxf(1.0, player.max_hp), Color("#d45149"), true)
 	_center_text(hp_rect.grow(3.0 * unit), "%d / %d" % [roundi(player.hp), roundi(player.max_hp)], maxi(8, roundi(11.0 * unit)), Color("#fff1df"))
@@ -208,7 +208,7 @@ func _draw_reference_controls(view: Vector2, unit: float) -> void:
 	var skill: Vector2 = touch["skill_center"]
 	var heal_r: float = touch["heal_radius"]
 	var skill_r: float = touch["skill_radius"]
-	var skill_ready := main_ref.active_skill_cooldown <= 0.0
+	var skill_ready: bool = main_ref.active_skill_cooldown <= 0.0
 	draw_circle(heal, heal_r, Color("#15130e", 0.9))
 	draw_arc(heal, heal_r, 0.0, TAU, 40, Color("#bd865d") if main_ref.heal_charges > 0 else Color("#6a6357"), 2.0 * unit)
 	# Small potion silhouette for the actual healing action.
