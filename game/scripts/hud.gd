@@ -21,15 +21,211 @@ func _draw() -> void:
 	if main_ref == null:
 		return
 	var view := get_viewport_rect().size
-	_draw_hud(view)
+	_draw_reference_hud(view)
 	if main_ref.state == "level_up":
 		_draw_level_up(view)
 	elif main_ref.state == "paused":
 		_draw_pause(view)
 	elif main_ref.state == "game_over" or main_ref.state == "victory":
 		_draw_end_screen(view)
+	# The reference HUD owns action/joystick visuals for keyboard and touch alike.
+
+
+# The approved 1303x609 reference is a thin, edge-anchored gameplay HUD.
+# Only layout and presentation change: all combat, upgrade and fire effects remain intact.
+func _reference_hud_layout(view: Vector2) -> Dictionary:
+	var unit := clampf(minf(view.x / 1303.0, view.y / 609.0), 0.38, 1.5)
+	var status_rect := Rect2(Vector2(22.0, 12.0) * unit, Vector2(356.0, 86.0) * unit)
+	var objective_rect := Rect2(Vector2(36.0, 108.0) * unit, Vector2(307.0, 64.0) * unit)
+	var time_size := Vector2(385.0, 49.0) * unit
+	var time_rect := Rect2(Vector2((view.x - time_size.x) * 0.5, 13.0 * unit), time_size)
+	var slots_rect := Rect2(Vector2(view.x - 82.0 * unit, 99.0 * unit), Vector2(66.0, 255.0) * unit)
+	var xp_rect := Rect2(Vector2((view.x - 477.0 * unit) * 0.5, view.y - 53.0 * unit), Vector2(477.0, 27.0) * unit)
+	var objective_marker := Rect2(Vector2(28.0, view.y - 49.0 * unit), Vector2(274.0, 25.0) * unit)
+	var pause_center := Vector2(view.x - 32.0 * unit, 31.0 * unit)
+	var boss_size := Vector2(380.0, 39.0) * unit
+	var boss_rect := Rect2(Vector2((view.x - boss_size.x) * 0.5, 70.0 * unit), boss_size)
+	return {"scale": unit, "status": status_rect, "objective": objective_rect, "time": time_rect, "slots": slots_rect, "xp": xp_rect, "objective_marker": objective_marker, "pause_center": pause_center, "boss": boss_rect}
+
+
+func reference_action_at(screen_position: Vector2) -> String:
+	var view := get_viewport_rect().size
+	var layout := _reference_hud_layout(view)
+	var unit: float = layout["scale"]
+	var pause_center: Vector2 = layout["pause_center"]
+	if screen_position.distance_to(pause_center) <= 23.0 * unit:
+		return "pause"
+	var touch := _touch_layout(view)
+	if screen_position.distance_to(touch["skill_center"]) <= float(touch["skill_hit_radius"]):
+		return "cast"
+	if screen_position.distance_to(touch["heal_center"]) <= float(touch["heal_hit_radius"]):
+		return "heal"
+	return ""
+
+
+func _reference_panel(rect: Rect2, accent: Color, unit: float) -> void:
+	draw_rect(rect, Color(0.024, 0.030, 0.032, 0.81))
+	draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.64), false, maxf(0.65, unit))
+	var corner := 12.0 * unit
+	for i in range(4):
+		var x := rect.position.x if i % 2 == 0 else rect.end.x
+		var y := rect.position.y if i < 2 else rect.end.y
+		var x_sign := 1.0 if i % 2 == 0 else -1.0
+		var y_sign := 1.0 if i < 2 else -1.0
+		draw_line(Vector2(x + x_sign * 3.0 * unit, y), Vector2(x + x_sign * corner, y), accent, maxf(0.8, 1.5 * unit))
+		draw_line(Vector2(x, y + y_sign * 3.0 * unit), Vector2(x, y + y_sign * corner), accent, maxf(0.8, 1.5 * unit))
+
+
+func _draw_reference_hud(view: Vector2) -> void:
+	var player = main_ref.player
+	if player == null:
+		return
+	var layout := _reference_hud_layout(view)
+	var unit: float = layout["scale"]
+	var gold := Color("#c8a365")
+	var pale_gold := Color("#f4d99f")
+	# A subtle four-corner filigree frame retains the approved Chinese dark-gold style.
+	for i in range(4):
+		var corner := Vector2(3.0 * unit if i % 2 == 0 else view.x - 3.0 * unit, 3.0 * unit if i < 2 else view.y - 3.0 * unit)
+		var dx := 1.0 if i % 2 == 0 else -1.0
+		var dy := 1.0 if i < 2 else -1.0
+		draw_line(corner, corner + Vector2(28.0 * dx, 0.0) * unit, Color("#b28a46", 0.74), 1.3 * unit)
+		draw_line(corner, corner + Vector2(0.0, 28.0 * dy) * unit, Color("#b28a46", 0.74), 1.3 * unit)
+	draw_line(Vector2(8.0 * unit, 2.0 * unit), Vector2(view.x - 8.0 * unit, 2.0 * unit), Color("#bb9451", 0.35), maxf(0.6, unit))
+	draw_line(Vector2(8.0 * unit, view.y - 2.0 * unit), Vector2(view.x - 8.0 * unit, view.y - 2.0 * unit), Color("#bb9451", 0.35), maxf(0.6, unit))
+
+	# Top-left portrait, name, health and level, aligned to the reference.
+	var status: Rect2 = layout["status"]
+	_reference_panel(status, gold, unit)
+	var portrait_center := status.position + Vector2(45.0, 43.0) * unit
+	var portrait_radius := 35.0 * unit
+	draw_circle(portrait_center, portrait_radius + 2.0 * unit, Color("#12110e", 0.97))
+	draw_arc(portrait_center, portrait_radius, 0.0, TAU, 48, pale_gold, 2.0 * unit)
+	draw_texture_rect(PLAYER_PORTRAIT_TEXTURE, Rect2(portrait_center - Vector2.ONE * 30.0 * unit, Vector2.ONE * 60.0 * unit), false)
+	var info_x := status.position.x + 86.0 * unit
+	_text(Vector2(info_x, status.position.y + 26.0 * unit), "镇邪录 · 破败义庄", maxi(9, roundi(16.0 * unit)), pale_gold)
+	var hp_rect := Rect2(info_x + Vector2(40.0, 39.0) * unit, Vector2(219.0, 10.0) * unit)
+	draw_rect(hp_rect, Color("#170d0b", 0.95))
+	_bar(hp_rect, player.hp / maxf(1.0, player.max_hp), Color("#d45149"), true)
+	_center_text(hp_rect.grow(3.0 * unit), "%d / %d" % [roundi(player.hp), roundi(player.max_hp)], maxi(8, roundi(11.0 * unit)), Color("#fff1df"))
+	_text(Vector2(info_x, status.position.y + 49.0 * unit), "Lv%d" % player.level, maxi(9, roundi(12.0 * unit)), gold)
+	_text(Vector2(info_x, status.position.y + 69.0 * unit), "击杀 %d" % main_ref.kills, maxi(8, roundi(12.0 * unit)), MUTED_COLOR)
+
+	# The objective is directly underneath, never floating over the central fight.
+	if main_ref.state != "victory" and main_ref.state != "game_over":
+		var objective := objective_data()
+		var goal_rect: Rect2 = layout["objective"]
+		var goal_accent := Color("#87c2a5") if str(objective.get("kind", "")) == "survival" else Color("#e0b96a")
+		_reference_panel(goal_rect, goal_accent, unit)
+		draw_arc(goal_rect.position + Vector2(24.0, 28.0) * unit, 12.0 * unit, 0.0, TAU, 30, goal_accent, 1.6 * unit)
+		draw_circle(goal_rect.position + Vector2(24.0, 28.0) * unit, 3.0 * unit, goal_accent)
+		_text(goal_rect.position + Vector2(46.0, 27.0) * unit, str(objective.get("title", "当前目标")), maxi(8, roundi(15.0 * unit)), goal_accent)
+		_text(goal_rect.position + Vector2(46.0, 49.0) * unit, str(objective.get("detail", "")), maxi(8, roundi(12.0 * unit)), TEXT_COLOR)
+
+	# Center time and spiritual energy stay in one thin frame.
+	var timer: Rect2 = layout["time"]
+	_reference_panel(timer, gold, unit)
+	_text(timer.position + Vector2(22.0, 31.0) * unit, "生存时间  %s" % _format_time(main_ref.elapsed_seconds), maxi(9, roundi(16.0 * unit)), TEXT_COLOR)
+	draw_line(timer.position + Vector2(210.0, 8.0) * unit, timer.position + Vector2(210.0, 41.0) * unit, Color("#84663f", 0.65), unit)
+	_text(timer.position + Vector2(236.0, 31.0) * unit, "灵气 %d/%d" % [player.xp, player.xp_to_next], maxi(9, roundi(14.0 * unit)), Color("#b0e4e1"))
+
+	# Top-right pause is an actual click/touch target.
+	var pause: Vector2 = layout["pause_center"]
+	draw_circle(pause, 18.0 * unit, Color("#0a0c0e", 0.92))
+	draw_arc(pause, 18.0 * unit, 0.0, TAU, 32, gold, 1.7 * unit)
+	draw_line(pause + Vector2(-4.0, -7.0) * unit, pause + Vector2(-4.0, 7.0) * unit, pale_gold, 2.7 * unit)
+	draw_line(pause + Vector2(4.0, -7.0) * unit, pause + Vector2(4.0, 7.0) * unit, pale_gold, 2.7 * unit)
+
+	# Four actual equipped auto-skill slots, icon-only, stacked against the right edge.
+	var slots: Rect2 = layout["slots"]
+	_reference_panel(slots, gold, unit)
+	var owned: Array[String] = []
+	for skill_variant in main_ref.AUTO_SKILL_DEFS.keys():
+		var sid := str(skill_variant)
+		if main_ref.skills.has(sid):
+			owned.append(sid)
+	var icon_radius := 25.0 * unit
+	for i in range(4):
+		var center := slots.position + Vector2(slots.size.x * 0.5, (35.0 + 60.0 * float(i)) * unit)
+		if i < owned.size():
+			var sid := str(owned[i])
+			var data: Dictionary = main_ref.skills[sid]
+			var evolved := str(data.get("evolved", ""))
+			var icon := sid if evolved.is_empty() else evolved
+			_draw_card_art(center, icon, _upgrade_color(icon), icon_radius)
+			_center_text(Rect2(center.x - 20.0 * unit, center.y + 15.0 * unit, 40.0 * unit, 13.0 * unit), "Lv%d" % int(data.get("level", 1)), maxi(7, roundi(10.0 * unit)), TEXT_COLOR)
+		elif i == 0 and owned.is_empty():
+			_draw_card_art(center, "control_art", Color("#b9975b"), icon_radius)
+			_center_text(Rect2(center.x - 20.0 * unit, center.y + 15.0 * unit, 40.0 * unit, 13.0 * unit), "基础", maxi(7, roundi(9.0 * unit)), TEXT_COLOR)
+		else:
+			draw_circle(center, icon_radius * 0.78, Color("#10120e", 0.84))
+			draw_arc(center, icon_radius * 0.78, 0.0, TAU, 28, Color("#aa9062", 0.45), 1.0 * unit)
+			_center_text(Rect2(center.x - 10.0 * unit, center.y - 8.0 * unit, 20.0 * unit, 16.0 * unit), "+", maxi(9, roundi(18.0 * unit)), Color("#c9ad78", 0.60))
+
+	# A single unobtrusive Boss HP bar appears only when the Boss exists.
+	var boss = main_ref.get_boss()
+	if boss != null:
+		var boss_rect: Rect2 = layout["boss"]
+		_reference_panel(boss_rect, Color("#b85e4c"), unit)
+		_text(boss_rect.position + Vector2(15.0, 17.0) * unit, "尸王" + (" · 暴走" if boss.hp / maxf(1.0, boss.max_hp) <= 0.5 else ""), maxi(9, roundi(12.0 * unit)), pale_gold)
+		_bar(Rect2(boss_rect.position + Vector2(15.0, 24.0) * unit, Vector2(boss_rect.size.x / unit - 30.0, 6.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b64d43"), true)
+
+	# Experience bar stays at the bottom center as on the approved screenshot.
+	var xp: Rect2 = layout["xp"]
+	draw_rect(xp, Color("#070909", 0.85))
+	draw_line(xp.position, Vector2(xp.end.x, xp.position.y), Color("#b88d4b", 0.72), 1.2 * unit)
+	draw_line(Vector2(xp.position.x, xp.end.y), xp.end, Color("#b88d4b", 0.72), 1.2 * unit)
+	var badge_center := xp.position + Vector2(19.0, 13.0) * unit
+	draw_circle(badge_center, 21.0 * unit, Color("#17130f", 0.98))
+	draw_arc(badge_center, 21.0 * unit, 0.0, TAU, 30, gold, 1.8 * unit)
+	_center_text(Rect2(badge_center - Vector2(20.0, 13.0) * unit, Vector2(40.0, 26.0) * unit), "Lv%d" % player.level, maxi(8, roundi(12.0 * unit)), pale_gold)
+	var xp_bar := Rect2(xp.position + Vector2(52.0, 8.0) * unit, Vector2(242.0, 12.0) * unit)
+	_bar(xp_bar, float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#c8984e"), true)
+	_text(xp.position + Vector2(310.0, 18.0) * unit, "经验 %d/%d" % [player.xp, player.xp_to_next], maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
+
+	# Keyboard movement guide, the current Q/SPACE active art and E healing.
+	_draw_reference_controls(view, unit)
+
+
+func _draw_reference_controls(view: Vector2, unit: float) -> void:
+	var touch := _touch_layout(view)
+	var joy: Vector2 = touch["joystick_center"]
+	var joy_r: float = touch["joystick_radius"]
+	draw_circle(joy, joy_r, Color("#0d1011", 0.26))
+	draw_arc(joy, joy_r, 0.0, TAU, 36, Color("#ab946a", 0.48), maxf(1.0, 1.25 * unit))
 	if _is_mobile():
-		_draw_touch_controls(view)
+		var offset: Vector2 = main_ref.player.mobile_move * joy_r * 0.45
+		draw_circle(joy + offset, 19.0 * unit, Color("#c6a464", 0.34))
+		draw_arc(joy + offset, 19.0 * unit, 0.0, TAU, 28, Color("#e3c68d"), 1.2 * unit)
+	else:
+		for item in [{"letter":"W","offset":Vector2(0,-32)}, {"letter":"A","offset":Vector2(-33,0)}, {"letter":"S","offset":Vector2(0,32)}, {"letter":"D","offset":Vector2(33,0)}]:
+			var c: Vector2 = joy + item["offset"] * unit
+			draw_circle(c, 16.0 * unit, Color("#161817", 0.72))
+			draw_arc(c, 16.0 * unit, 0.0, TAU, 24, Color("#bca783", 0.65), 1.2 * unit)
+			_center_text(Rect2(c - Vector2(13.0, 12.0) * unit, Vector2(26.0, 24.0) * unit), str(item["letter"]), maxi(8, roundi(14.0 * unit)), TEXT_COLOR)
+
+	var heal: Vector2 = touch["heal_center"]
+	var skill: Vector2 = touch["skill_center"]
+	var heal_r: float = touch["heal_radius"]
+	var skill_r: float = touch["skill_radius"]
+	var skill_ready := main_ref.active_skill_cooldown <= 0.0
+	draw_circle(heal, heal_r, Color("#15130e", 0.9))
+	draw_arc(heal, heal_r, 0.0, TAU, 40, Color("#bd865d") if main_ref.heal_charges > 0 else Color("#6a6357"), 2.0 * unit)
+	# Small potion silhouette for the actual healing action.
+	draw_rect(Rect2(heal.x - 5.0 * unit, heal.y - 13.0 * unit, 10.0 * unit, 5.0 * unit), Color("#c6a365"))
+	draw_colored_polygon(PackedVector2Array([heal + Vector2(-9,-7) * unit, heal + Vector2(9,-7) * unit, heal + Vector2(11,10) * unit, heal + Vector2(-11,10) * unit]), Color("#bc5545"))
+	draw_circle(heal + Vector2(0,2) * unit, 4.0 * unit, Color("#f4c2a0"))
+	_center_text(Rect2(heal.x - 17.0 * unit, heal.y + (heal_r / unit - 2.0) * unit, 34.0 * unit, 15.0 * unit), "E · %d" % main_ref.heal_charges, maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
+
+	draw_circle(skill, skill_r, Color("#191209", 0.94))
+	var sword_color := Color("#f8d47b") if skill_ready else Color("#857869")
+	draw_arc(skill, skill_r, 0.0, TAU, 48, sword_color, 3.2 * unit)
+	_draw_card_art(skill, "control_art", sword_color, 27.0 * unit)
+	if not skill_ready:
+		var ratio := clampf(main_ref.active_skill_cooldown / maxf(0.1, main_ref.active_skill_base_cooldown), 0.0, 1.0)
+		draw_arc(skill, skill_r + 3.0 * unit, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - ratio), 40, Color("#4bbfa8"), 2.1 * unit)
+		_center_text(Rect2(skill - Vector2(22.0, 10.0) * unit, Vector2(44.0, 20.0) * unit), str(ceili(main_ref.active_skill_cooldown)), maxi(9, roundi(15.0 * unit)), Color("#ffffff"))
+	_center_text(Rect2(skill.x - 15.0 * unit, skill.y + (skill_r / unit - 1.0) * unit, 30.0 * unit, 16.0 * unit), "Q", maxi(9, roundi(14.0 * unit)), TEXT_COLOR)
 
 
 func _draw_hud(view: Vector2) -> void:
@@ -873,15 +1069,26 @@ func end_panel_rect(view: Vector2) -> Rect2:
 
 
 func _touch_layout(view: Vector2) -> Dictionary:
-	var scale := clampf(minf(view.x / 1280.0, view.y / 720.0), 0.62, 1.0)
-	var joystick_center := Vector2(94.0 * scale, view.y - 105.0 * scale)
-	var skill_center := Vector2(view.x - 82.0 * scale, view.y - 145.0 * scale)
-	var heal_center := Vector2(view.x - 48.0 * scale, view.y - 38.0 * scale)
-	var joystick_radius := 58.0 * scale
-	var skill_radius := maxf(26.0, 44.0 * scale)
-	var heal_radius := maxf(22.0, 30.0 * scale)
-	return {"scale": scale, "joystick_center": joystick_center, "joystick_radius": joystick_radius, "joystick_move_radius": 52.0 * scale, "skill_center": skill_center, "skill_radius": skill_radius, "skill_hit_radius": maxf(36.0, skill_radius + 8.0), "heal_center": heal_center, "heal_radius": heal_radius, "heal_hit_radius": maxf(30.0, heal_radius + 8.0)}
-
+	# Q/E actions and joystick use exactly the locations drawn by the reference HUD.
+	var scale := clampf(minf(view.x / 1303.0, view.y / 609.0), 0.38, 1.5)
+	var joystick_center := Vector2(145.0 * scale, view.y - 92.0 * scale)
+	var skill_center := Vector2(view.x - 96.0 * scale, view.y - 66.0 * scale)
+	var heal_center := Vector2(view.x - 208.0 * scale, view.y - 66.0 * scale)
+	var joystick_radius := 55.0 * scale
+	var skill_radius := 39.0 * scale
+	var heal_radius := 33.0 * scale
+	return {
+		"scale": scale,
+		"joystick_center": joystick_center,
+		"joystick_radius": joystick_radius,
+		"joystick_move_radius": 49.0 * scale,
+		"skill_center": skill_center,
+		"skill_radius": skill_radius,
+		"skill_hit_radius": 44.0 * scale,
+		"heal_center": heal_center,
+		"heal_radius": heal_radius,
+		"heal_hit_radius": 39.0 * scale
+	}
 
 func _draw_touch_controls(view: Vector2) -> void:
 	var touch := _touch_layout(view)

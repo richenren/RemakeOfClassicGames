@@ -237,7 +237,7 @@ func _input(event: InputEvent) -> void:
 				state = "playing"
 			get_viewport().set_input_as_handled()
 			return
-		if event.keycode == KEY_SPACE and state == "playing":
+		if event.keycode in [KEY_SPACE, KEY_Q] and state == "playing":
 			cast_active_skill()
 			return
 		if event.keycode == KEY_E and state == "playing":
@@ -260,6 +260,14 @@ func _input(event: InputEvent) -> void:
 				_reroll_level_cards()
 			else:
 				_select_upgrade(hud.card_index_at(event.position))
+		elif state == "playing":
+			match hud.reference_action_at(event.position):
+				"cast":
+					cast_active_skill()
+				"heal":
+					use_heal()
+				"pause":
+					state = "paused"
 		elif state == "paused":
 			state = "playing"
 		elif state == "game_over" or state == "victory":
@@ -289,7 +297,7 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 		if state != "playing":
 			return
 		var view := get_viewport_rect().size
-		if event.position.y < 70.0 and absf(event.position.x - view.x * 0.5) < 150.0:
+		if hud.reference_action_at(event.position) == "pause":
 			state = "paused"
 			return
 		var touch: Dictionary = hud._touch_layout(view)

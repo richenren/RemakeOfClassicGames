@@ -23,6 +23,7 @@ func _run_tests() -> void:
 	_test_xp_orb()
 	_test_end_screen_layout()
 	_test_responsive_layout()
+	_test_reference_hud_layout()
 	_test_compact_hud_layout()
 	_test_skill_art_assets()
 
@@ -474,6 +475,32 @@ func _test_responsive_layout() -> void:
 		_check(all_inside, "三张升级卡均位于面板内")
 		_check(no_overlap, "三张升级卡之间不重叠")
 	hud.queue_free()
+
+func _test_reference_hud_layout() -> void:
+	var hud: Variant = HUD_SCRIPT.new()
+	root.add_child(hud)
+	for view in [Vector2(1303.0, 609.0), Vector2(1280.0, 720.0), Vector2(1067.0, 744.0), Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
+		var layout: Dictionary = hud._reference_hud_layout(view)
+		var status: Rect2 = layout["status"]
+		var objective: Rect2 = layout["objective"]
+		var timer: Rect2 = layout["time"]
+		var slots: Rect2 = layout["slots"]
+		var xp: Rect2 = layout["xp"]
+		var pause_center: Vector2 = layout["pause_center"]
+		for key in ["status", "objective", "time", "slots", "xp", "boss"]:
+			var rect: Rect2 = layout[key]
+			_check(rect.position.x >= 0.0 and rect.position.y >= 0.0 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
+		_check(status.end.y < objective.position.y and status.end.x < timer.position.x and timer.end.x < slots.position.x, "定稿HUD角落状态、目标、计时、窄技能栏互不重叠")
+		_check(slots.size.x <= 72.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧技能栏保持竖排窄幅，不覆盖战场")
+		var touch: Dictionary = hud._touch_layout(view)
+		var skill_center: Vector2 = touch["skill_center"]
+		var heal_center: Vector2 = touch["heal_center"]
+		var joystick_center: Vector2 = touch["joystick_center"]
+		_check(skill_center.distance_to(heal_center) > float(touch["skill_hit_radius"]) + float(touch["heal_hit_radius"]), "Q与E按钮点击热区没有重叠")
+		_check(xp.position.x > joystick_center.x + float(touch["joystick_radius"]) and xp.end.x < heal_center.x - float(touch["heal_hit_radius"]), "底部经验条避开虚拟摇杆及主动按钮")
+		_check(pause_center.x > slots.position.x and pause_center.y + 19.0 * float(layout["scale"]) < slots.position.y, "右上暂停与技能栏分离")
+	hud.queue_free()
+
 
 func _test_compact_hud_layout() -> void:
 	var hud: Variant = HUD_SCRIPT.new()
