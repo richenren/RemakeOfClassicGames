@@ -7,6 +7,8 @@ const XP_ORB_SCRIPT = preload("res://scripts/xp_orb.gd")
 const HUD_SCRIPT = preload("res://scripts/hud.gd")
 const GRAVEYARD_BACKGROUND: Texture2D = preload("res://assets/sprites/graveyard_background.svg")
 const FIRE_FIELD_TEXTURE: Texture2D = preload("res://assets/sprites/fire_field_prototype.png")
+# Metal slashes have a separate transparent illustrated edge; approved fire assets stay untouched.
+const METAL_SLASH_TEXTURE: Texture2D = preload("res://assets/sprites/metal_blade_slash.svg")
 # Sixteen 160x128 frames from the approved artwork. The ground silhouette, alpha and palette stay stable.
 const FIRE_FIELD_ANIMATION: Texture2D = preload("res://assets/sprites/fire_field_animation_sheet.png")
 const FIRE_FIELD_ANIMATION_FRAME_SIZE := Vector2(160.0, 128.0)
@@ -1423,7 +1425,7 @@ func _resolve_projectile_hit(projectile) -> void:
 	var evolved := str(skill_data.get("evolved", ""))
 	if skill_id == "copper_coin_sword" and projectile.impact_is_return:
 		target.take_damage(damage * float(projectile.return_damage_multiplier))
-		_spawn_skill_effect("slash", target.position, 24.0, 0.18)
+		_spawn_skill_effect("slash", target.position, 24.0, 0.18, projectile.rotation - PI * 0.5 + 0.55)
 		return
 	match skill_id:
 		"fire_talisman":
@@ -1475,12 +1477,12 @@ func _resolve_projectile_hit(projectile) -> void:
 			if branch == "pierce" and int(projectile.pierce_hit_count) > 1:
 				hit_damage *= float(projectile.pierce_damage_multiplier)
 			target.take_damage(hit_damage)
-			_spawn_skill_effect("metal_impact", target.position, 25.0, 0.18)
+			_spawn_skill_effect("metal_impact", target.position, 25.0, 0.18, projectile.rotation - PI * 0.5 - 0.5)
 			if branch == "return":
 				projectile.begin_return(player)
 			if evolved == "golden_sword_array":
 				_apply_chain_damage(target, damage * 0.42, 2, "metal")
-				_spawn_skill_effect("golden_sword_array", target.position, 38.0, 0.28)
+				_spawn_skill_effect("golden_sword_array", target.position, 38.0, 0.28, projectile.rotation - PI * 0.5)
 				if _artifact_level("sword_manual") > 0:
 					_spawn_skill_effect("sword_manual", target.position, 42.0, 0.3)
 			if _cultivation_level("metal") > 0:
@@ -1516,7 +1518,7 @@ func _apply_chain_damage(origin_enemy, damage: float, max_targets: int, chain_st
 		hit_targets.append(next_target)
 		if chain_style == "metal":
 			_spawn_chain_effect(origin_enemy.position, next_target.position, 0.2, "metal_chain")
-			_spawn_skill_effect("slash", next_target.position, 26.0, 0.18)
+			_spawn_skill_effect("slash", next_target.position, 26.0, 0.18, (next_target.position - origin_enemy.position).angle() - 0.5)
 		elif chain_style == "wood":
 			_spawn_chain_effect(origin_enemy.position, next_target.position, 0.22, "wood_chain")
 			_spawn_skill_effect("wood", next_target.position, 22.0, 0.2)
@@ -1524,11 +1526,11 @@ func _apply_chain_damage(origin_enemy, damage: float, max_targets: int, chain_st
 			_spawn_chain_effect(origin_enemy.position, next_target.position, 0.26)
 			_spawn_skill_effect("lightning", next_target.position, 28.0, 0.24)
 
-func _spawn_skill_effect(effect_kind: String, center: Vector2, radius: float, duration: float) -> void:
+func _spawn_skill_effect(effect_kind: String, center: Vector2, radius: float, duration: float, slash_angle: float = 0.0) -> void:
 	# Cap transient particles so dense late-game combat cannot grow the effect list without bound.
 	if skill_effects.size() >= 80:
 		skill_effects.remove_at(0)
-	skill_effects.append({"kind": effect_kind, "position": center, "radius": radius, "time": duration, "duration": duration})
+	skill_effects.append({"kind": effect_kind, "position": center, "radius": radius, "time": duration, "duration": duration, "angle": slash_angle})
 	queue_redraw()
 
 
@@ -1617,6 +1619,16 @@ func _tick_skill_effects(delta: float) -> void:
 		queue_redraw()
 
 
+func _draw_metal_blade_slash(center: Vector2, radius: float, alpha: float, angle: float, stretch: float = 1.0) -> void:
+	# Curved, tapered gold blade artwork. Rotation follows the actual sword trajectory.
+	if alpha <= 0.001:
+		return
+	var size := Vector2(radius * 2.65 * stretch, radius * 1.54 * stretch)
+	draw_set_transform(center, angle, Vector2.ONE)
+	draw_texture_rect(METAL_SLASH_TEXTURE, Rect2(-size * 0.5, size), false, Color(1.0, 1.0, 1.0, clampf(alpha, 0.0, 1.0)))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
 func _draw_skill_effects() -> void:
 	for effect in skill_effects:
 		var center: Vector2 = effect.get("position", Vector2.ZERO)
@@ -1673,20 +1685,34 @@ func _draw_skill_effects() -> void:
 					draw_colored_polygon(PackedVector2Array([base - tangent * 4.0, tip, base + tangent * 4.0]), Color(1.0, 0.34, 0.04, life * 0.78))
 					draw_line(base, tip, Color(1.0, 0.84, 0.42, life * 0.9), 1.5, true)
 			"metal_impact":
-				var blade_angle := -0.62 + sin(elapsed_seconds * 24.0) * 0.08
+				var blade_angle := float(effect.get("angle", -0.5))
+				_draw_metal_blade_slash(center, radius, life * 0.98, blade_angle, 0.65 + progress * 0.38)
+				_draw_metal_blade_slash(center + Vector2(2.0, -1.0), radius * 0.68, life * 0.42, blade_angle - 0.12, 0.7 + progress * 0.3)
+				draw_circle(center, radius * 0.09, Color("#fff9dc", life * 0.74))
+				# Three directional metallic glints, deliberately not a radial explosion.
 				var blade_direction := Vector2(cos(blade_angle), sin(blade_angle))
 				var blade_side := Vector2(-blade_direction.y, blade_direction.x)
-				draw_line(center - blade_direction * radius * 0.82, center + blade_direction * radius * 0.82, Color("#f6d98d", life * 0.92), 3.2, true)
-				draw_line(center - blade_direction * radius * 0.62 + blade_side * 2.0, center + blade_direction * radius * 0.58 + blade_side * 2.0, Color("#fff2c8", life * 0.8), 1.2, true)
-				for spark_index in range(4):
-					var spark_angle := TAU * float(spark_index) / 4.0 + elapsed_seconds * 7.0
-					var spark_direction := Vector2(cos(spark_angle), sin(spark_angle))
-					draw_line(center + spark_direction * radius * 0.24, center + spark_direction * radius * 0.52, Color("#e9bd58", life * 0.82), 1.6, true)
+				for spark_index in range(3):
+					var spark_offset := blade_direction * (float(spark_index) - 1.0) * radius * 0.3 + blade_side * (float(spark_index % 2) - 0.5) * radius * 0.33
+					draw_line(center + spark_offset, center + spark_offset + blade_side * (4.0 + float(spark_index)), Color("#f5c86f", life * 0.7), 1.0, true)
 			"slash", "golden_sword_array":
-				draw_line(center + Vector2(-radius * 0.75, radius * 0.55), center + Vector2(radius * 0.72, -radius * 0.55), Color(0.98, 0.86, 0.58, life), 3.2)
-				draw_line(center + Vector2(-radius * 0.38, radius * 0.72), center + Vector2(radius * 0.48, -radius * 0.25), Color(0.78, 0.63, 0.36, life * 0.75), 1.8)
-				if kind == "golden_sword_array":
-					draw_line(center + Vector2(-radius * 0.65, -radius * 0.4), center + Vector2(radius * 0.58, radius * 0.35), Color(0.98, 0.78, 0.35, life * 0.9), 2.8)
+				var base_angle := float(effect.get("angle", -0.5))
+				if kind == "slash":
+					_draw_metal_blade_slash(center, radius, life * 0.92, base_angle, 0.67 + progress * 0.36)
+				else:
+					# Two separate staggered blade strikes after the primary weapon hit.
+					# Both are visual only; chain damage is resolved by combat code.
+					var first_in := smoothstep(0.04, 0.23, progress)
+					var first_out := 1.0 - smoothstep(0.46, 0.8, progress)
+					var second_in := smoothstep(0.31, 0.51, progress)
+					var second_out := 1.0 - smoothstep(0.75, 1.0, progress)
+					var first_alpha := first_in * first_out
+					var second_alpha := second_in * second_out
+					_draw_metal_blade_slash(center + Vector2(-radius * 0.08, radius * 0.04), radius * 1.06, first_alpha, base_angle - 0.64, 0.78 + progress * 0.2)
+					_draw_metal_blade_slash(center + Vector2(radius * 0.08, -radius * 0.04), radius * 1.06, second_alpha, base_angle + 0.76, 0.78 + progress * 0.2)
+					# High-level sword-intent insignia, faint and smaller than the weapon.
+					var sigil_alpha := minf(first_alpha, second_in) * life * 0.32
+					draw_arc(center, radius * 0.18, base_angle - 0.82, base_angle + 0.82, 12, Color("#ffe1a0", sigil_alpha), 0.85, true)
 			"hit":
 				draw_circle(center, radius * (0.25 + progress * 0.45), Color(1.0, 0.88, 0.62, life * 0.35))
 				draw_arc(center, radius * (0.35 + progress * 0.55), 0.0, TAU, 24, Color(1.0, 0.78, 0.45, life * 0.75), 1.6)

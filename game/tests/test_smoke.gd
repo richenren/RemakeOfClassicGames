@@ -149,6 +149,12 @@ func _test_sprite_assets(main: Variant) -> void:
 	_check(fire_profile["primary"] != thunder_profile["primary"], "火符和雷符投射物采用不同主色")
 	_check(thunder_profile["primary"] == Color("#dcefff") and thunder_profile["core"] == Color("#ffffff"), "雷符统一使用银白主色与纯白核心")
 	_check(metal_profile["primary"] != wood_profile["primary"] and metal_profile["primary"] != fire_profile["primary"], "金系剑气与木系桃木剑具备独立颜色")
+	var gilded_sword: Texture2D = PROJECTILE_SCRIPT.METAL_SWORD_TEXTURE
+	var metal_slash: Texture2D = main.METAL_SLASH_TEXTURE
+	_check(gilded_sword != null and gilded_sword.get_size() == Vector2(96.0, 176.0), "金系御剑流加载独立透明鎏金铜钱法剑素材")
+	_check(metal_slash != null and metal_slash.get_size() == Vector2(192.0, 112.0), "金系命中加载独立弧形金属锋刃素材")
+	_check(PROJECTILE_SCRIPT.METAL_SWORD_DRAW_SIZE.x < PLAYER_SCRIPT.PLAYER_DRAW_SIZE.x and PROJECTILE_SCRIPT.METAL_SWORD_DRAW_SIZE.y < PLAYER_SCRIPT.PLAYER_DRAW_SIZE.y, "御剑素材保持小于主角的克制战斗比例")
+	_check(not PLAYER_SCRIPT.cast_uses_paper("metal") and PLAYER_SCRIPT.cast_uses_paper("fire") and PLAYER_SCRIPT.cast_uses_paper("lightning"), "金系改用御剑起手，不绘制纸符；其他元素符箓不变")
 	var water_profile: Dictionary = PROJECTILE_SCRIPT.visual_profile_for_skill("water_array")
 	_check(water_profile["primary"] != fire_profile["primary"] and water_profile["element"] == "water", "水系投射物拥有独立的水球视觉配置")
 	_check(thunder_profile["element"] == "lightning", "雷系视觉配置统一标记为 lightning")
@@ -664,6 +670,14 @@ func _test_combat_visuals(main: Variant) -> void:
 	_check(projectile_visual.trail_history.size() == 2, "投射物飞行时采样并保留连续轨迹点")
 	_check(projectile_visual.PROJECTILE_VISUAL_SCALE < 1.0 and projectile_visual.PROJECTILE_VISUAL_SCALE > 0.8 and projectile_visual.MAX_TRAIL_POINTS >= 4, "投射物主体缩至角色尺寸的克制比例并保留多帧拖尾")
 	_check(projectile_visual.DEFAULT_MAX_TRAVEL_DISTANCE > 0.0, "所有投射物具有默认最大飞行距离")
+	var sword_image: Image = PROJECTILE_SCRIPT.METAL_SWORD_TEXTURE.get_image()
+	var slash_image: Image = main.METAL_SLASH_TEXTURE.get_image()
+	_check(sword_image.get_pixel(0, 0).a < 0.05 and sword_image.get_pixel(48, 65).a > 0.8, "金系飞剑贴图透明背景且铜钱剑实体可见")
+	_check(slash_image.get_pixel(0, 0).a < 0.05, "金系斩击贴图无不透明边缘背景")
+	main._spawn_skill_effect("metal_impact", Vector2(320.0, 260.0), 25.0, 0.18, 0.47)
+	var sampled_slash: Dictionary = main.skill_effects[main.skill_effects.size() - 1]
+	_check(is_equal_approx(float(sampled_slash.get("angle", -99.0)), 0.47), "金系斩击方向作为纯视觉属性保留，不影响伤害判定")
+	main.skill_effects.pop_back()
 	projectile_visual.queue_free()
 
 	var range_projectile: Variant = PROJECTILE_SCRIPT.new()

@@ -1,5 +1,9 @@
 extends Node2D
 
+# Gold-school weapon art is an independent summoned coin-sword, not a paper talisman.
+const METAL_SWORD_TEXTURE: Texture2D = preload("res://assets/sprites/metal_coin_sword.svg")
+const METAL_SWORD_DRAW_SIZE := Vector2(24.0, 44.0)
+
 const PROJECTILE_HIT_RADIUS := 4.0
 const DEFAULT_MAX_TRAVEL_DISTANCE := 540.0
 const PROJECTILE_VISUAL_SCALE := 0.92
@@ -260,6 +264,33 @@ func _draw_motion_trail(primary: Color, core: Color) -> void:
 		draw_line(points[index], points[index + 1], inner, maxf(1.2, width * 0.36), true)
 
 
+func _draw_metal_sword_trail() -> void:
+	# A narrow, tapered gold afterimage follows the existing movement samples.
+	# It naturally bends on return, without changing flight or hit detection.
+	if trail_history.is_empty():
+		return
+	var points := PackedVector2Array()
+	for sample_position in trail_history:
+		points.append((sample_position - position).rotated(-rotation))
+	points.append(Vector2.ZERO)
+	for index in range(points.size() - 1):
+		var start: Vector2 = points[index]
+		var finish: Vector2 = points[index + 1]
+		var segment: Vector2 = finish - start
+		if segment.length_squared() < 0.1:
+			continue
+		var tangent := Vector2(-segment.y, segment.x).normalized()
+		var strength := float(index + 1) / float(points.size() - 1)
+		var half_width := lerpf(0.7, 3.1, strength)
+		draw_colored_polygon(PackedVector2Array([
+			start - tangent * half_width * 0.58,
+			start + tangent * half_width * 0.58,
+			finish + tangent * half_width,
+			finish - tangent * half_width
+		]), Color("#d6a249", 0.05 + strength * 0.22))
+		draw_line(start, finish, Color("#fff0b5", 0.08 + strength * 0.56), 0.55 + strength * 0.85, true)
+
+
 func _draw() -> void:
 	var profile: Dictionary = visual_profile_for_skill(skill_id)
 	var primary: Color = profile["primary"]
@@ -274,7 +305,10 @@ func _draw() -> void:
 		"thunder_talisman", "five_thunder":
 			skill_scale = 0.82
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * PROJECTILE_VISUAL_SCALE * skill_scale * pulse_scale)
-	_draw_motion_trail(primary, core)
+	if skill_id == "copper_coin_sword":
+		_draw_metal_sword_trail()
+	else:
+		_draw_motion_trail(primary, core)
 	match skill_id:
 		"fire_talisman":
 			draw_line(Vector2(0.0, 7.0), Vector2(0.0, 23.0), Color(1.0, 0.28, 0.05, 0.66), 6.5, true)
@@ -301,17 +335,11 @@ func _draw() -> void:
 			draw_colored_polygon(bolt, primary)
 			draw_polyline(PackedVector2Array([Vector2(2.8, -12.0), Vector2(-5.5, -1.0), Vector2(-1.2, -1.0), Vector2(-4.0, 10.0)]), core, 1.8, true)
 		"copper_coin_sword":
-			# A visible coin-chain blade rather than a lone floating coin.
-			draw_colored_polygon(PackedVector2Array([Vector2(0.0, -20.0), Vector2(3.5, -11.0), Vector2(2.8, 7.0), Vector2(-2.8, 7.0), Vector2(-3.5, -11.0)]), Color("#6f5027"))
-			draw_colored_polygon(PackedVector2Array([Vector2(0.0, -18.0), Vector2(2.0, -10.0), Vector2(1.7, 5.0), Vector2(-1.7, 5.0), Vector2(-2.0, -10.0)]), primary)
-			for coin_index in range(4):
-				var coin_y := -9.0 + float(coin_index) * 4.2
-				draw_circle(Vector2(0.0, coin_y), 3.0, Color("#b17a32"))
-				draw_arc(Vector2(0.0, coin_y), 3.0, 0.0, TAU, 16, core, 0.8, true)
-				draw_rect(Rect2(-0.9, coin_y - 0.9, 1.8, 1.8), Color("#34271a"))
-			draw_line(Vector2(-5.0, 5.0), Vector2(5.0, 5.0), core, 2.2, true)
-			draw_line(Vector2(0.0, 7.0), Vector2(0.0, 13.0), Color("#8d5b2b"), 2.2, true)
-			draw_circle(Vector2(0.0, 14.0), 2.0, primary)
+			# An illustrated, gilded bronze coin-sword replaces procedural coin circles.
+			# No rotation wobble or wide glow; the blade silhouette stays legible.
+			draw_texture_rect(METAL_SWORD_TEXTURE, Rect2(-METAL_SWORD_DRAW_SIZE * 0.5, METAL_SWORD_DRAW_SIZE), false)
+			var glint_y := -9.0 + 10.0 * (0.5 + 0.5 * sin(age * 9.0))
+			draw_line(Vector2(-2.5, glint_y), Vector2(2.2, glint_y - 1.8), Color("#fffbe8", 0.18 + 0.45 * (0.5 + 0.5 * sin(age * 9.0))), 0.8, true)
 		"peachwood_sword":
 			# A full wooden talisman sword with grain, guard and a small jade charm.
 			draw_circle(Vector2.ZERO, 11.0, Color(primary.r, primary.g, primary.b, 0.14))

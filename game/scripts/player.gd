@@ -274,6 +274,30 @@ func _update_animation(delta: float) -> void:
 			animation_frame_index = (animation_frame_index + 1) % frames.size()
 
 
+static func cast_uses_paper(element: String) -> bool:
+	# Gold is sword-cultivation: the hand guides summoned steel, not a paper seal.
+	return element != "metal"
+
+
+func _draw_metal_cast_pose(center: Vector2, direction: Vector2, progress: float, pulse: float) -> void:
+	# A palm-sized sword-intent flash. Never add an arm, a second weapon or a talisman.
+	var side := Vector2(-direction.y, direction.x)
+	var glow := 0.24 + 0.72 * pulse
+	var beginning := center - direction * 4.0
+	var point := center + direction * (8.0 + pulse * 5.0)
+	draw_line(beginning, point, Color("#a47132", glow * 0.65), 3.5, true)
+	draw_line(beginning, point, Color("#fff0b5", glow), 1.35, true)
+	draw_line(center + side * 3.4 - direction * 3.0, center - side * 3.4 - direction * 3.0, Color("#e9bd58", glow), 1.25, true)
+	for index in range(3):
+		var offset := side * (float(index) - 1.0) * 4.2 - direction * (2.0 + float(index % 2) * 3.0)
+		var spark_center := center + offset
+		draw_line(spark_center - side * 1.0, spark_center + side * 1.0, Color("#ffe3a0", 0.63 * pulse), 0.85, true)
+	# A minimal seal glints only during the release; never a paper rectangle.
+	if progress > 0.58 and progress < 0.84:
+		var sigil_alpha := sin((progress - 0.58) / 0.26 * PI) * 0.5
+		draw_arc(center - direction * 2.0, 5.0, direction.angle() - 0.6, direction.angle() + 0.6, 10, Color("#f6d98d", sigil_alpha), 0.9, true)
+
+
 func _draw_cast_pose() -> void:
 	# Keep the seal close to the palm and body silhouette. The character artwork already
 	# contains its arm; drawing another long arm here created a detached torch-like shape.
@@ -285,6 +309,9 @@ func _draw_cast_pose() -> void:
 	var talisman_center := hand_anchor + direction * reach
 	var pulse := sin(progress * PI)
 	var paper_alpha := 0.9 - progress * 0.08
+	if not cast_uses_paper(cast_element):
+		_draw_metal_cast_pose(talisman_center, direction, progress, pulse)
+		return
 
 	# Keep the seal visibly attached to the leading hand; no detached arm/torch geometry.
 	draw_circle(talisman_center, 5.0 + pulse * 2.0, Color(0.88, 0.61, 0.25, 0.06 + pulse * 0.14))

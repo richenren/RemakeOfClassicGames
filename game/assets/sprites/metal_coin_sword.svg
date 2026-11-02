@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="176" viewBox="0 0 96 176">
+<defs>
+  <linearGradient id="bronze" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#604522"/><stop offset=".18" stop-color="#a57332"/><stop offset=".38" stop-color="#e9bf62"/><stop offset=".56" stop-color="#fff0b5"/><stop offset=".76" stop-color="#ba8437"/><stop offset="1" stop-color="#5b3b1e"/></linearGradient>
+  <linearGradient id="blade" x1="0" y1="0" x2="1" y2=".06"><stop offset="0" stop-color="#88602e"/><stop offset=".18" stop-color="#f0c967"/><stop offset=".47" stop-color="#fff4c5"/><stop offset=".58" stop-color="#f6d57e"/><stop offset="1" stop-color="#865a28"/></linearGradient>
+  <radialGradient id="coin"><stop offset="0" stop-color="#fff0ae"/><stop offset=".46" stop-color="#dca84a"/><stop offset=".78" stop-color="#ac772c"/><stop offset="1" stop-color="#6a4520"/></radialGradient>
+  <linearGradient id="edge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f2c56b" stop-opacity=".0"/><stop offset=".5" stop-color="#fff9e2" stop-opacity=".95"/><stop offset="1" stop-color="#ffd576" stop-opacity=".2"/></linearGradient>
+</defs>
+<!-- The gold weapon is an independent, summoned sword, not the character's back-mounted sword. -->
+<path d="M48 8 L57 34 L60 41 L65 117 L59 133 L48 143 L37 133 L31 117 L36 41 L39 34Z" fill="#5d4022" opacity=".55"/>
+<path d="M48 10 L57 37 L62 118 L53 133 L48 141 L43 133 L34 118 L39 37Z" fill="url(#bronze)" stroke="#ffe3a2" stroke-width="1.8" stroke-linejoin="round"/>
+<path d="M48 13 L51 39 L55 119 L49 133 L48 138 L46 133 L40 119 L45 39Z" fill="url(#blade)" opacity=".94"/>
+<path d="M48 11 L49.5 39" stroke="#fff8dc" stroke-width="2.2" stroke-linecap="round" opacity=".92"/>
+<path d="M38 42 L34 118 L41 132 M58 42 L62 118 L55 132" fill="none" stroke="#fff0ae" stroke-width="1.9" opacity=".77" stroke-linecap="round"/>
+<!-- Five linked cash coins: recognizable square holes, worn bronze patina, gilded rims. -->
+<g>
+<g><circle cx="48" cy="48" r="10.7" fill="#553718" stroke="#f4c66d" stroke-width="1.25"/><circle cx="48" cy="48" r="9.1" fill="url(#coin)" stroke="#eac06c" stroke-width=".85"/><circle cx="48" cy="48" r="6.9" fill="none" stroke="#76501f" stroke-width=".75" opacity=".8"/><rect x="44.7" y="44.7" width="6.6" height="6.6" rx=".4" fill="#47301c" stroke="#ffe49a" stroke-width=".8"/><path d="M42 43 Q45 39 48 40 M52 53 Q49 56 45 55" fill="none" stroke="#fff0ba" stroke-width=".8" opacity=".65"/></g>
+<g><circle cx="48" cy="66" r="10.7" fill="#553718" stroke="#f4c66d" stroke-width="1.25"/><circle cx="48" cy="66" r="9.1" fill="url(#coin)" stroke="#eac06c" stroke-width=".85"/><circle cx="48" cy="66" r="6.9" fill="none" stroke="#76501f" stroke-width=".75" opacity=".8"/><rect x="44.7" y="62.7" width="6.6" height="6.6" rx=".4" fill="#47301c" stroke="#ffe49a" stroke-width=".8"/><path d="M42 61 Q45 57 48 58 M52 71 Q49 74 45 73" fill="none" stroke="#fff0ba" stroke-width=".8" opacity=".65"/></g>
+<g><circle cx="48" cy="84" r="10.7" fill="#553718" stroke="#f4c66d" stroke-width="1.25"/><circle cx="48" cy="84" r="9.1" fill="url(#coin)" stroke="#eac06c" stroke-width=".85"/><circle cx="48" cy="84" r="6.9" fill="none" stroke="#76501f" stroke-width=".75" opacity=".8"/><rect x="44.7" y="80.7" width="6.6" height="6.6" rx=".4" fill="#47301c" stroke="#ffe49a" stroke-width=".8"/><path d="M42 79 Q45 75 48 76 M52 89 Q49 92 45 91" fill="none" stroke="#fff0ba" stroke-width=".8" opacity=".65"/></g>
+<g><circle cx="48" cy="102" r="10.7" fill="#553718" stroke="#f4c66d" stroke-width="1.25"/><circle cx="48" cy="102" r="9.1" fill="url(#coin)" stroke="#eac06c" stroke-width=".85"/><circle cx="48" cy="102" r="6.9" fill="none" stroke="#76501f" stroke-width=".75" opacity=".8"/><rect x="44.7" y="98.7" width="6.6" height="6.6" rx=".4" fill="#47301c" stroke="#ffe49a" stroke-width=".8"/><path d="M42 97 Q45 93 48 94 M52 107 Q49 110 45 109" fill="none" stroke="#fff0ba" stroke-width=".8" opacity=".65"/></g>
+<g><circle cx="48" cy="120" r="10.7" fill="#553718" stroke="#f4c66d" stroke-width="1.25"/><circle cx="48" cy="120" r="9.1" fill="url(#coin)" stroke="#eac06c" stroke-width=".85"/><circle cx="48" cy="120" r="6.9" fill="none" stroke="#76501f" stroke-width=".75" opacity=".8"/><rect x="44.7" y="116.7" width="6.6" height="6.6" rx=".4" fill="#47301c" stroke="#ffe49a" stroke-width=".8"/><path d="M42 115 Q45 111 48 112 M52 125 Q49 128 45 127" fill="none" stroke="#fff0ba" stroke-width=".8" opacity=".65"/></g>
+</g>
+<!-- A clear sword guard, wrapped grip, and restrained red silk knot. -->
+<path d="M24 129 Q34 126 39 131 L48 135 L57 131 Q65 126 72 129 Q68 136 58 137 L48 139 L38 137 Q28 137 24 129Z" fill="url(#bronze)" stroke="#fff1b3" stroke-width="1.8"/>
+<path d="M44 138 L52 138 L51 159 Q48 163 45 159Z" fill="#785020" stroke="#edc579" stroke-width="1.3"/>
+<path d="M44.5 142 L51.5 146 M44.5 149 L51 153 M45 155 L50 158" stroke="#e5ae56" stroke-width="1.7" opacity=".8"/>
+<path d="M43 159 Q48 156 53 159 L51 164 L45 164Z" fill="url(#blade)" stroke="#fbe5a1" stroke-width=".9"/>
+<path d="M48 164 C43 169 40 169 37 174 M48 164 C54 168 56 171 60 174" fill="none" stroke="#a0442d" stroke-width="2.3" stroke-linecap="round" opacity=".8"/>
+</svg>
