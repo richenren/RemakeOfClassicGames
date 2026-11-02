@@ -5,15 +5,28 @@ const SKILL_CARD_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_card
 const WATER_COLD_TIDE_CARD_TEXTURE: Texture2D = preload("res://assets/sprites/water_cold_tide_card.svg")
 const ELEMENT_CULTIVATION_ATLAS: Texture2D = preload("res://assets/sprites/element_cultivation_atlas.svg")
 const PLAYER_PORTRAIT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_portrait.tres")
+const BOSS_UI_PORTRAIT_DEFAULT: Texture2D = preload("res://assets/sprites/enemy_boss.svg")
+const HEAL_CELADON_TEXTURE: Texture2D = preload("res://assets/sprites/heal_celadon_flask.svg")
 
 var main_ref
+const MOUSE_TOOLTIP_DELAY := 0.40
+const TOUCH_TOOLTIP_DELAY := 0.52
+var hovered_tooltip_key: String = ""
+var hover_tooltip_elapsed: float = 0.0
+var pressed_tooltip_key: String = ""
+var pressed_touch_index: int = -1
+var pressed_touch_position: Vector2 = Vector2.ZERO
+var touch_tooltip_elapsed: float = 0.0
+var touch_tooltip_long: bool = false
+var pressed_touch_action: String = ""
 const TEXT_COLOR := Color("#efe6d2")
 const MUTED_COLOR := Color("#b8ad99")
 const PANEL_COLOR := Color(0.08, 0.075, 0.065, 0.92)
 const PANEL_EDGE := Color("#8b7758")
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_advance_tooltips(delta)
 	queue_redraw()
 
 
@@ -22,6 +35,8 @@ func _draw() -> void:
 		return
 	var view := get_viewport_rect().size
 	_draw_reference_hud(view)
+	if main_ref.state == "playing":
+		_draw_reference_tooltip(view)
 	if main_ref.state == "level_up":
 		_draw_level_up(view)
 	elif main_ref.state == "paused":
@@ -37,7 +52,7 @@ func _reference_hud_layout(view: Vector2) -> Dictionary:
 	var unit := clampf(minf(view.x / 1303.0, view.y / 609.0), 0.38, 1.5)
 	var status_rect := Rect2(Vector2(22.0, 12.0) * unit, Vector2(356.0, 86.0) * unit)
 	var objective_rect := Rect2(Vector2(36.0, 108.0) * unit, Vector2(307.0, 64.0) * unit)
-	var time_size := Vector2(385.0, 49.0) * unit
+	var time_size := Vector2(245.0, 49.0) * unit
 	var time_rect := Rect2(Vector2((view.x - time_size.x) * 0.5, 13.0 * unit), time_size)
 	var slots_rect := Rect2(Vector2(view.x - 82.0 * unit, 99.0 * unit), Vector2(66.0, 255.0) * unit)
 	var xp_rect := Rect2(Vector2((view.x - 477.0 * unit) * 0.5, view.y - 53.0 * unit), Vector2(477.0, 27.0) * unit)
@@ -111,23 +126,40 @@ func _draw_reference_hud(view: Vector2) -> void:
 	_text(Vector2(info_x, status.position.y + 49.0 * unit), "Lv%d" % player.level, maxi(9, roundi(12.0 * unit)), gold)
 	_text(Vector2(info_x, status.position.y + 69.0 * unit), "击杀 %d" % main_ref.kills, maxi(8, roundi(12.0 * unit)), MUTED_COLOR)
 
-	# The objective is directly underneath, never floating over the central fight.
+	# Boss-specific seal portrait and compact countdown. The stage profile determines
+	# the visible boss name/portrait; the current prologue uses its existing boss art.
 	if main_ref.state != "victory" and main_ref.state != "game_over":
 		var objective := objective_data()
 		var goal_rect: Rect2 = layout["objective"]
-		var goal_accent := Color("#87c2a5") if str(objective.get("kind", "")) == "survival" else Color("#e0b96a")
+		var spawning: bool = str(objective.get("kind", "")) == "survival"
+		var remaining: int = int(objective.get("remaining_seconds", 0))
+		var danger: bool = spawning and remaining <= 60
+		var imminent: bool = spawning and remaining <= 10
+		var goal_accent := Color("#c85a46") if danger or not spawning else Color("#a98a57")
 		_reference_panel(goal_rect, goal_accent, unit)
-		draw_arc(goal_rect.position + Vector2(24.0, 28.0) * unit, 12.0 * unit, 0.0, TAU, 30, goal_accent, 1.6 * unit)
-		draw_circle(goal_rect.position + Vector2(24.0, 28.0) * unit, 3.0 * unit, goal_accent)
-		_text(goal_rect.position + Vector2(46.0, 27.0) * unit, str(objective.get("title", "当前目标")), maxi(8, roundi(15.0 * unit)), goal_accent)
-		_text(goal_rect.position + Vector2(46.0, 49.0) * unit, str(objective.get("detail", "")), maxi(8, roundi(12.0 * unit)), TEXT_COLOR)
+		var icon_center := goal_rect.position + Vector2(27.0, 30.0) * unit
+		draw_circle(icon_center, 23.0 * unit, Color("#18100f"))
+		draw_arc(icon_center, 23.0 * unit, 0.0, TAU, 36, goal_accent, 1.4 * unit)
+		var avatar_rect := Rect2(icon_center - Vector2(19.0, 20.0) * unit, Vector2(38.0, 40.0) * unit)
+		var avatar_modulate := Color(0.75, 0.68, 0.58, 0.86) if spawning and not danger else Color.WHITE
+		draw_texture_rect_region(_boss_profile_portrait(), avatar_rect, Rect2(54.0, 9.0, 84.0, 90.0), avatar_modulate, false)
+		var label_x := goal_rect.position.x + 58.0 * unit
+		var boss_title := str(objective.get("boss_name", "尸王"))
+		_text(Vector2(label_x, goal_rect.position.y + 18.0 * unit), "镇邪令 · " + boss_title, maxi(8, roundi(13.0 * unit)), goal_accent)
+		if spawning:
+			var countdown := "%02d:%02d" % [remaining / 60, remaining % 60]
+			_text(Vector2(label_x, goal_rect.position.y + 42.0 * unit), "现身倒计时", maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
+			var pulse := 1.0 if not imminent else 0.74 + 0.26 * sin(main_ref.elapsed_seconds * 13.0)
+			_text(Vector2(label_x + 85.0 * unit, goal_rect.position.y + 43.0 * unit), countdown, maxi(10, roundi(18.0 * unit)), Color(goal_accent.r, goal_accent.g, goal_accent.b, pulse))
+		else:
+			_text(Vector2(label_x, goal_rect.position.y + 42.0 * unit), str(objective.get("detail", "正在交战")), maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
+		var objective_progress := float(objective.get("progress", 0.0))
+		_bar(Rect2(goal_rect.position.x + 58.0 * unit, goal_rect.end.y - 9.0 * unit, goal_rect.size.x - 70.0 * unit, 3.0 * unit), objective_progress, goal_accent)
 
-	# Center time and spiritual energy stay in one thin frame.
+	# XP belongs only in the bottom progress bar. The upper display is time-only.
 	var timer: Rect2 = layout["time"]
 	_reference_panel(timer, gold, unit)
-	_text(timer.position + Vector2(22.0, 31.0) * unit, "生存时间  %s" % _format_time(main_ref.elapsed_seconds), maxi(9, roundi(16.0 * unit)), TEXT_COLOR)
-	draw_line(timer.position + Vector2(210.0, 8.0) * unit, timer.position + Vector2(210.0, 41.0) * unit, Color("#84663f", 0.65), unit)
-	_text(timer.position + Vector2(236.0, 31.0) * unit, "灵气 %d/%d" % [player.xp, player.xp_to_next], maxi(9, roundi(14.0 * unit)), Color("#b0e4e1"))
+	_center_text(timer, "生存时间  %s" % _format_time(main_ref.elapsed_seconds), maxi(9, roundi(17.0 * unit)), TEXT_COLOR)
 
 	# Top-right pause is an actual click/touch target.
 	var pause: Vector2 = layout["pause_center"]
@@ -167,7 +199,7 @@ func _draw_reference_hud(view: Vector2) -> void:
 	if boss != null:
 		var boss_rect: Rect2 = layout["boss"]
 		_reference_panel(boss_rect, Color("#b85e4c"), unit)
-		_text(boss_rect.position + Vector2(15.0, 17.0) * unit, "尸王" + (" · 暴走" if boss.hp / maxf(1.0, boss.max_hp) <= 0.5 else ""), maxi(9, roundi(12.0 * unit)), pale_gold)
+		_text(boss_rect.position + Vector2(15.0, 17.0) * unit, str(main_ref.get_boss_ui_profile().get("name", "尸王")) + (" · 暴走" if boss.hp / maxf(1.0, boss.max_hp) <= 0.5 else ""), maxi(9, roundi(12.0 * unit)), pale_gold)
 		_bar(Rect2(boss_rect.position + Vector2(15.0, 24.0) * unit, Vector2(boss_rect.size.x / unit - 30.0, 6.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b64d43"), true)
 
 	# Experience bar stays at the bottom center as on the approved screenshot.
@@ -211,10 +243,9 @@ func _draw_reference_controls(view: Vector2, unit: float) -> void:
 	var skill_ready: bool = main_ref.active_skill_cooldown <= 0.0
 	draw_circle(heal, heal_r, Color("#15130e", 0.9))
 	draw_arc(heal, heal_r, 0.0, TAU, 40, Color("#bd865d") if main_ref.heal_charges > 0 else Color("#6a6357"), 2.0 * unit)
-	# Small potion silhouette for the actual healing action.
-	draw_rect(Rect2(heal.x - 5.0 * unit, heal.y - 13.0 * unit, 10.0 * unit, 5.0 * unit), Color("#c6a365"))
-	draw_colored_polygon(PackedVector2Array([heal + Vector2(-9,-7) * unit, heal + Vector2(9,-7) * unit, heal + Vector2(11,10) * unit, heal + Vector2(-11,10) * unit]), Color("#bc5545"))
-	draw_circle(heal + Vector2(0,2) * unit, 4.0 * unit, Color("#f4c2a0"))
+	# An independent illustrated celadon pill flask replaces the debug-red flask.
+	var potion_alpha := 1.0 if main_ref.heal_charges > 0 else 0.40
+	draw_texture_rect(HEAL_CELADON_TEXTURE, Rect2(heal - Vector2.ONE * 24.0 * unit, Vector2.ONE * 48.0 * unit), false, Color(1.0, 1.0, 1.0, potion_alpha))
 	_center_text(Rect2(heal.x - 17.0 * unit, heal.y + (heal_r / unit - 2.0) * unit, 34.0 * unit, 15.0 * unit), "E · %d" % main_ref.heal_charges, maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
 
 	draw_circle(skill, skill_r, Color("#191209", 0.94))
@@ -226,6 +257,164 @@ func _draw_reference_controls(view: Vector2, unit: float) -> void:
 		draw_arc(skill, skill_r + 3.0 * unit, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - ratio), 40, Color("#4bbfa8"), 2.1 * unit)
 		_center_text(Rect2(skill - Vector2(22.0, 10.0) * unit, Vector2(44.0, 20.0) * unit), str(ceili(main_ref.active_skill_cooldown)), maxi(9, roundi(15.0 * unit)), Color("#ffffff"))
 	_center_text(Rect2(skill.x - 15.0 * unit, skill.y + (skill_r / unit - 1.0) * unit, 30.0 * unit, 16.0 * unit), "Q", maxi(9, roundi(14.0 * unit)), TEXT_COLOR)
+
+
+func _boss_profile_portrait() -> Texture2D:
+	var profile: Dictionary = main_ref.get_boss_ui_profile()
+	var path := str(profile.get("portrait_path", ""))
+	# When future chapters define their own portrait, load once through the engine's
+	# resource cache rather than hard-coding a new boss face in the HUD.
+	if path.is_empty() or path == "res://assets/sprites/enemy_boss.svg":
+		return BOSS_UI_PORTRAIT_DEFAULT
+	var resource := load(path) as Texture2D
+	return resource if resource != null else BOSS_UI_PORTRAIT_DEFAULT
+
+
+func _equipped_skill_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for skill_variant in main_ref.AUTO_SKILL_DEFS.keys():
+		var sid := str(skill_variant)
+		if main_ref.skills.has(sid):
+			ids.append(sid)
+	return ids
+
+
+func reference_tooltip_at(position: Vector2) -> String:
+	if main_ref == null or main_ref.state != "playing":
+		return ""
+	var view := get_viewport_rect().size
+	var touch := _touch_layout(view)
+	if position.distance_to(touch["heal_center"]) <= float(touch["heal_radius"]):
+		return "heal"
+	if position.distance_to(touch["skill_center"]) <= float(touch["skill_radius"]):
+		return "active"
+	var layout := _reference_hud_layout(view)
+	var slots: Rect2 = layout["slots"]
+	var unit: float = layout["scale"]
+	var owned := _equipped_skill_ids()
+	for i in range(mini(4, owned.size())):
+		var center := slots.position + Vector2(slots.size.x * 0.5, (35.0 + float(i) * 60.0) * unit)
+		if position.distance_to(center) <= 28.0 * unit:
+			return "skill:" + owned[i]
+	if slots.has_point(position) and owned.is_empty():
+		return "basic"
+	return ""
+
+
+func begin_touch_inspect(index: int, position: Vector2) -> bool:
+	var key := reference_tooltip_at(position)
+	if key.is_empty() or pressed_touch_index >= 0:
+		return false
+	pressed_touch_index = index
+	pressed_touch_position = position
+	pressed_tooltip_key = key
+	pressed_touch_action = reference_action_at(position)
+	touch_tooltip_elapsed = 0.0
+	touch_tooltip_long = false
+	return true
+
+
+func end_touch_inspect(index: int, position: Vector2) -> String:
+	if index != pressed_touch_index:
+		return ""
+	var action := pressed_touch_action
+	var was_long := touch_tooltip_long
+	var travelled := position.distance_to(pressed_touch_position)
+	pressed_touch_index = -1
+	pressed_tooltip_key = ""
+	pressed_touch_action = ""
+	touch_tooltip_elapsed = 0.0
+	touch_tooltip_long = false
+	if was_long or travelled > 30.0 * _reference_hud_layout(get_viewport_rect().size)["scale"]:
+		return ""
+	return action
+
+
+func _advance_tooltips(delta: float) -> void:
+	if main_ref == null or main_ref.state != "playing":
+		hovered_tooltip_key = ""
+		hover_tooltip_elapsed = 0.0
+		pressed_touch_index = -1
+		pressed_tooltip_key = ""
+		return
+	if pressed_touch_index >= 0:
+		touch_tooltip_elapsed += maxf(0.0, delta)
+		if touch_tooltip_elapsed >= TOUCH_TOOLTIP_DELAY:
+			touch_tooltip_long = true
+		return
+	if _is_mobile():
+		return
+	var key := reference_tooltip_at(get_viewport().get_mouse_position())
+	if key != hovered_tooltip_key:
+		hovered_tooltip_key = key
+		hover_tooltip_elapsed = 0.0
+	else:
+		hover_tooltip_elapsed += maxf(0.0, delta)
+
+
+func tooltip_details(key: String) -> Dictionary:
+	if key == "heal":
+		return {"name":"回春丹", "level":"治疗道具", "detail":"恢复最大生命值的 30%，满血时无法使用。", "stat":"剩余 %d 次 · E 使用" % main_ref.heal_charges}
+	if key == "active":
+		var lvl: int = main_ref.active_skill_level
+		var ready_text := "就绪" if main_ref.active_skill_cooldown <= 0.0 else "冷却剩余 %.1f 秒" % main_ref.active_skill_cooldown
+		return {"name":"镇尸诀", "level":"Lv%d · 主动道术" % lvl, "detail":"对周围邪祟造成伤害和减速，等级越高作用范围越大。", "stat":"%s · Q / Space 使用" % ready_text}
+	if key == "basic":
+		return {"name":"基础符箓", "level":"自动攻击", "detail":"自动攻击附近邪祟，伤害和攻击间隔受角色属性影响。", "stat":"伤害 %d · 间隔 %.2f 秒" % [roundi(main_ref.player.damage), main_ref.player.attack_interval]}
+	if key.begins_with("skill:"):
+		var skill_id := key.trim_prefix("skill:")
+		if not main_ref.skills.has(skill_id) or not main_ref.AUTO_SKILL_DEFS.has(skill_id):
+			return {}
+		var data: Dictionary = main_ref.skills[skill_id]
+		var def: Dictionary = main_ref.AUTO_SKILL_DEFS[skill_id]
+		var name := str(def.get("name", skill_id))
+		var evolved := str(data.get("evolved", ""))
+		if not evolved.is_empty():
+			name += " · 已进化"
+		var branch := str(data.get("branch", ""))
+		var branch_name := ""
+		for item in main_ref.SKILL_BRANCHES.get(skill_id, []):
+			if str(item.get("id", "")) == branch:
+				branch_name = str(item.get("name", ""))
+		var stat := "基础冷却 %.2f 秒" % float(def.get("cooldown", 0.0))
+		if not branch_name.is_empty():
+			stat += " · " + branch_name
+		return {"name":name, "level":"Lv%d · 自动技能" % int(data.get("level", 1)), "detail":str(def.get("desc", "")), "stat":stat}
+	return {}
+
+
+func _draw_reference_tooltip(view: Vector2) -> void:
+	var key := ""
+	var unit: float = _reference_hud_layout(view)["scale"]
+	if pressed_touch_index >= 0:
+		if touch_tooltip_long:
+			key = pressed_tooltip_key
+	elif hover_tooltip_elapsed >= MOUSE_TOOLTIP_DELAY:
+		key = hovered_tooltip_key
+	if key.is_empty():
+		return
+	var detail := tooltip_details(key)
+	if detail.is_empty():
+		return
+	var size := Vector2(302.0, 137.0) * unit
+	var anchor := Vector2.ZERO
+	if key.begins_with("skill:") or key == "basic":
+		var layout := _reference_hud_layout(view)
+		var slots: Rect2 = layout["slots"]
+		anchor = Vector2(slots.position.x - size.x - 10.0 * unit, slots.position.y + 22.0 * unit)
+	else:
+		var touch := _touch_layout(view)
+		var center: Vector2 = touch["skill_center"] if key == "active" else touch["heal_center"]
+		anchor = Vector2(center.x - size.x * 0.5, center.y - size.y - 57.0 * unit)
+	anchor.x = clampf(anchor.x, 5.0 * unit, maxf(5.0 * unit, view.x - size.x - 5.0 * unit))
+	anchor.y = clampf(anchor.y, 5.0 * unit, maxf(5.0 * unit, view.y - size.y - 5.0 * unit))
+	var panel := Rect2(anchor, size)
+	_reference_panel(panel, Color("#d3ab65"), unit)
+	_text(panel.position + Vector2(13.0, 26.0) * unit, str(detail["name"]), maxi(9, roundi(17.0 * unit)), Color("#f6d99e"))
+	_text(panel.position + Vector2(13.0, 47.0) * unit, str(detail["level"]), maxi(8, roundi(12.0 * unit)), Color("#b9e1cf"))
+	_draw_wrapped_text(Rect2(panel.position + Vector2(13.0, 53.0) * unit, Vector2(size.x - 26.0 * unit, 52.0 * unit)), str(detail["detail"]), maxi(8, roundi(11.0 * unit)), TEXT_COLOR, 2)
+	draw_line(panel.position + Vector2(12.0, 113.0) * unit, panel.position + Vector2(290.0, 113.0) * unit, Color("#9b7746", 0.72), unit)
+	_text(panel.position + Vector2(13.0, 129.0) * unit, str(detail["stat"]), maxi(8, roundi(10.0 * unit)), Color("#f2cb85"))
 
 
 func _draw_hud(view: Vector2) -> void:
@@ -755,24 +944,28 @@ func _draw_seal(center: Vector2, label: String, accent: Color) -> void:
 func objective_data() -> Dictionary:
 	if main_ref == null:
 		return {}
+	var profile: Dictionary = main_ref.get_boss_ui_profile()
+	var boss_name := str(profile.get("name", "尸王"))
+	var appearance := maxf(1.0, float(profile.get("spawn_time", 480.0)))
 	if main_ref.state == "victory":
-		return {"title": "任务完成 · 尸王伏诛", "detail": "本局目标已达成", "progress": 1.0, "kind": "success"}
+		return {"title":"任务完成 · " + boss_name + "伏诛", "detail":"本局目标已达成", "progress":1.0, "kind":"success", "boss_name":boss_name}
 	if main_ref.state == "game_over":
-		return {"title": "本局结束 · 阳寿已尽", "detail": "整备后可重新挑战", "progress": 0.0, "kind": "failed"}
+		return {"title":"本局结束 · 阳寿已尽", "detail":"整备后可重新挑战", "progress":0.0, "kind":"failed", "boss_name":boss_name}
 	if main_ref.boss_spawned:
 		var boss = main_ref.get_boss()
 		if boss != null:
 			var progress := 1.0 - clampf(boss.hp / maxf(1.0, boss.max_hp), 0.0, 1.0)
-			return {"title": "当前目标 · 击败尸王", "detail": "持续走位，抓住输出时机", "progress": progress, "kind": "boss"}
-		return {"title": "当前目标 · 清理战场", "detail": "尸王战斗正在收尾", "progress": 0.9, "kind": "boss"}
-	var remaining := maxi(0, ceili(480.0 - main_ref.elapsed_seconds))
+			return {"title":"当前目标 · 击败" + boss_name, "detail":"尸王降临 · 抓住输出时机", "progress":progress, "kind":"boss", "boss_name":boss_name}
+		return {"title":"当前目标 · 清理战场", "detail":"尸王战斗正在收尾", "progress":0.9, "kind":"boss", "boss_name":boss_name}
+	var remaining := maxi(0, ceili(appearance - main_ref.elapsed_seconds))
 	return {
-		"title": "当前目标 · 镇压尸潮",
-		"detail": "尸王现身倒计时 %02d:%02d" % [remaining / 60, remaining % 60],
-		"progress": clampf(main_ref.elapsed_seconds / 480.0, 0.0, 1.0),
-		"kind": "survival"
+		"title":"当前目标 · 镇压尸潮",
+		"detail":"尸王现身倒计时 %02d:%02d" % [remaining / 60, remaining % 60],
+		"remaining_seconds":remaining,
+		"boss_name":boss_name,
+		"progress":clampf(main_ref.elapsed_seconds / appearance, 0.0, 1.0),
+		"kind":"survival"
 	}
-
 
 func _draw_skill_emblem(center: Vector2, ready: bool, color: Color) -> void:
 	draw_circle(center, 13.0, Color("#211c16"))

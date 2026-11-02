@@ -36,6 +36,7 @@ func _run_tests() -> void:
 	_test_camera_follow(main)
 	_test_render_hierarchy(main)
 	_test_hud_presentation(main)
+	_test_hud_tooltips_and_boss_profile(main)
 	_test_sprite_assets(main)
 	_test_upgrade_rerolls(main)
 	_test_skill_build_system(main)
@@ -90,6 +91,49 @@ func _test_hud_presentation(main: Variant) -> void:
 	_check(hud._upgrade_category("general_swift_step") == "通用强化", "通用强化卡显示正确类别")
 	_check(hud._upgrade_category("active_skill_upgrade") == "主动道术", "主动道术升级卡显示正确类别")
 	_check(hud._upgrade_category("cultivation_water") == "元素修炼", "元素修炼卡显示独立类别")
+
+
+func _test_hud_tooltips_and_boss_profile(main: Variant) -> void:
+	var hud: Variant = main.hud
+	var original_state: String = main.state
+	var original_elapsed: float = main.elapsed_seconds
+	var original_boss_profile: Dictionary = main.stage_boss_profile.duplicate(true)
+	main.state = "playing"
+	main.elapsed_seconds = 23.0
+	var profile: Dictionary = main.get_boss_ui_profile()
+	_check(str(profile.get("name", "")) == "义庄尸王" and str(profile.get("portrait_path", "")).ends_with("enemy_boss.svg"), "首关尸王使用该关专属Boss名称和头像资源")
+	_check(hud.BOSS_UI_PORTRAIT_DEFAULT.get_size() == Vector2(192.0, 224.0), "当前Boss肖像资源已正确加载")
+	_check(hud.HEAL_CELADON_TEXTURE.get_size() == Vector2(96.0, 96.0), "青瓷回春丹替换旧红色几何药瓶")
+	var goal: Dictionary = hud.objective_data()
+	_check(int(goal.get("remaining_seconds", -1)) == 457 and str(goal.get("boss_name", "")) == "义庄尸王", "Boss倒计时与Boss身份按关卡配置动态计算")
+	main.elapsed_seconds = 421.0
+	_check(int(hud.objective_data().get("remaining_seconds", -1)) == 59, "尸王登场前一分钟进入预警区间")
+	main.elapsed_seconds = 23.0
+	var view: Vector2 = main.get_viewport_rect().size
+	var touch: Dictionary = hud._touch_layout(view)
+	var cast_pos: Vector2 = touch["skill_center"]
+	var heal_pos: Vector2 = touch["heal_center"]
+	_check(hud.reference_tooltip_at(cast_pos) == "active" and hud.reference_tooltip_at(heal_pos) == "heal", "主动道术与青瓷丹瓶均支持技能说明热区")
+	_check(str(hud.tooltip_details("active").get("name", "")) == "镇尸诀" and str(hud.tooltip_details("heal").get("name", "")) == "回春丹", "技能说明与实际技能、治疗名称一致")
+	_check(hud.begin_touch_inspect(31, heal_pos), "触屏按下治疗图标进入长按判断而非立即使用")
+	hud._advance_tooltips(0.53)
+	_check(hud.touch_tooltip_long and hud.end_touch_inspect(31, heal_pos).is_empty(), "长按青瓷丹瓶弹出说明且松手不扣除治疗次数")
+	_check(hud.begin_touch_inspect(32, heal_pos) and hud.end_touch_inspect(32, heal_pos) == "heal", "短按青瓷丹瓶仍能触发原治疗行为")
+	_check(hud.begin_touch_inspect(33, cast_pos) and hud.end_touch_inspect(33, cast_pos) == "cast", "短按主动法术仍能释放")
+	_check(hud.begin_touch_inspect(34, cast_pos), "主动技能支持长按")
+	hud._advance_tooltips(0.55)
+	_check(hud.end_touch_inspect(34, cast_pos).is_empty(), "长按主动法术仅查看说明不触发施法")
+	var rect: Rect2 = hud._reference_hud_layout(view)["slots"]
+	var unit: float = hud._reference_hud_layout(view)["scale"]
+	main.skills["copper_coin_sword"] = {"level":3, "branch":"pierce", "evolved":""}
+	var icon_center := rect.position + Vector2(rect.size.x * 0.5, 35.0 * unit)
+	_check(hud.reference_tooltip_at(icon_center) == "skill:copper_coin_sword", "右侧窄技能栏图标支持鼠标悬停与触屏长按识别")
+	var details: Dictionary = hud.tooltip_details("skill:copper_coin_sword")
+	_check(str(details.get("name", "")) == "铜钱剑" and str(details.get("stat", "")).contains("贯穿"), "技能说明读取当前实际等级、分支与冷却，而不是固定占位数据")
+	main.skills.erase("copper_coin_sword")
+	main.elapsed_seconds = original_elapsed
+	main.stage_boss_profile = original_boss_profile
+	main.state = original_state
 
 
 func _test_sprite_assets(main: Variant) -> void:

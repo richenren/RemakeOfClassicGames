@@ -18,6 +18,9 @@ const FIRE_FIELD_ANIMATION_FPS := 12.0
 const WORLD_SIZE := Vector2(2400.0, 1600.0)
 const MAX_ENEMIES := 100
 const BOSS_PHASE_ENEMY_CAP := 18
+# Future chapter configs replace this entire UI profile with the chapter boss's name and portrait.
+# Current prototype only contains the first chapter boss; no other chapters are implied.
+const DEFAULT_STAGE_BOSS_PROFILE := {"id":"ruined_manor", "name":"义庄尸王", "portrait_path":"res://assets/sprites/enemy_boss.svg", "spawn_time":480.0}
 
 var player
 var hud
@@ -116,6 +119,7 @@ var element_cultivation_levels: Dictionary = {"metal": 0, "wood": 0, "water": 0,
 var water_recovery_accumulator: float = 0.0
 var heal_charges: int = 2
 var boss_spawned: bool = false
+var stage_boss_profile: Dictionary = DEFAULT_STAGE_BOSS_PROFILE.duplicate(true)
 var level_cards: Array[Dictionary] = []
 var rerolls_remaining: int = REROLLS_PER_STAGE
 var skills: Dictionary = {}
@@ -206,7 +210,7 @@ func _process(delta: float) -> void:
 			_spawn_wave()
 			spawn_timer = _spawn_interval()
 
-		if not boss_spawned and elapsed_seconds >= 480.0:
+		if not boss_spawned and elapsed_seconds >= float(get_boss_ui_profile().get("spawn_time", 480.0)):
 			boss_spawned = true
 			_trim_regular_enemies_for_boss_phase(BOSS_PHASE_ENEMY_CAP)
 			spawn_enemy("boss")
@@ -300,15 +304,19 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 		if hud.reference_action_at(event.position) == "pause":
 			state = "paused"
 			return
-		var touch: Dictionary = hud._touch_layout(view)
-		if event.position.distance_to(touch["skill_center"]) <= float(touch["skill_hit_radius"]):
-			cast_active_skill()
-		elif event.position.distance_to(touch["heal_center"]) <= float(touch["heal_hit_radius"]):
-			use_heal()
-		elif event.position.x < view.x * 0.42 and event.position.y > view.y * 0.52 and joystick_touch_id == -1:
+		# Delay a touch action until release so holding shows details without casting
+		# or consuming the healing potion.
+		if hud.begin_touch_inspect(event.index, event.position):
+			return
+		if event.position.x < view.x * 0.42 and event.position.y > view.y * 0.52 and joystick_touch_id == -1:
 			joystick_touch_id = event.index
 			_update_mobile_move(event.position)
 	else:
+		var released_action: String = hud.end_touch_inspect(event.index, event.position)
+		if released_action == "cast":
+			cast_active_skill()
+		elif released_action == "heal":
+			use_heal()
 		if event.index == joystick_touch_id:
 			joystick_touch_id = -1
 			player.mobile_move = Vector2.ZERO
@@ -2316,6 +2324,10 @@ func use_heal() -> void:
 		return
 	heal_charges -= 1
 	player.heal(player.max_hp * 0.3)
+
+
+func get_boss_ui_profile() -> Dictionary:
+	return stage_boss_profile
 
 
 func get_boss():
