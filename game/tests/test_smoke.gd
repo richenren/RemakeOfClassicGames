@@ -696,19 +696,11 @@ func _test_combat_visuals(main: Variant) -> void:
 	_check(main.fire_zones.size() == 1, "火符按固定间隔自动生成持续火焰区域")
 	_check(main.has_method("_draw_fire_zones") and main.has_method("_draw_water_field"), "火场与寒潮水域使用独立的持续效果绘制器")
 	var fire_cells: PackedVector2Array = main._ground_effect_cells("fire")
-	var fire_outline: PackedVector2Array = main._fire_field_outline(Vector2.ZERO, Vector2(82.0, 60.0), 0.0)
-	var fire_radius_min := 1.0e20
-	var fire_radius_max := -1.0e20
-	for fire_point in fire_outline:
-		var normalized_radius := Vector2(fire_point.x / 82.0, fire_point.y / 60.0).length()
-		fire_radius_min = minf(fire_radius_min, normalized_radius)
-		fire_radius_max = maxf(fire_radius_max, normalized_radius)
-	var fire_band: PackedVector2Array = main._fire_flame_band(Vector2.ZERO, 72.0, 8.0, 40.0, 0.0)
-	var fire_top_min := 1.0e20
-	var fire_top_max := -1.0e20
-	for fire_point_index in range(41, fire_band.size()):
-		fire_top_min = minf(fire_top_min, fire_band[fire_point_index].y)
-		fire_top_max = maxf(fire_top_max, fire_band[fire_point_index].y)
+	var fire_sprite: Texture2D = main.FIRE_FIELD_TEXTURE
+	var world_fire_center := Vector2(420.0, 260.0)
+	var prototype_rect: Rect2 = main._fire_sprite_rect(world_fire_center, 78.0)
+	_check(fire_cells.is_empty() and fire_sprite != null and fire_sprite.get_size() == Vector2(160.0, 128.0), "火场使用已确认的完整透明火焰原型素材，不再程序拼接火焰")
+	_check(prototype_rect.has_point(world_fire_center) and prototype_rect.size.x > prototype_rect.size.y and prototype_rect.size.x > 170.0, "火焰原型以非零世界坐标居中，保持横向覆盖的整体火场")
 	var water_cells: PackedVector2Array = main._ground_effect_cells("water")
 	var water_outline: PackedVector2Array = main._water_field_outline(Vector2.ZERO, Vector2(112.0, 48.0), 0.0)
 	var water_radius_min := 1.0e20
@@ -729,18 +721,6 @@ func _test_combat_visuals(main: Variant) -> void:
 	var water_width := water_max_x - water_min_x
 	var water_height := water_max_y - water_min_y
 	var earth_cells: PackedVector2Array = main._ground_effect_cells("earth")
-	_check(fire_cells.is_empty() and fire_outline.size() == 64 and fire_radius_max - fire_radius_min > 0.04, "火场使用单一不规则连续燃烧轮廓，不再依赖七格布局")
-	_check(fire_band.size() == 82 and fire_top_max - fire_top_min > 8.0, "火焰主体由连续宽幅起伏轮廓构成，不再绘制分离的小火苗")
-	var world_fire_center := Vector2(420.0, 260.0)
-	var anchored_flame: PackedVector2Array = main._fire_flame_band(world_fire_center, 70.0, 12.0, 46.0, 0.7)
-	var anchored_flame_min_y := 1.0e20
-	var anchored_flame_max_y := -1.0e20
-	for flame_point in anchored_flame:
-		anchored_flame_min_y = minf(anchored_flame_min_y, flame_point.y)
-		anchored_flame_max_y = maxf(anchored_flame_max_y, flame_point.y)
-	_check(anchored_flame.size() == 82 and anchored_flame_min_y < 245.0 and anchored_flame_max_y < 285.0 and anchored_flame_max_y > 255.0, "火焰必须在非零世界坐标的火场附近绘制，禁止 Y 位置重复叠加")
-	var flame_ribbon: PackedVector2Array = main._fire_flame_ribbon(world_fire_center, 14.0, 35.0, 0.6)
-	_check(flame_ribbon.size() == 38 and flame_ribbon[0].y == world_fire_center.y and flame_ribbon[18].y < world_fire_center.y - 30.0, "连续火舌从火场底部上升，不会退化成深红色贴地色块")
 	_check(water_cells.is_empty() and water_outline.size() == 64 and water_width > water_height * 1.8 and water_radius_max - water_radius_min > 0.06, "水域使用横向舒展的自然不规则水面轮廓")
 	_check(earth_cells.size() == 5, "土系地刺以敌人脚下为中心生成五格突刺布局")
 	_check(main.AUTO_SKILL_DEFS.has("earth_formation") and main.AUTO_SKILL_DEFS["earth_formation"].get("name", "") == "地刺", "土系保留内部技能 ID 并将显示名称调整为地刺")

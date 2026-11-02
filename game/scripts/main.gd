@@ -6,6 +6,7 @@ const PROJECTILE_SCRIPT = preload("res://scripts/projectile.gd")
 const XP_ORB_SCRIPT = preload("res://scripts/xp_orb.gd")
 const HUD_SCRIPT = preload("res://scripts/hud.gd")
 const GRAVEYARD_BACKGROUND: Texture2D = preload("res://assets/sprites/graveyard_background.svg")
+const FIRE_FIELD_TEXTURE: Texture2D = preload("res://assets/sprites/fire_field_prototype.png")
 
 const WORLD_SIZE := Vector2(2400.0, 1600.0)
 const MAX_ENEMIES := 100
@@ -2154,119 +2155,21 @@ func _draw_earth_spikes(center: Vector2, radius: float, life: float, progress: f
 			var debris := PackedVector2Array([debris_center + Vector2(-2.0, 1.0), debris_center + Vector2(2.8, -1.2), debris_center + Vector2(1.0, 2.2)])
 			draw_colored_polygon(debris, Color(0.45, 0.38, 0.28, life * 0.86))
 
-func _fire_field_outline(center: Vector2, half_extents: Vector2, phase: float, inset: float = 0.0) -> PackedVector2Array:
-	# One connected burn scar with a gently broken shoreline; no tile-shaped islands or cell borders.
-	var points := PackedVector2Array()
-	var safe_extents := Vector2(maxf(2.0, half_extents.x - inset), maxf(2.0, half_extents.y - inset * 0.72))
-	for point_index in range(64):
-		var angle := TAU * float(point_index) / 64.0
-		var radius_wave := 1.0 + 0.075 * sin(angle * 3.0 + phase * 0.32) + 0.042 * sin(angle * 7.0 - phase * 0.24) + 0.018 * sin(angle * 11.0 + phase * 0.18)
-		var height_wave := 1.0 + 0.025 * sin(angle * 2.0 + phase * 0.25)
-		points.append(center + Vector2(cos(angle) * safe_extents.x * radius_wave, sin(angle) * safe_extents.y * radius_wave * height_wave))
-	return points
-
-func _fire_flame_band(center: Vector2, half_width: float, base_y: float, max_height: float, phase: float, width_scale: float = 1.0, height_scale: float = 1.0) -> PackedVector2Array:
-	# IMPORTANT: base_y is LOCAL to center, not a world Y position. Adding center.y twice hid the flames.
-	# Draw one connected sheet, with a shifting scalloped crest rather than isolated triangular spikes.
-	var points := PackedVector2Array()
-	var segments := 40
-	for step in range(segments + 1):
-		var t := float(step) / float(segments)
-		var x := lerpf(-half_width * width_scale, half_width * width_scale, t)
-		var bottom_wave := sin(t * TAU * 1.7 + phase * 0.36) * 1.35
-		points.append(center + Vector2(x, base_y + bottom_wave))
-	for step in range(segments, -1, -1):
-		var t := float(step) / float(segments)
-		var x := lerpf(-half_width * width_scale, half_width * width_scale, t)
-		var envelope := pow(maxf(0.0, sin(t * PI)), 0.52)
-		var crest := 0.88 + 0.19 * sin(t * PI * 3.0 + phase * 0.7) + 0.14 * sin(t * PI * 7.0 - phase * 0.53) + 0.075 * sin(t * PI * 11.0 + phase * 0.39)
-		var flame_height := max_height * height_scale * envelope * clampf(crest, 0.45, 1.28)
-		var curl := 2.5 * envelope * sin(t * TAU * 2.0 + phase * 0.47)
-		points.append(center + Vector2(x + curl, base_y - flame_height))
-	return points
-
-
-func _fire_flame_ribbon(origin: Vector2, width: float, height: float, phase: float) -> PackedVector2Array:
-	# A bent golden flame that stays connected to the larger fire sheet at its base.
-	var points := PackedVector2Array()
-	var segments := 18
-	for step in range(segments + 1):
-		var t := float(step) / float(segments)
-		var sway := (sin(t * 2.6 + phase) - sin(phase)) * width * 0.8 * t
-		var half_thickness := width * 0.42 * pow(1.0 - t, 0.68) + 0.15
-		points.append(origin + Vector2(sway - half_thickness, -height * t))
-	for step in range(segments, -1, -1):
-		var t := float(step) / float(segments)
-		var sway := (sin(t * 2.6 + phase) - sin(phase)) * width * 0.8 * t
-		var half_thickness := width * 0.42 * pow(1.0 - t, 0.68) + 0.15
-		points.append(origin + Vector2(sway + half_thickness, -height * t))
-	return points
+func _fire_sprite_rect(center: Vector2, radius: float) -> Rect2:
+	# Keep the approved one-piece flame prototype centered on the original attack area.
+	var width := clampf(radius * 2.28, 160.0, 235.0)
+	var size := Vector2(width, width * 0.8)
+	return Rect2(center - size * 0.5, size)
 
 
 func _draw_fire_zones() -> void:
 	for zone in fire_zones:
 		var center: Vector2 = zone.get("position", Vector2.ZERO)
 		var radius := float(zone.get("radius", 78.0))
-		var duration := maxf(0.01, float(zone.get("duration", 3.0)))
-		var life := clampf(float(zone.get("time", 0.0)) / duration, 0.0, 1.0)
-		var fade := clampf(life * 2.2, 0.0, 1.0)
-		var phase := elapsed_seconds * 2.85
-		var half_extents := Vector2(clampf(radius * 1.08, 76.0, 96.0), clampf(radius * 0.78, 54.0, 68.0))
-
-		# Faint scorched terrain, not an opaque dark-red pool. The fire must be the visual focus.
-		var shadow := _fire_field_outline(center + Vector2(0.0, 3.0), half_extents + Vector2(7.0, 4.0), phase * 0.16)
-		draw_colored_polygon(shadow, Color(0.035, 0.011, 0.006, fade * 0.24))
-		var scorch := _fire_field_outline(center, half_extents, phase * 0.2)
-		draw_colored_polygon(scorch, Color(0.21, 0.042, 0.008, fade * 0.29))
-		var hot_ground := _fire_field_outline(center, half_extents * 0.88, phase * 0.26 + 0.7)
-		draw_colored_polygon(hot_ground, Color(0.83, 0.15, 0.013, fade * 0.20))
-		var ground_glow := _fire_field_outline(center + Vector2(0.0, -5.0), half_extents * 1.08, phase * 0.21 + 0.4)
-		draw_colored_polygon(ground_glow, Color(1.0, 0.30, 0.025, fade * 0.12))
-		var coal_glow := _fire_field_outline(center + Vector2(0.0, 5.0), half_extents * 0.76, phase * 0.23)
-		draw_colored_polygon(coal_glow, Color(1.0, 0.57, 0.055, fade * 0.22))
-
-		# Three overlapping banks fill the entire ground patch in perspective; one back, one middle, one front.
-		# base_y stays local to each bank. Do not reintroduce center.y in this argument.
-		var row_offsets := PackedVector2Array([Vector2(-13.0, -22.0), Vector2(9.0, 0.0), Vector2(-5.0, 22.0)])
-		for row_index in range(row_offsets.size()):
-			var row_center := center + row_offsets[row_index]
-			var row_width := half_extents.x * (0.72 + 0.055 * float(row_index))
-			var row_height := half_extents.y * (0.89 + 0.06 * float(row_index))
-			var row_phase := phase + float(row_index) * 1.16
-			var local_base_y := half_extents.y * 0.19
-			var glow := _fire_flame_band(row_center, row_width * 1.13, local_base_y + 2.0, row_height * 1.16, row_phase + 0.15)
-			draw_colored_polygon(glow, Color(1.0, 0.20, 0.008, fade * 0.20))
-			var red_flame := _fire_flame_band(row_center, row_width, local_base_y, row_height, row_phase)
-			draw_colored_polygon(red_flame, Color(1.0, 0.18, 0.014, fade * 0.98))
-			var orange_flame := _fire_flame_band(row_center + Vector2(1.0, 2.0), row_width * 0.88, local_base_y + 1.0, row_height * 0.81, row_phase + 0.42)
-			draw_colored_polygon(orange_flame, Color(1.0, 0.40, 0.018, fade * 0.96))
-			var yellow_flame := _fire_flame_band(row_center + Vector2(-2.0, 4.0), row_width * 0.69, local_base_y + 1.0, row_height * 0.62, row_phase + 0.8)
-			draw_colored_polygon(yellow_flame, Color(1.0, 0.73, 0.064, fade * 0.93))
-			var white_hot := _fire_flame_band(row_center + Vector2(1.0, 6.0), row_width * 0.43, local_base_y + 1.0, row_height * 0.38, row_phase + 1.24)
-			draw_colored_polygon(white_hot, Color(1.0, 0.95, 0.39, fade * 0.78))
-
-		# Bright curling strands remain embedded in the connected flames.
-		var ribbon_offsets := PackedVector2Array([
-			Vector2(-0.56, -0.12), Vector2(-0.3, 0.28), Vector2(0.12, -0.3),
-			Vector2(0.46, 0.18), Vector2(0.67, -0.16), Vector2(-0.06, 0.53)
-		])
-		for ribbon_index in range(ribbon_offsets.size()):
-			var offset := ribbon_offsets[ribbon_index]
-			var origin := center + Vector2(offset.x * half_extents.x, offset.y * half_extents.y)
-			var ribbon_phase := phase * 0.73 + float(ribbon_index) * 1.19
-			var ribbon_width := 13.0 + float(ribbon_index % 3) * 2.6
-			var ribbon_height := 26.0 + float(ribbon_index % 3) * 8.0
-			draw_colored_polygon(_fire_flame_ribbon(origin, ribbon_width, ribbon_height, ribbon_phase), Color(1.0, 0.82, 0.16, fade * 0.78))
-
-		# Loose embers rise above the hot surface with staggered timing.
-		for ember_index in range(13):
-			var ember_progress := fposmod(elapsed_seconds * (0.47 + float(ember_index % 4) * 0.07) + float(ember_index) * 0.137, 1.0)
-			var drift_x := sin(elapsed_seconds * 0.6 + float(ember_index) * 1.91) * half_extents.x * 0.75
-			var drift_y := sin(float(ember_index) * 1.33) * half_extents.y * 0.45 - 15.0 - ember_progress * 33.0
-			var ember_pos := center + Vector2(drift_x, drift_y)
-			var ember_alpha := fade * (1.0 - ember_progress)
-			draw_circle(ember_pos, 2.4, Color(1.0, 0.27, 0.018, ember_alpha * 0.26))
-			draw_circle(ember_pos, 1.05, Color(1.0, 0.81, 0.16, ember_alpha * 0.96))
+		# The original painted prototype remains unchanged throughout the burn.
+		# Only fade out the whole texture in the last fraction of a second.
+		var fade := clampf(float(zone.get("time", 0.0)) / 0.15, 0.0, 1.0)
+		draw_texture_rect(FIRE_FIELD_TEXTURE, _fire_sprite_rect(center, radius), false, Color(1.0, 1.0, 1.0, fade))
 
 
 func cast_active_skill() -> void:
