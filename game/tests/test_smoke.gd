@@ -737,6 +737,19 @@ func _test_combat_visuals(main: Variant) -> void:
 				fire_alpha_stable = false
 	_check(fire_sample_count > 80 and fire_motion_samples > 20, "火焰内部亮部在不同帧中明显流动，而非单张静态贴图重复16次")
 	_check(fire_alpha_stable, "火场各帧的边缘透明度保持一致，避免焦黑外轮廓跳动")
+	var cleared_fire_shadow := true
+	var visible_fire_preserved := true
+	for shadow_frame in range(main.FIRE_FIELD_ANIMATION_FRAME_COUNT):
+		var frame_x := shadow_frame * 160
+		# The original art had an almost opaque brown matte at these points outside the flames.
+		# It must be transparent, otherwise it appears as a large dark oval around the fire.
+		cleared_fire_shadow = cleared_fire_shadow and fire_animation_pixels.get_pixel(frame_x + 20, 67).a < 0.06
+		cleared_fire_shadow = cleared_fire_shadow and fire_animation_pixels.get_pixel(frame_x + 140, 69).a < 0.06
+		# The actual orange and yellow flame body must remain opaque.
+		visible_fire_preserved = visible_fire_preserved and fire_animation_pixels.get_pixel(frame_x + 40, 75).a > 0.9
+		visible_fire_preserved = visible_fire_preserved and fire_animation_pixels.get_pixel(frame_x + 100, 100).a > 0.9
+	_check(cleared_fire_shadow, "火焰外侧的深褐色不透明阴影已去除，16帧均不会出现黑色外圈")
+	_check(visible_fire_preserved, "清理阴影时保留橙黄火焰本体的透明度与亮度")
 	var water_cells: PackedVector2Array = main._ground_effect_cells("water")
 	var water_outline: PackedVector2Array = main._water_field_outline(Vector2.ZERO, Vector2(112.0, 48.0), 0.0)
 	var water_radius_min := 1.0e20
