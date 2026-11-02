@@ -7,6 +7,11 @@ const XP_ORB_SCRIPT = preload("res://scripts/xp_orb.gd")
 const HUD_SCRIPT = preload("res://scripts/hud.gd")
 const GRAVEYARD_BACKGROUND: Texture2D = preload("res://assets/sprites/graveyard_background.svg")
 const FIRE_FIELD_TEXTURE: Texture2D = preload("res://assets/sprites/fire_field_prototype.png")
+# Four 160x128 frames made from the approved fire-field artwork; the original image remains untouched.
+const FIRE_FIELD_ANIMATION: Texture2D = preload("res://assets/sprites/fire_field_animation_sheet.png")
+const FIRE_FIELD_ANIMATION_FRAME_SIZE := Vector2(160.0, 128.0)
+const FIRE_FIELD_ANIMATION_FRAME_COUNT := 4
+const FIRE_FIELD_ANIMATION_FPS := 7.0
 
 const WORLD_SIZE := Vector2(2400.0, 1600.0)
 const MAX_ENEMIES := 100
@@ -2162,14 +2167,35 @@ func _fire_sprite_rect(center: Vector2, radius: float) -> Rect2:
 	return Rect2(center - size * 0.5, size)
 
 
+func _fire_field_frame_index(zone: Dictionary) -> int:
+	# Animate from this zone's age so overlapping fires need no extra combat-state fields.
+	var duration := maxf(0.01, float(zone.get("duration", 3.0)))
+	var remaining := clampf(float(zone.get("time", duration)), 0.0, duration)
+	var elapsed := duration - remaining
+	return int(floor(elapsed * FIRE_FIELD_ANIMATION_FPS)) % FIRE_FIELD_ANIMATION_FRAME_COUNT
+
+
+func _fire_field_frame_region(frame_index: int) -> Rect2:
+	return Rect2(
+		Vector2(float(frame_index) * FIRE_FIELD_ANIMATION_FRAME_SIZE.x, 0.0),
+		FIRE_FIELD_ANIMATION_FRAME_SIZE
+	)
+
+
 func _draw_fire_zones() -> void:
 	for zone in fire_zones:
 		var center: Vector2 = zone.get("position", Vector2.ZERO)
 		var radius := float(zone.get("radius", 78.0))
-		# The original painted prototype remains unchanged throughout the burn.
-		# Only fade out the whole texture in the last fraction of a second.
+		# Keep the approved silhouette and proportions; only the internal flame highlights move.
+		# The entire effect fades as a unit during the last 0.15s, exactly as before.
 		var fade := clampf(float(zone.get("time", 0.0)) / 0.15, 0.0, 1.0)
-		draw_texture_rect(FIRE_FIELD_TEXTURE, _fire_sprite_rect(center, radius), false, Color(1.0, 1.0, 1.0, fade))
+		var frame_index := _fire_field_frame_index(zone)
+		draw_texture_rect_region(
+			FIRE_FIELD_ANIMATION,
+			_fire_sprite_rect(center, radius),
+			_fire_field_frame_region(frame_index),
+			Color(1.0, 1.0, 1.0, fade)
+		)
 
 
 func cast_active_skill() -> void:

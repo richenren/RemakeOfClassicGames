@@ -697,10 +697,28 @@ func _test_combat_visuals(main: Variant) -> void:
 	_check(main.has_method("_draw_fire_zones") and main.has_method("_draw_water_field"), "火场与寒潮水域使用独立的持续效果绘制器")
 	var fire_cells: PackedVector2Array = main._ground_effect_cells("fire")
 	var fire_sprite: Texture2D = main.FIRE_FIELD_TEXTURE
+	var fire_sheet: Texture2D = main.FIRE_FIELD_ANIMATION
 	var world_fire_center := Vector2(420.0, 260.0)
 	var prototype_rect: Rect2 = main._fire_sprite_rect(world_fire_center, 78.0)
-	_check(fire_cells.is_empty() and fire_sprite != null and fire_sprite.get_size() == Vector2(160.0, 128.0), "火场使用已确认的完整透明火焰原型素材，不再程序拼接火焰")
+	_check(fire_cells.is_empty() and fire_sprite != null and fire_sprite.get_size() == Vector2(160.0, 128.0), "保留已确认的单张火焰原型和形状，不回退到程序绘制")
 	_check(prototype_rect.has_point(world_fire_center) and prototype_rect.size.x > prototype_rect.size.y and prototype_rect.size.x > 170.0, "火焰原型以非零世界坐标居中，保持横向覆盖的整体火场")
+	_check(fire_sheet != null and fire_sheet.get_size() == Vector2(640.0, 128.0) and main.FIRE_FIELD_ANIMATION_FRAME_COUNT == 4, "火系四帧贴图正确导入，四帧保持 160x128 原型尺寸")
+	var frame_regions_valid := true
+	for frame_index in range(main.FIRE_FIELD_ANIMATION_FRAME_COUNT):
+		var region: Rect2 = main._fire_field_frame_region(frame_index)
+		frame_regions_valid = frame_regions_valid and region.position == Vector2(float(frame_index) * 160.0, 0.0) and region.size == Vector2(160.0, 128.0)
+	_check(frame_regions_valid, "四帧贴图区域连续且完全一致，不会出现火场缩放与错位")
+	var sample_fire: Dictionary = {"position": world_fire_center, "radius": 78.0, "duration": 3.0, "time": 3.0}
+	var sample_frame_0 := main._fire_field_frame_index(sample_fire)
+	sample_fire["time"] = 2.85
+	var sample_frame_1 := main._fire_field_frame_index(sample_fire)
+	sample_fire["time"] = 2.70
+	var sample_frame_2 := main._fire_field_frame_index(sample_fire)
+	sample_fire["time"] = 2.55
+	var sample_frame_3 := main._fire_field_frame_index(sample_fire)
+	sample_fire["time"] = 2.40
+	var sample_frame_loop := main._fire_field_frame_index(sample_fire)
+	_check(sample_frame_0 == 0 and sample_frame_1 == 1 and sample_frame_2 == 2 and sample_frame_3 == 3 and sample_frame_loop == 0, "火场按 7 FPS 播放 4 帧并无缝循环，不出现分阶段状态切换")
 	var water_cells: PackedVector2Array = main._ground_effect_cells("water")
 	var water_outline: PackedVector2Array = main._water_field_outline(Vector2.ZERO, Vector2(112.0, 48.0), 0.0)
 	var water_radius_min := 1.0e20
