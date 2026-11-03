@@ -573,8 +573,9 @@ func _test_compact_hud_layout() -> void:
 		var controls_rect: Rect2 = layout["controls"]
 		var build_rect: Rect2 = layout["build"]
 		_check(status_rect.end.x < objective_rect.position.x and objective_rect.end.x < skill_rect.position.x, "小视口目标栏避开左右状态面板")
-		_check(objective_rect.position.y < skill_rect.position.y, "小视口右上Boss追踪栏与右侧技能栏垂直分离")
-		_check(time_rect == Rect2(), "方案C不再常驻显示生存时间")
+		var reference_layout: Dictionary = hud._reference_hud_layout(view)
+		_check(reference_layout["objective"].position.y < reference_layout["slots"].position.y, "小视口右上Boss追踪栏与右侧技能栏垂直分离")
+		_check(reference_layout["time"] == Rect2(), "方案C不再常驻显示生存时间")
 		_check(controls_rect.end.y < build_rect.position.y, "小视口操作提示与构筑栏不重叠")
 		_check(layout["build"].size.y >= 32.0, "紧凑构筑栏为单行图标保留足够高度")
 		if view == Vector2(1067.0, 600.0):
