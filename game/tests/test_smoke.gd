@@ -523,6 +523,13 @@ func _test_responsive_layout() -> void:
 func _test_reference_hud_layout() -> void:
 	var hud: Variant = HUD_SCRIPT.new()
 	root.add_child(hud)
+	var center_rect := Rect2(17.0, 23.0, 241.0, 37.0)
+	var center_origin: Vector2 = hud._center_text_origin(center_rect, "居中测试 07:43", 16)
+	var font: Font = ThemeDB.fallback_font
+	var center_width: float = font.get_string_size("居中测试 07:43", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16).x
+	var visual_center_x: float = center_origin.x + center_width * 0.5
+	var visual_center_y: float = center_origin.y + (font.get_descent(16) - font.get_ascent(16)) * 0.5
+	_check(is_equal_approx(visual_center_x, center_rect.get_center().x) and is_equal_approx(visual_center_y, center_rect.get_center().y), "HUD文字按字体实际宽高水平和垂直居中")
 	for view in [Vector2(1303.0, 609.0), Vector2(1280.0, 720.0), Vector2(1067.0, 744.0), Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
 		var layout: Dictionary = hud._reference_hud_layout(view)
 		var status: Rect2 = layout["status"]
@@ -531,14 +538,6 @@ func _test_reference_hud_layout() -> void:
 		var slots: Rect2 = layout["slots"]
 		var xp: Rect2 = layout["xp"]
 		var pause_center: Vector2 = layout["pause_center"]
-	var center_rect := Rect2(17.0, 23.0, 241.0, 37.0)
-	var center_origin: Vector2 = hud._center_text_origin(center_rect, "居中测试 07:43", 16)
-	var font: Font = ThemeDB.fallback_font
-	var center_width: float = font.get_string_size("居中测试 07:43", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16).x
-	var font_height: float = font.get_ascent(16) + font.get_descent(16)
-	var visual_center_x: float = center_origin.x + center_width * 0.5
-	var visual_center_y: float = center_origin.y + (font.get_descent(16) - font.get_ascent(16)) * 0.5
-	_check(is_equal_approx(visual_center_x, center_rect.get_center().x) and is_equal_approx(visual_center_y, center_rect.get_center().y), "HUD文字按字体实际宽高水平和垂直居中")
 		for key in ["status", "objective", "time", "slots", "xp", "boss"]:
 			var rect: Rect2 = layout[key]
 			_check(rect.position.x >= 0.0 and rect.position.y >= 0.0 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
