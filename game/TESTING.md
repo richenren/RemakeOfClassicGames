@@ -341,3 +341,12 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 - 最新提交：`298825c1fdfe0ee976b4bcddb22aa76b5c6f5461`
 - [GitHub Actions](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41611309970)：Godot 4.5.1，**541 项通过，0 项失败**。
 - 资源导入、GDScript 解析、自动化测试、主场景 Headless 启动全部通过。
+
+
+## 2026-11-03 HUD组件图拆分与比例适配
+
+- [x] 玩家卡、Boss卡、击杀牌、摇杆、自动技能栏、E/Q/R技能组、经验底栏均为独立SVG组件，按原型宽高比制作。
+- [x] R技能槽为中式朱砂符箓笔画，不再出现X占位符。
+- [x] 玩家/Boss头像采用圆形纹理裁切；动态数值保留Godot文本绘制。
+- [x] E/Q/R视觉组件位置与鼠标/触屏热区共用同一组坐标。
+- [ ] Windows实机检查SVG缩放、字体清晰度、符箓细节和按钮热区；CI通过不等于画面验收。

@@ -81,7 +81,7 @@ func reference_action_at(screen_position: Vector2) -> String:
 	var layout := _reference_hud_layout(view)
 	var unit: float = layout["scale"]
 	var pause_center: Vector2 = layout["pause_center"]
-	if screen_position.distance_to(pause_center) <= 23.0 * unit:
+	if screen_position.distance_to(pause_center) <= 18.0 * unit:
 		return "pause"
 	var touch := _touch_layout(view)
 	if screen_position.distance_to(touch["skill_center"]) <= float(touch["skill_hit_radius"]):
@@ -310,10 +310,10 @@ func _draw_reference_hud(view: Vector2) -> void:
 	_draw_xp_footer(layout["xp"], player, unit)
 
 	var pause: Vector2 = layout["pause_center"]
-	draw_circle(pause, 23.0 * unit, Color("#090b0d", 0.96))
-	draw_arc(pause, 23.0 * unit, 0.0, TAU, 48, Color("#e1b45f"), 2.0 * unit, true)
-	draw_line(pause + Vector2(-5.0, -8.0) * unit, pause + Vector2(-5.0, 8.0) * unit, Color("#f4d99f"), 3.0 * unit, true)
-	draw_line(pause + Vector2(5.0, -8.0) * unit, pause + Vector2(5.0, 8.0) * unit, Color("#f4d99f"), 3.0 * unit, true)
+	draw_circle(pause, 18.0 * unit, Color("#090b0d", 0.96))
+	draw_arc(pause, 18.0 * unit, 0.0, TAU, 48, Color("#e1b45f"), 1.8 * unit, true)
+	draw_line(pause + Vector2(-4.0, -6.0) * unit, pause + Vector2(-4.0, 6.0) * unit, Color("#f4d99f"), 3.0 * unit, true)
+	draw_line(pause + Vector2(4.0, -6.0) * unit, pause + Vector2(4.0, 6.0) * unit, Color("#f4d99f"), 3.0 * unit, true)
 
 	_draw_auto_skill_rail(layout["slots"], unit)
 	_draw_reference_controls(view, unit)

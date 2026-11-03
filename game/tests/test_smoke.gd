@@ -572,6 +572,8 @@ func _test_reference_hud_layout() -> void:
 	_check(load("res://assets/sprites/hud_reference/screen_frame.svg").get_size() == Vector2(1672.0, 941.0), "全屏金红装饰边框使用独立透明SVG素材")
 	_check(load("res://assets/sprites/hud_reference/player_card.svg") != null and load("res://assets/sprites/hud_reference/boss_card.svg") != null and load("res://assets/sprites/hud_reference/kill_card.svg") != null, "玩家、尸王与击杀卡片使用独立高清装饰素材")
 	_check(load("res://assets/sprites/hud_reference/joystick.svg") != null and load("res://assets/sprites/hud_reference/skill_cluster.svg") != null and load("res://assets/sprites/hud_reference/auto_rail.svg") != null, "摇杆、三角技能组和自动技能栏装饰素材可加载")
+	var cluster_svg := FileAccess.get_file_as_string("res://assets/sprites/hud_reference/skill_cluster.svg")
+	_check(cluster_svg.contains("M180 62") and not cluster_svg.contains(">X<"), "R主动技能槽使用中式符箓笔画，不再显示X占位符")
 	hud.queue_free()
 
 
