@@ -1,9 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 58">
-<defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="#ffedaa"/><stop offset=".25" stop-color="#d39a46"/><stop offset=".7" stop-color="#69401d"/><stop offset="1" stop-color="#f4c76b"/></linearGradient><linearGradient id="p" x2="0" y2="1"><stop stop-color="#1b1010"/><stop offset=".55" stop-color="#090a0c"/><stop offset="1" stop-color="#321011"/></linearGradient><linearGradient id="r" x2="0" y2="1"><stop stop-color="#ff6946"/><stop offset="1" stop-color="#75131a"/></linearGradient></defs>
-<path d="M18 3 H302 L317 15 V43 L302 55 H18 L3 43 V15 Z" fill="url(#p)" stroke="#1b0d08" stroke-width="5"/>
-<path d="M18 3 H302 L317 15 V43 L302 55 H18 L3 43 V15 Z" fill="none" stroke="url(#g)" stroke-width="2.4"/>
-<path d="M22 8 H298 L310 17 V41 L298 50 H22 L10 41 V17 Z" fill="none" stroke="#8b5b2b" stroke-width=".8"/>
-<path d="M7 44 Q25 56 48 51 M313 14 Q292 2 274 8" fill="none" stroke="url(#r)" stroke-width="3"/>
-<path d="M160 0 l8 8 -8 8 -8 -8z M160 42 l8 8 -8 8 -8 -8z" fill="url(#g)"/>
-<path d="M45 10 l4 4 -4 4 -4 -4z M275 40 l4 4 -4 4 -4 -4z" fill="url(#g)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 93">
+<defs>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff1b5"/><stop offset=".22" stop-color="#e2ad55"/><stop offset=".55" stop-color="#70401c"/><stop offset=".82" stop-color="#f6c96e"/><stop offset="1" stop-color="#713d19"/></linearGradient>
+ <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff6747"/><stop offset="1" stop-color="#751319"/></linearGradient>
+ <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#38100f"/><stop offset=".55" stop-color="#10090a"/><stop offset="1" stop-color="#3a1012"/></linearGradient>
+</defs>
+<path d="M24 5 H306 L325 22 V70 L306 88 H24 L5 70 V22 Z" fill="url(#panel)" stroke="#1a0b08" stroke-width="6"/>
+<path d="M24 5 H306 L325 22 V70 L306 88 H24 L5 70 V22 Z" fill="none" stroke="url(#gold)" stroke-width="3"/>
+<path d="M27 12 H303 L317 25 V67 L303 81 H27 L13 67 V25 Z" fill="none" stroke="#a66f35" stroke-width="1"/>
+<path d="M5 64 Q22 88 56 84 M325 25 Q306 3 278 10" fill="none" stroke="url(#red)" stroke-width="4"/>
+<path d="M165 0 l10 11 -10 11 -10 -11z M165 71 l10 11 -10 11 -10 -11z" fill="url(#gold)"/>
+<path d="M44 14 l5 6 -5 6 -5 -6z M285 67 l5 6 -5 6 -5 -6z" fill="url(#gold)"/>
 </svg>

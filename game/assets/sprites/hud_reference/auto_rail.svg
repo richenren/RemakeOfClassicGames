@@ -1,8 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 82 354">
-<defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="#ffedb0"/><stop offset=".28" stop-color="#d39c4b"/><stop offset=".7" stop-color="#69401e"/><stop offset="1" stop-color="#f3c66b"/></linearGradient><linearGradient id="p" x2="0" y2="1"><stop stop-color="#18110d" stop-opacity=".96"/><stop offset=".5" stop-color="#090a0b" stop-opacity=".96"/><stop offset="1" stop-color="#21100d" stop-opacity=".96"/></linearGradient></defs>
-<path d="M15 2 H67 L80 16 V337 L67 352 H15 L2 337 V16 Z" fill="url(#p)" stroke="url(#g)" stroke-width="2.4"/>
-<path d="M19 8 H63 L73 19 V333 L63 346 H19 L9 333 V19 Z" fill="none" stroke="#916a37" stroke-width="1"/>
-<path d="M12 89 H70 M12 177 H70 M12 265 H70" stroke="#9b713a" stroke-width=".8" opacity=".55"/>
-<path d="M41 0 l8 10 -8 10 -8 -10z M41 344 l8 10 -8 10 -8 -10z" fill="url(#g)"/>
-<path d="M6 24 L18 12 M76 24 L64 12 M6 330 L18 342 M76 330 L64 342" stroke="url(#g)" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 82 320">
+<defs>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff2b5"/><stop offset=".22" stop-color="#e0aa50"/><stop offset=".6" stop-color="#6e411d"/><stop offset=".84" stop-color="#f3c56b"/><stop offset="1" stop-color="#73431d"/></linearGradient>
+ <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#1d120d"/><stop offset=".5" stop-color="#08090a"/><stop offset="1" stop-color="#21100d"/></linearGradient>
+</defs>
+<path d="M14 2 H68 L80 16 V304 L68 318 H14 L2 304 V16 Z" fill="url(#panel)" stroke="url(#gold)" stroke-width="2.6"/>
+<path d="M18 8 H64 L73 19 V301 L64 312 H18 L9 301 V19 Z" fill="none" stroke="#93652f" stroke-width="1"/>
+<path d="M9 88 H73 M9 166 H73 M9 244 H73" stroke="#a87939" stroke-width=".8" opacity=".4"/>
+<!-- top automatic talisman -->
+<path d="M31 18 H51 L55 25 V53 L51 61 H31 L27 53 V25 Z" fill="#e9c36c" stroke="url(#gold)" stroke-width="2"/>
+<path d="M35 26 l4 4 -3 5 6 4 -5 5 4 5 M46 25 l-3 7 5 5 -4 7" fill="none" stroke="#9a2920" stroke-width="1.7"/>
+<path d="M31 16 H51 M31 62 H51" stroke="url(#gold)" stroke-width="2"/>
+<g fill="none" stroke="url(#gold)" stroke-width="2.3">
+ <circle cx="41" cy="130" r="25"/><circle cx="41" cy="208" r="25"/><circle cx="41" cy="286" r="25"/>
+ <circle cx="41" cy="130" r="20"/><circle cx="41" cy="208" r="20"/><circle cx="41" cy="286" r="20"/>
+</g>
+<g fill="url(#gold)"><path d="M41 116 V144 M27 130 H55"/><path d="M41 194 V222 M27 208 H55"/><path d="M41 272 V300 M27 286 H55"/></g>
+<path d="M41 0 l7 9 -7 9 -7 -9z M41 311 l7 9 -7 9 -7 -9z" fill="url(#gold)"/>
+<path d="M6 22 L17 10 M76 22 L65 10 M6 298 L17 310 M76 298 L65 310" stroke="url(#gold)" stroke-width="1.5"/>
 </svg>
