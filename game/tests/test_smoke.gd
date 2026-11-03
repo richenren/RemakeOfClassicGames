@@ -591,7 +591,7 @@ func _test_compact_hud_layout() -> void:
 		_check(heal_center.x < skill_center.x and absf(heal_center.y - skill_center.y) <= 0.1, "小视口治疗瓶与Q主动技能保持水平排列")
 		_check(skill_center.distance_to(heal_center) > float(touch["skill_radius"]) + float(touch["heal_radius"]), "小视口Q主动技能与E治疗道具视觉上不重叠")
 		_check(skill_center.distance_to(heal_center) > float(touch["skill_hit_radius"]) + float(touch["heal_hit_radius"]), "小视口Q主动技能与E治疗触控热区不重叠")
-		_check(heal_center.y < skill_center.y, "E治疗道具位于右侧技能栏下方、Q按钮上方")
+		_check(heal_center.y > view.y - 90.0 * float(touch["scale"]), "E治疗道具与Q按钮组成贴近底边的操作区")
 	hud.queue_free()
 
 func _test_skill_art_assets() -> void:
