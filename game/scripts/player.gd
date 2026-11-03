@@ -2,7 +2,7 @@ extends Node2D
 
 const WORLD_MIN := Vector2(48.0, 48.0)
 const WORLD_MAX := Vector2(2352.0, 1552.0)
-const DEFAULT_CHARACTER_PORTRAIT: Texture2D = preload("res://assets/sprites/player_portrait.svg")
+const DEFAULT_CHARACTER_PORTRAIT: Texture2D = preload("res://assets/sprites/hud_portrait_player.webp")
 const PLAYER_FRONT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_front.tres")
 const PLAYER_SIDE_LEFT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_side_left.tres")
 const PLAYER_BACK_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_back.tres")

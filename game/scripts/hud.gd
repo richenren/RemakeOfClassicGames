@@ -4,8 +4,9 @@ const SKILL_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_art_atlas
 const SKILL_CARD_ART_ATLAS: Texture2D = preload("res://assets/sprites/skill_card_art_atlas.svg")
 const WATER_COLD_TIDE_CARD_TEXTURE: Texture2D = preload("res://assets/sprites/water_cold_tide_card.svg")
 const ELEMENT_CULTIVATION_ATLAS: Texture2D = preload("res://assets/sprites/element_cultivation_atlas.svg")
-const PLAYER_PORTRAIT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_portrait.tres")
-const BOSS_UI_PORTRAIT_DEFAULT: Texture2D = preload("res://assets/sprites/enemy_boss.svg")
+const PLAYER_PORTRAIT_TEXTURE: Texture2D = preload("res://assets/sprites/hud_portrait_player.webp")
+const BOSS_UI_PORTRAIT_DEFAULT: Texture2D = preload("res://assets/sprites/hud_portrait_boss.webp")
+const HUD_ACTION_ATLAS: Texture2D = preload("res://assets/sprites/hud_skill_buttons.webp")
 const HEAL_CELADON_TEXTURE: Texture2D = preload("res://assets/sprites/heal_celadon_flask.svg")
 
 var main_ref
@@ -54,7 +55,7 @@ func _reference_hud_layout(view: Vector2) -> Dictionary:
 	var canvas_size := Vector2(1672.0, 941.0) * unit
 	var offset := (view - canvas_size) * 0.5
 	var status_rect := Rect2(offset + Vector2(28.0, 78.0) * unit, Vector2(480.0, 136.0) * unit)
-	var kills_rect := Rect2(offset + Vector2(145.0, 220.0) * unit, Vector2(350.0, 66.0) * unit)
+	var kills_rect := Rect2(offset + Vector2(145.0, 218.0) * unit, Vector2(320.0, 58.0) * unit
 	var objective_rect := Rect2(Vector2(view.x - 572.0 * unit, offset.y + 78.0 * unit), Vector2(480.0, 142.0) * unit)
 	var slots_rect := Rect2(Vector2(view.x - 126.0 * unit, offset.y + 228.0 * unit), Vector2(82.0, 354.0) * unit)
 	var xp_rect := Rect2(offset + Vector2(550.0, 858.0) * unit, Vector2(570.0, 32.0) * unit)
@@ -95,22 +96,44 @@ func _reference_panel(rect: Rect2, accent: Color, unit: float) -> void:
 		draw_line(Vector2(x, y + y_sign * 3.0 * unit), Vector2(x, y + y_sign * corner), accent, maxf(0.8, 1.5 * unit))
 
 
+
 func _draw_ornate_game_card(rect: Rect2, accent: Color, unit: float, red_trim: bool = true) -> void:
-	draw_rect(rect, Color(0.018, 0.022, 0.026, 0.91))
-	draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.92), false, maxf(0.9, 1.45 * unit))
-	draw_rect(rect.grow(-4.0 * unit), Color(accent.r, accent.g, accent.b, 0.22), false, maxf(0.6, 0.8 * unit))
 	var x := rect.position.x
 	var y := rect.position.y
 	var right := rect.end.x
 	var bottom := rect.end.y
-	var corner := 22.0 * unit
+	var cut_x := minf(18.0 * unit, rect.size.x * 0.18)
+	var cut_y := minf(13.0 * unit, rect.size.y * 0.18)
+	var shape := PackedVector2Array([
+		Vector2(x + cut_x, y), Vector2(right - cut_x, y),
+		Vector2(right, y + cut_y), Vector2(right, bottom - cut_y),
+		Vector2(right - cut_x, bottom), Vector2(x + cut_x, bottom),
+		Vector2(x, bottom - cut_y), Vector2(x, y + cut_y)
+	])
+	draw_colored_polygon(shape, Color("#080a0d", 0.95))
+	var outline := shape.duplicate()
+	outline.append(shape[0])
+	draw_polyline(outline, Color(accent.r, accent.g, accent.b, 0.96), maxf(0.9, 1.7 * unit), true)
+	var inset := PackedVector2Array([
+		Vector2(x + cut_x + 4.0 * unit, y + 4.0 * unit),
+		Vector2(right - cut_x - 4.0 * unit, y + 4.0 * unit),
+		Vector2(right - 4.0 * unit, y + cut_y + 3.0 * unit),
+		Vector2(right - 4.0 * unit, bottom - cut_y - 3.0 * unit),
+		Vector2(right - cut_x - 4.0 * unit, bottom - 4.0 * unit),
+		Vector2(x + cut_x + 4.0 * unit, bottom - 4.0 * unit),
+		Vector2(x + 4.0 * unit, bottom - cut_y - 3.0 * unit),
+		Vector2(x + 4.0 * unit, y + cut_y + 3.0 * unit)
+	])
+	var inner_outline := inset.duplicate()
+	inner_outline.append(inset[0])
+	draw_polyline(inner_outline, Color(accent.r, accent.g, accent.b, 0.34), maxf(0.5, 0.75 * unit), true)
 	for side in [1.0, -1.0]:
 		var cx := x + 5.0 * unit if side > 0.0 else right - 5.0 * unit
 		var dx := 1.0 if side > 0.0 else -1.0
-		draw_line(Vector2(cx, y + corner), Vector2(cx + dx * corner, y + 5.0 * unit), accent, 1.5 * unit, true)
-		draw_line(Vector2(cx + dx * corner, y + 5.0 * unit), Vector2(cx + dx * 2.0 * corner, y + 5.0 * unit), accent, 1.1 * unit, true)
-		draw_line(Vector2(cx, bottom - corner), Vector2(cx + dx * corner, bottom - 5.0 * unit), accent, 1.5 * unit, true)
-		draw_line(Vector2(cx + dx * corner, bottom - 5.0 * unit), Vector2(cx + dx * 2.0 * corner, bottom - 5.0 * unit), accent, 1.1 * unit, true)
+		draw_line(Vector2(cx, y + cut_y + 2.0 * unit), Vector2(cx + dx * 13.0 * unit, y + 5.0 * unit), accent, maxf(0.8, 1.4 * unit), true)
+		draw_line(Vector2(cx + dx * 13.0 * unit, y + 5.0 * unit), Vector2(cx + dx * 29.0 * unit, y + 5.0 * unit), Color(accent.r, accent.g, accent.b, 0.76), maxf(0.7, 1.0 * unit), true)
+		draw_line(Vector2(cx, bottom - cut_y - 2.0 * unit), Vector2(cx + dx * 13.0 * unit, bottom - 5.0 * unit), accent, maxf(0.8, 1.4 * unit), true)
+		draw_line(Vector2(cx + dx * 13.0 * unit, bottom - 5.0 * unit), Vector2(cx + dx * 29.0 * unit, bottom - 5.0 * unit), Color(accent.r, accent.g, accent.b, 0.76), maxf(0.7, 1.0 * unit), true)
 	var top_diamond := rect.position + Vector2(rect.size.x * 0.5, 2.0 * unit)
 	var bottom_diamond := Vector2(rect.get_center().x, rect.end.y - 2.0 * unit)
 	for center in [top_diamond, bottom_diamond]:
@@ -119,12 +142,12 @@ func _draw_ornate_game_card(rect: Rect2, accent: Color, unit: float, red_trim: b
 			center + Vector2(0.0, 5.0 * unit), center + Vector2(-6.0 * unit, 0.0),
 			center + Vector2(0.0, -5.0 * unit)
 		])
-		draw_colored_polygon(diamond, Color(accent.r, accent.g, accent.b, 0.86))
+		draw_colored_polygon(diamond, Color(accent.r, accent.g, accent.b, 0.9))
 	if red_trim:
-		var red := Color("#a83b32", 0.82)
-		draw_arc(rect.position + Vector2(39.0, rect.size.y - 4.0) * unit, 34.0 * unit, PI * 1.10, PI * 1.78, 28, red, 2.2 * unit, true)
-		draw_arc(Vector2(rect.end.x - 39.0 * unit, rect.position.y + 4.0 * unit), 34.0 * unit, PI * 0.10, PI * 0.82, 28, red, 2.2 * unit, true)
-
+		var red := Color("#b23a32", 0.86)
+		draw_arc(rect.position + Vector2(39.0, rect.size.y - 4.0) * unit, 34.0 * unit, PI * 1.10, PI * 1.78, 28, red, 2.4 * unit, true)
+		draw_arc(Vector2(rect.end.x - 39.0 * unit, rect.position.y + 4.0 * unit), 34.0 * unit, PI * 0.10, PI * 0.82, 28, red, 2.4 * unit, true)
+		draw_arc(rect.position + Vector2(24.0, rect.size.y * 0.5) * unit, 72.0 * unit, PI * 0.72, PI * 1.20, 28, Color("#8f2928", 0.52), 1.4 * unit, true)
 
 func _center_text_outline(rect: Rect2, value: String, size: int, color: Color, outline_size: int = 1) -> void:
 	var font: Font = ThemeDB.fallback_font
@@ -170,10 +193,14 @@ func _draw_reference_frame(view: Vector2, layout: Dictionary) -> void:
 	_draw_cloud_motif(offset + Vector2(1510.0, 900.0) * unit, unit, Color("#a43b32", 0.66))
 
 
+
 func _draw_player_card(player, rect: Rect2, unit: float) -> void:
 	_draw_ornate_game_card(rect, Color("#d2aa63"), unit, true)
 	var portrait_center := rect.position + Vector2(86.0, 68.0) * unit
 	var portrait_size := 122.0 * unit
+	# Realistic transparent portrait supplied for the approved reference composition.
+	draw_arc(portrait_center, 72.0 * unit, PI * 0.68, PI * 1.30, 32, Color("#a8322d", 0.88), 2.4 * unit, true)
+	draw_arc(portrait_center, 72.0 * unit, PI * 1.68, PI * 2.30, 32, Color("#a8322d", 0.88), 2.4 * unit, true)
 	draw_circle(portrait_center, 65.0 * unit, Color("#090b0d", 0.98))
 	draw_arc(portrait_center, 64.0 * unit, 0.0, TAU, 64, Color("#f0ce82"), 2.4 * unit, true)
 	draw_arc(portrait_center, 58.0 * unit, 0.0, TAU, 64, Color("#946c39", 0.9), 1.2 * unit, true)
@@ -183,17 +210,24 @@ func _draw_player_card(player, rect: Rect2, unit: float) -> void:
 	var name_rect := Rect2(rect.position + Vector2(158.0, 14.0) * unit, Vector2(300.0, 48.0) * unit)
 	var name_size := _fit_font_size(name_text, name_rect.size.x - 12.0 * unit, maxi(14, roundi(36.0 * unit)), maxi(12, roundi(22.0 * unit)))
 	_center_text_outline(name_rect, name_text, name_size, Color("#f4d99f"), 1)
-	var hp_rect := Rect2(rect.position + Vector2(171.0, 76.0) * unit, Vector2(284.0, 26.0) * unit)
+	var hp_rect := Rect2(rect.position + Vector2(171.0, 76.0) * unit, Vector2(265.0, 28.0) * unit)
 	_draw_health_pill(hp_rect, player.hp / maxf(1.0, player.max_hp), Color("#d34b43"), true)
 	_center_text_outline(hp_rect.grow(2.0 * unit), "%d / %d" % [roundi(player.hp), roundi(player.max_hp)], maxi(10, roundi(19.0 * unit)), Color("#fff1df"), 1)
 
 
 func _draw_kill_card(rect: Rect2, unit: float) -> void:
 	_draw_ornate_game_card(rect, Color("#d6a85d"), unit, true)
-	var label_rect := Rect2(rect.position + Vector2(35.0, 9.0) * unit, Vector2(105.0, 47.0) * unit)
-	var count_rect := Rect2(rect.position + Vector2(137.0, 5.0) * unit, Vector2(196.0, 54.0) * unit)
+	var label_plate := Rect2(rect.position + Vector2(8.0, 8.0) * unit, Vector2(138.0, 42.0) * unit)
+	var count_plate := Rect2(rect.position + Vector2(151.0, 5.0) * unit, Vector2(160.0, 48.0) * unit)
+	draw_rect(label_plate, Color("#100e0c", 0.97))
+	draw_rect(label_plate, Color("#b58a4d", 0.88), false, 1.1 * unit)
+	draw_rect(count_plate, Color("#42191a", 0.98))
+	draw_rect(count_plate, Color("#d4a35b", 0.98), false, 1.4 * unit)
+	draw_line(count_plate.position + Vector2(8.0, 4.0) * unit, count_plate.position + Vector2(count_plate.size.x - 8.0 * unit, 4.0 * unit), Color("#efc879", 0.72), 0.8 * unit)
+	var label_rect := Rect2(label_plate.position, label_plate.size)
+	var count_rect := Rect2(count_plate.position + Vector2(2.0, 0.0) * unit, count_plate.size - Vector2(4.0, 0.0) * unit)
 	var count_text := _format_kill_count(main_ref.kills)
-	var count_size := _fit_font_size(count_text, count_rect.size.x - 8.0 * unit, maxi(14, roundi(44.0 * unit)), maxi(12, roundi(22.0 * unit)))
+	var count_size := _fit_font_size(count_text, count_rect.size.x - 8.0 * unit, maxi(14, roundi(42.0 * unit)), maxi(12, roundi(20.0 * unit)))
 	_center_text_outline(label_rect, "击杀", maxi(14, roundi(27.0 * unit)), Color("#e7c47c"), 1)
 	_center_text_outline(count_rect, count_text, count_size, Color("#ffd889"), 1)
 
@@ -201,11 +235,18 @@ func _draw_kill_card(rect: Rect2, unit: float) -> void:
 func _draw_boss_card(rect: Rect2, unit: float) -> void:
 	_draw_ornate_game_card(rect, Color("#c75b45"), unit, true)
 	var portrait_center := rect.position + Vector2(77.0, 71.0) * unit
+	draw_arc(portrait_center, 72.0 * unit, PI * 0.68, PI * 1.30, 32, Color("#a8322d", 0.94), 2.6 * unit, true)
+	draw_arc(portrait_center, 72.0 * unit, PI * 1.68, PI * 2.30, 32, Color("#a8322d", 0.94), 2.6 * unit, true)
 	draw_circle(portrait_center, 65.0 * unit, Color("#120d0d", 0.98))
 	draw_arc(portrait_center, 64.0 * unit, 0.0, TAU, 64, Color("#e4b86b"), 2.5 * unit, true)
 	draw_arc(portrait_center, 58.0 * unit, 0.0, TAU, 64, Color("#a84035", 0.88), 1.4 * unit, true)
-	var portrait_rect := Rect2(portrait_center - Vector2(59.0, 62.0) * unit, Vector2(118.0, 124.0) * unit)
-	draw_texture_rect_region(_boss_profile_portrait(), portrait_rect, Rect2(54.0, 9.0, 84.0, 90.0), Color.WHITE, false)
+	var portrait := _boss_profile_portrait()
+	var portrait_rect := Rect2(portrait_center - Vector2.ONE * 62.0 * unit, Vector2.ONE * 124.0 * unit)
+	if portrait == BOSS_UI_PORTRAIT_DEFAULT:
+		draw_texture_rect(portrait, portrait_rect, false)
+	else:
+		var legacy_portrait_rect := Rect2(portrait_center - Vector2(59.0, 62.0) * unit, Vector2(118.0, 124.0) * unit)
+		draw_texture_rect_region(portrait, legacy_portrait_rect, Rect2(54.0, 9.0, 84.0, 90.0), Color.WHITE, false)
 	var objective := objective_data()
 	var boss_title := str(objective.get("boss_name", main_ref.get_boss_ui_profile().get("name", "尸王")))
 	var title_rect := Rect2(rect.position + Vector2(145.0, 16.0) * unit, Vector2(315.0, 43.0) * unit)
@@ -229,7 +270,6 @@ func _draw_boss_card(rect: Rect2, unit: float) -> void:
 		var progress := float(objective.get("progress", 0.0))
 		_bar(Rect2(rect.position + Vector2(150.0, 127.0) * unit, Vector2(294.0, 4.0) * unit), progress, Color("#c85b46"))
 
-
 func _draw_boss_health_lane(rect: Rect2, unit: float) -> void:
 	var boss = main_ref.get_boss()
 	if boss == null:
@@ -240,18 +280,40 @@ func _draw_boss_health_lane(rect: Rect2, unit: float) -> void:
 	_draw_health_pill(Rect2(rect.position + Vector2(16.0, 25.0) * unit, Vector2(rect.size.x / unit - 32.0, 7.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b84d42"), true)
 
 
+
 func _draw_xp_footer(rect: Rect2, player, unit: float) -> void:
 	var level_center := rect.position + Vector2(37.0, 16.0) * unit
-	draw_circle(level_center, 29.0 * unit, Color("#100f0d", 0.98))
-	draw_arc(level_center, 29.0 * unit, 0.0, TAU, 48, Color("#d9ad60"), 2.1 * unit, true)
-	draw_arc(level_center, 24.0 * unit, 0.0, TAU, 48, Color("#8c6938", 0.72), 0.9 * unit, true)
+	var crest := PackedVector2Array([
+		level_center + Vector2(0.0, -29.0) * unit,
+		level_center + Vector2(16.0, -20.0) * unit,
+		level_center + Vector2(29.0, -4.0) * unit,
+		level_center + Vector2(19.0, 17.0) * unit,
+		level_center + Vector2(0.0, 29.0) * unit,
+		level_center + Vector2(-19.0, 17.0) * unit,
+		level_center + Vector2(-29.0, -4.0) * unit,
+		level_center + Vector2(-16.0, -20.0) * unit
+	])
+	draw_colored_polygon(crest, Color("#100f0d", 0.98))
+	var crest_outline := crest.duplicate()
+	crest_outline.append(crest[0])
+	draw_polyline(crest_outline, Color("#d9ad60"), 2.1 * unit, true)
+	draw_polyline(PackedVector2Array([
+		level_center + Vector2(0.0, -22.0) * unit,
+		level_center + Vector2(22.0, -3.0) * unit,
+		level_center + Vector2(14.0, 14.0) * unit,
+		level_center + Vector2(0.0, 22.0) * unit,
+		level_center + Vector2(-14.0, 14.0) * unit,
+		level_center + Vector2(-22.0, -3.0) * unit,
+		level_center + Vector2(0.0, -22.0) * unit
+	]), Color("#8c6938", 0.82), 0.9 * unit, true)
 	_center_text_outline(Rect2(level_center - Vector2(25.0, 15.0) * unit, Vector2(50.0, 30.0) * unit), "Lv%d" % player.level, maxi(11, roundi(19.0 * unit)), Color("#f3d18b"), 1)
 	var xp_bar := Rect2(rect.position + Vector2(82.0, 8.0) * unit, Vector2(410.0, 12.0) * unit)
-	draw_rect(xp_bar, Color("#080a0b", 0.9))
-	draw_rect(xp_bar, Color("#b38b4c", 0.9), false, 1.0 * unit)
+	draw_rect(xp_bar, Color("#080a0b", 0.94))
+	draw_rect(xp_bar, Color("#b38b4c", 0.98), false, 1.2 * unit)
 	_bar(xp_bar.grow(-1.0 * unit), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#e1a944"))
+	draw_line(xp_bar.position + Vector2(0.0, -3.0) * unit, xp_bar.position + Vector2(0.0, xp_bar.size.y + 3.0 * unit), Color("#f1cf83", 0.95), 1.0 * unit)
+	draw_line(xp_bar.end + Vector2(0.0, -3.0) * unit, xp_bar.end + Vector2(0.0, xp_bar.size.y + 3.0 * unit), Color("#f1cf83", 0.95), 1.0 * unit)
 	_center_text_outline(Rect2(rect.position + Vector2(503.0, 1.0) * unit, Vector2(64.0, 28.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(8, roundi(17.0 * unit)), Color("#f0dfbb"), 1)
-
 
 func _draw_auto_skill_rail(rect: Rect2, unit: float) -> void:
 	_draw_ornate_game_card(rect, Color("#bd9957"), unit, false)
@@ -301,6 +363,7 @@ func _draw_reference_hud(view: Vector2) -> void:
 	_draw_reference_controls(view, unit)
 
 
+
 func _draw_reference_controls(view: Vector2, unit: float) -> void:
 	var touch := _touch_layout(view)
 	var joy: Vector2 = touch["joystick_center"]
@@ -327,54 +390,38 @@ func _draw_reference_controls(view: Vector2, unit: float) -> void:
 	var reserved_r: float = touch["secondary_radius"]
 	var skill_ready: bool = main_ref.active_skill_cooldown <= 0.0
 
-	# E: healing flask, with the remaining count as a small corner badge.
-	draw_circle(heal, heal_r + 8.0 * unit, Color("#080b0c", 0.9))
-	draw_arc(heal, heal_r + 5.0 * unit, 0.0, TAU, 56, Color("#d5ad70"), 2.0 * unit, true)
-	draw_circle(heal, heal_r - 5.0 * unit, Color("#151711", 0.96))
-	var potion_alpha := 1.0 if main_ref.heal_charges > 0 else 0.4
-	draw_texture_rect(HEAL_CELADON_TEXTURE, Rect2(heal - Vector2.ONE * 33.0 * unit, Vector2.ONE * 66.0 * unit), false, Color(1.0, 1.0, 1.0, potion_alpha))
-	draw_circle(heal + Vector2(28.0, 27.0) * unit, 12.0 * unit, Color("#17120d", 0.96))
-	draw_arc(heal + Vector2(28.0, 27.0) * unit, 12.0 * unit, 0.0, TAU, 24, Color("#d6b06a"), 1.1 * unit)
-	_center_text_outline(Rect2(heal.x - 10.0 * unit, heal.y + 18.0 * unit, 20.0 * unit, 18.0 * unit), str(main_ref.heal_charges), maxi(8, roundi(12.0 * unit)), Color("#fff0d1"), 1)
+	# Approved HUD atlas: E healing flask, Q talisman active skill, R reserved second active skill.
+	var heal_alpha := 1.0 if main_ref.heal_charges > 0 else 0.42
+	draw_texture_rect_region(HUD_ACTION_ATLAS, Rect2(heal - Vector2.ONE * heal_r, Vector2.ONE * heal_r * 2.0), Rect2(0.0, 0.0, 128.0, 128.0), Color(1.0, 1.0, 1.0, heal_alpha), false)
 	_draw_action_keycap(heal, heal_r, "E", unit)
 
-	# R: reserved second active-skill socket. It is visual-only until its gameplay is implemented.
-	draw_circle(reserved, reserved_r + 8.0 * unit, Color("#080b0c", 0.88))
-	draw_arc(reserved, reserved_r + 5.0 * unit, 0.0, TAU, 56, Color("#b18b50", 0.86), 2.0 * unit, true)
-	draw_circle(reserved, reserved_r - 5.0 * unit, Color("#17130e", 0.94))
-	var scroll := PackedVector2Array([
-		reserved + Vector2(-18.0, -27.0) * unit,
-		reserved + Vector2(18.0, -23.0) * unit,
-		reserved + Vector2(15.0, 26.0) * unit,
-		reserved + Vector2(0.0, 31.0) * unit,
-		reserved + Vector2(-17.0, 22.0) * unit
-	])
-	draw_colored_polygon(scroll, Color("#d6b36e", 0.86))
-	draw_polyline(PackedVector2Array([scroll[0], scroll[1], scroll[2], scroll[3], scroll[4], scroll[0]]), Color("#f2d18a", 0.9), 1.4 * unit, true)
-	draw_line(reserved + Vector2(-7.0, -12.0) * unit, reserved + Vector2(7.0, 12.0) * unit, Color("#a43b32", 0.95), 2.5 * unit, true)
-	draw_line(reserved + Vector2(7.0, -12.0) * unit, reserved + Vector2(-7.0, 12.0) * unit, Color("#a43b32", 0.95), 2.5 * unit, true)
-	_draw_action_keycap(reserved, reserved_r, "R", unit)
-
-	# Q: current active skill. The outer arc communicates cooldown without adding another panel.
-	draw_circle(skill, skill_r + 8.0 * unit, Color("#080b0c", 0.94))
-	draw_arc(skill, skill_r + 5.0 * unit, 0.0, TAU, 64, Color("#e5bd69") if skill_ready else Color("#8c795c"), 2.6 * unit, true)
-	draw_circle(skill, skill_r - 5.0 * unit, Color("#1a130a", 0.98))
-	draw_arc(skill, skill_r * 0.48, -PI * 0.82, PI * 1.32, 48, Color("#f2c66e"), 4.0 * unit, true)
-	draw_arc(skill + Vector2(4.0, -3.0) * unit, skill_r * 0.25, PI * 0.08, PI * 1.7, 36, Color("#fff0b5"), 2.4 * unit, true)
-	draw_line(skill + Vector2(17.0, -19.0) * unit, skill + Vector2(27.0, -27.0) * unit, Color("#ffe7a2"), 2.5 * unit, true)
+	draw_texture_rect_region(HUD_ACTION_ATLAS, Rect2(skill - Vector2.ONE * skill_r, Vector2.ONE * skill_r * 2.0), Rect2(128.0, 0.0, 128.0, 128.0), Color.WHITE, false)
 	if not skill_ready:
 		var ratio := clampf(main_ref.active_skill_cooldown / maxf(0.1, main_ref.active_skill_base_cooldown), 0.0, 1.0)
-		draw_arc(skill, skill_r + 8.0 * unit, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - ratio), 48, Color("#67c8b3"), 3.0 * unit, true)
+		draw_circle(skill, skill_r * 0.66, Color("#07090b", 0.58))
+		draw_arc(skill, skill_r + 2.0 * unit, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - ratio), 48, Color("#67c8b3"), 3.0 * unit, true)
 		_center_text_outline(Rect2(skill - Vector2(24.0, 12.0) * unit, Vector2(48.0, 24.0) * unit), str(ceili(main_ref.active_skill_cooldown)), maxi(10, roundi(17.0 * unit)), Color("#ffffff"), 1)
 	_draw_action_keycap(skill, skill_r, "Q", unit)
 
+	draw_texture_rect_region(HUD_ACTION_ATLAS, Rect2(reserved - Vector2.ONE * reserved_r, Vector2.ONE * reserved_r * 2.0), Rect2(256.0, 0.0, 128.0, 128.0), Color(1.0, 1.0, 1.0, 0.88), false)
+	_draw_action_keycap(reserved, reserved_r, "R", unit)
+
 
 func _draw_action_keycap(center: Vector2, radius: float, key: String, unit: float) -> void:
-	var rect := Rect2(Vector2(center.x - 22.0 * unit, center.y + radius + 3.0 * unit), Vector2(44.0, 25.0) * unit)
-	draw_rect(rect, Color("#100e0b", 0.96))
-	draw_rect(rect, Color("#d5ad70", 0.95), false, 1.1 * unit)
+	var rect := Rect2(Vector2(center.x - 23.0 * unit, center.y + radius * 0.66), Vector2(46.0, 26.0) * unit)
+	var tab := PackedVector2Array([
+		rect.position + Vector2(6.0, 0.0) * unit,
+		rect.position + Vector2(rect.size.x - 6.0 * unit, 0.0),
+		rect.position + Vector2(rect.size.x, 8.0 * unit),
+		rect.position + Vector2(rect.size.x - 6.0 * unit, rect.size.y),
+		rect.position + Vector2(6.0 * unit, rect.size.y),
+		rect.position + Vector2(0.0, 8.0 * unit)
+	])
+	draw_colored_polygon(tab, Color("#100e0b", 0.98))
+	var outline := tab.duplicate()
+	outline.append(tab[0])
+	draw_polyline(outline, Color("#d5ad70", 0.98), 1.25 * unit, true)
 	_center_text_outline(rect, key, maxi(8, roundi(17.0 * unit)), Color("#f5d99a"), 1)
-
 
 func _boss_profile_portrait() -> Texture2D:
 	var profile: Dictionary = main_ref.get_boss_ui_profile()
@@ -1393,27 +1440,25 @@ func end_panel_rect(view: Vector2) -> Rect2:
 	)
 
 
+
 func _touch_layout(view: Vector2) -> Dictionary:
 	var scale := clampf(minf(view.x / 1672.0, view.y / 941.0), 0.36, 1.5)
 	var offset := (view - Vector2(1672.0, 941.0) * scale) * 0.5
 	var joystick_center := offset + Vector2(173.0, 782.0) * scale
-	# Triangular action cluster: E healing, Q primary active, R reserved second active.
-	var heal_center := offset + Vector2(1375.0, 802.0) * scale
-	var secondary_center := offset + Vector2(1447.0, 727.0) * scale
-	var skill_center := offset + Vector2(1532.0, 802.0) * scale
+	# Match the approved reference: E, Q and R sit in one horizontal action row.
+	var heal_center := offset + Vector2(1262.0, 800.0) * scale
+	var skill_center := offset + Vector2(1388.0, 800.0) * scale
+	var secondary_center := offset + Vector2(1515.0, 800.0) * scale
 	var joystick_radius := 85.0 * scale
-	var skill_radius := 53.0 * scale
-	var heal_radius := 45.0 * scale
-	var secondary_radius := 49.0 * scale
+	var button_radius := 51.0 * scale
 	return {
 		"scale": scale, "offset": offset,
 		"joystick_center": joystick_center, "joystick_radius": joystick_radius,
 		"joystick_move_radius": 49.0 * scale,
-		"skill_center": skill_center, "skill_radius": skill_radius, "skill_hit_radius": 59.0 * scale,
-		"heal_center": heal_center, "heal_radius": heal_radius, "heal_hit_radius": 52.0 * scale,
-		"secondary_center": secondary_center, "secondary_radius": secondary_radius
+		"skill_center": skill_center, "skill_radius": button_radius, "skill_hit_radius": 58.0 * scale,
+		"heal_center": heal_center, "heal_radius": button_radius, "heal_hit_radius": 58.0 * scale,
+		"secondary_center": secondary_center, "secondary_radius": button_radius, "secondary_hit_radius": 58.0 * scale
 	}
-
 
 func _draw_touch_controls(view: Vector2) -> void:
 	var touch := _touch_layout(view)
