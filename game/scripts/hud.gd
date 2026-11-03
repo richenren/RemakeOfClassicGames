@@ -268,7 +268,7 @@ func _draw_xp_footer(rect: Rect2, player, unit: float) -> void:
 	draw_texture_rect(HUD_XP_FOOTER_FRAME, rect, false)
 	var level_center := rect.position + Vector2(37.0, 16.0) * unit
 	_center_text_outline(Rect2(level_center - Vector2(25.0, 15.0) * unit, Vector2(50.0, 30.0) * unit), "Lv%d" % player.level, maxi(11, roundi(19.0 * unit)), Color("#f3d18b"), 1)
-	var xp_bar := Rect2(rect.position + Vector2(82.0, 8.0) * unit, Vector2(410.0, 16.0) * unit)
+	var xp_bar := Rect2(rect.position + Vector2(88.0, 10.0) * unit, Vector2(397.0, 12.0) * unit)
 	_bar(xp_bar, float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#e1a944"))
 	_center_text_outline(Rect2(rect.position + Vector2(503.0, 1.0) * unit, Vector2(64.0, 28.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(8, roundi(17.0 * unit)), Color("#f0dfbb"), 1)
 
@@ -335,7 +335,7 @@ func _draw_reference_controls(view: Vector2, unit: float) -> void:
 			_center_text_outline(Rect2(center - Vector2(18.0, 17.0) * unit, Vector2(36.0, 34.0) * unit), str(item["letter"]), maxi(11, roundi(21.0 * unit)), Color("#f0dfbd"), 1)
 
 	# Ornamental three-point cluster: E and Q below, R above. Hit targets use the same centers.
-	var cluster_position := Vector2(1280.0, 583.0) * unit + Vector2((view.x - 1672.0 * unit) * 0.5, (view.y - 941.0 * unit) * 0.5)
+	var cluster_position := Vector2(1280.0, 590.0) * unit + Vector2((view.x - 1672.0 * unit) * 0.5, (view.y - 941.0 * unit) * 0.5)
 	draw_texture_rect(HUD_SKILL_CLUSTER_FRAME, Rect2(cluster_position, Vector2(350.0, 300.0) * unit), false)
 	var heal: Vector2 = touch["heal_center"]
 	var skill: Vector2 = touch["skill_center"]
@@ -1401,7 +1401,7 @@ func _touch_layout(view: Vector2) -> Dictionary:
 	# Match the approved reference's triangular action cluster: E bottom-left, R top, Q bottom-right.
 	var heal_center := offset + Vector2(1350.0, 780.0) * scale
 	var skill_center := offset + Vector2(1560.0, 780.0) * scale
-	var secondary_center := offset + Vector2(1455.0, 660.0) * scale
+	var secondary_center := offset + Vector2(1455.0, 667.0) * scale
 	var joystick_radius := 108.0 * scale
 	var button_radius := 60.0 * scale
 	return {
