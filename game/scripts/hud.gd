@@ -49,17 +49,18 @@ func _draw() -> void:
 # The approved 1303x609 reference is a thin, edge-anchored gameplay HUD.
 # Only layout and presentation change: all combat, upgrade and fire effects remain intact.
 func _reference_hud_layout(view: Vector2) -> Dictionary:
+	# Scheme C: player card, right-side Boss tracker, reserved Boss HP lane, slim XP footer.
 	var unit := clampf(minf(view.x / 1303.0, view.y / 609.0), 0.38, 1.5)
 	var status_rect := Rect2(Vector2(22.0, 12.0) * unit, Vector2(356.0, 86.0) * unit)
-	var objective_rect := Rect2(Vector2(36.0, 108.0) * unit, Vector2(307.0, 64.0) * unit)
-	var time_size := Vector2(245.0, 49.0) * unit
-	var time_rect := Rect2(Vector2((view.x - time_size.x) * 0.5, 13.0 * unit), time_size)
-	var slots_rect := Rect2(Vector2(view.x - 82.0 * unit, 99.0 * unit), Vector2(66.0, 255.0) * unit)
-	var xp_rect := Rect2(Vector2((view.x - 477.0 * unit) * 0.5, view.y - 53.0 * unit), Vector2(477.0, 27.0) * unit)
-	var objective_marker := Rect2(Vector2(28.0, view.y - 49.0 * unit), Vector2(274.0, 25.0) * unit)
-	var pause_center := Vector2(view.x - 32.0 * unit, 31.0 * unit)
+	var objective_size := Vector2(300.0, 64.0) * unit
+	var objective_rect := Rect2(Vector2(view.x - objective_size.x - 54.0 * unit, 12.0 * unit), objective_size)
+	var slots_rect := Rect2(Vector2(view.x - 82.0 * unit, 116.0 * unit), Vector2(66.0, 255.0) * unit)
+	var xp_rect := Rect2(Vector2((view.x - 390.0 * unit) * 0.5, view.y - 25.0 * unit), Vector2(390.0, 12.0) * unit)
+	var objective_marker := Rect2(Vector2(view.x - 330.0 * unit, 84.0 * unit), Vector2(276.0, 24.0) * unit)
+	var pause_center := Vector2(view.x - 27.0 * unit, 29.0 * unit)
 	var boss_size := Vector2(380.0, 39.0) * unit
-	var boss_rect := Rect2(Vector2((view.x - boss_size.x) * 0.5, 70.0 * unit), boss_size)
+	var boss_rect := Rect2(Vector2((view.x - boss_size.x) * 0.5, 12.0 * unit), boss_size)
+	var time_rect := Rect2()
 	return {"scale": unit, "status": status_rect, "objective": objective_rect, "time": time_rect, "slots": slots_rect, "xp": xp_rect, "objective_marker": objective_marker, "pause_center": pause_center, "boss": boss_rect}
 
 
@@ -156,10 +157,25 @@ func _draw_reference_hud(view: Vector2) -> void:
 		var objective_progress := float(objective.get("progress", 0.0))
 		_bar(Rect2(goal_rect.position.x + 58.0 * unit, goal_rect.end.y - 9.0 * unit, goal_rect.size.x - 70.0 * unit, 3.0 * unit), objective_progress, goal_accent)
 
-	# XP belongs only in the bottom progress bar. The upper display is time-only.
-	var timer: Rect2 = layout["time"]
-	_reference_panel(timer, gold, unit)
-	_center_text(timer, "生存时间  %s" % _format_time(main_ref.elapsed_seconds), maxi(9, roundi(17.0 * unit)), TEXT_COLOR)
+	# Survival time is intentionally not rendered. Keep the top-center lane for the Boss HP bar.
+	# Boss HP is shown only after the Boss spawns.
+	var boss = main_ref.get_boss()
+	if boss != null:
+		var boss_rect: Rect2 = layout["boss"]
+		_reference_panel(boss_rect, Color("#b85e4c"), unit)
+		_center_text(Rect2(boss_rect.position.x + 8.0 * unit, boss_rect.position.y, boss_rect.size.x - 16.0 * unit, 18.0 * unit), str(main_ref.get_boss_ui_profile().get("name", "尸王")) + (" · 暴走" if boss.hp / maxf(1.0, boss.max_hp) <= 0.5 else ""), maxi(8, roundi(11.0 * unit)), pale_gold)
+		_bar(Rect2(boss_rect.position + Vector2(15.0, 24.0) * unit, Vector2(boss_rect.size.x / unit - 30.0, 6.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b64d43"), true)
+
+	# Minimal XP footer: small level seal, fine progress line, quiet numeric progress.
+	var xp: Rect2 = layout["xp"]
+	var badge_center := xp.position + Vector2(12.0, 6.0) * unit
+	draw_circle(badge_center, 11.0 * unit, Color("#17130f", 0.94))
+	draw_arc(badge_center, 11.0 * unit, 0.0, TAU, 28, gold, 1.1 * unit)
+	_center_text(Rect2(badge_center - Vector2(12.0, 8.0) * unit, Vector2(24.0, 16.0) * unit), "Lv%d" % player.level, maxi(7, roundi(9.0 * unit)), pale_gold)
+	var xp_bar := Rect2(xp.position + Vector2(29.0, 3.0) * unit, Vector2(274.0, 6.0) * unit)
+	draw_rect(xp_bar, Color("#090b0c", 0.78))
+	_bar(xp_bar, float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#bd914d"))
+	_center_text(Rect2(xp.position + Vector2(307.0, -2.0) * unit, Vector2(82.0, 16.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(7, roundi(9.0 * unit)), MUTED_COLOR)
 
 	# Top-right pause is an actual click/touch target.
 	var pause: Vector2 = layout["pause_center"]
@@ -168,9 +184,11 @@ func _draw_reference_hud(view: Vector2) -> void:
 	draw_line(pause + Vector2(-4.0, -7.0) * unit, pause + Vector2(-4.0, 7.0) * unit, pale_gold, 2.7 * unit)
 	draw_line(pause + Vector2(4.0, -7.0) * unit, pause + Vector2(4.0, 7.0) * unit, pale_gold, 2.7 * unit)
 
-	# Four actual equipped auto-skill slots, icon-only, stacked against the right edge.
+	# Narrow right-side auto-skill rail, visually lighter than the objective panel.
 	var slots: Rect2 = layout["slots"]
-	_reference_panel(slots, gold, unit)
+	draw_rect(slots, Color("#080a0b", 0.28))
+	draw_line(slots.position, Vector2(slots.position.x, slots.end.y), Color(gold.r, gold.g, gold.b, 0.35), 1.0 * unit)
+	draw_line(Vector2(slots.end.x, slots.position.y), slots.end, Color(gold.r, gold.g, gold.b, 0.35), 1.0 * unit)
 	var owned: Array[String] = []
 	for skill_variant in main_ref.AUTO_SKILL_DEFS.keys():
 		var sid := str(skill_variant)
@@ -193,28 +211,6 @@ func _draw_reference_hud(view: Vector2) -> void:
 			draw_circle(center, icon_radius * 0.78, Color("#10120e", 0.84))
 			draw_arc(center, icon_radius * 0.78, 0.0, TAU, 28, Color("#aa9062", 0.45), 1.0 * unit)
 			_center_text(Rect2(center.x - 10.0 * unit, center.y - 8.0 * unit, 20.0 * unit, 16.0 * unit), "+", maxi(9, roundi(18.0 * unit)), Color("#c9ad78", 0.60))
-
-	# A single unobtrusive Boss HP bar appears only when the Boss exists.
-	var boss = main_ref.get_boss()
-	if boss != null:
-		var boss_rect: Rect2 = layout["boss"]
-		_reference_panel(boss_rect, Color("#b85e4c"), unit)
-		_center_text(Rect2(boss_rect.position.x + 8.0 * unit, boss_rect.position.y, boss_rect.size.x - 16.0 * unit, 18.0 * unit), str(main_ref.get_boss_ui_profile().get("name", "尸王")) + (" · 暴走" if boss.hp / maxf(1.0, boss.max_hp) <= 0.5 else ""), maxi(8, roundi(11.0 * unit)), pale_gold)
-		_bar(Rect2(boss_rect.position + Vector2(15.0, 24.0) * unit, Vector2(boss_rect.size.x / unit - 30.0, 6.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b64d43"), true)
-
-	# Experience bar stays at the bottom center as on the approved screenshot.
-	var xp: Rect2 = layout["xp"]
-	draw_rect(xp, Color("#070909", 0.85))
-	draw_line(xp.position, Vector2(xp.end.x, xp.position.y), Color("#b88d4b", 0.72), 1.2 * unit)
-	draw_line(Vector2(xp.position.x, xp.end.y), xp.end, Color("#b88d4b", 0.72), 1.2 * unit)
-	var badge_center := xp.position + Vector2(19.0, 13.0) * unit
-	draw_circle(badge_center, 21.0 * unit, Color("#17130f", 0.98))
-	draw_arc(badge_center, 21.0 * unit, 0.0, TAU, 30, gold, 1.8 * unit)
-	_center_text(Rect2(badge_center - Vector2(20.0, 13.0) * unit, Vector2(40.0, 26.0) * unit), "Lv%d" % player.level, maxi(8, roundi(12.0 * unit)), pale_gold)
-	var xp_bar := Rect2(xp.position + Vector2(52.0, 8.0) * unit, Vector2(242.0, 12.0) * unit)
-	_bar(xp_bar, float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#c8984e"), true)
-	var xp_label_rect := Rect2(xp.position.x + 300.0 * unit, xp.position.y + 2.0 * unit, xp.size.x - 308.0 * unit, xp.size.y - 4.0 * unit)
-	_center_text(xp_label_rect, "经验 %d/%d" % [player.xp, player.xp_to_next], maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
 
 	# Keyboard movement guide, the current Q/SPACE active art and E healing.
 	_draw_reference_controls(view, unit)
@@ -1273,14 +1269,14 @@ func end_panel_rect(view: Vector2) -> Rect2:
 
 
 func _touch_layout(view: Vector2) -> Dictionary:
-	# Q/E actions and joystick use exactly the locations drawn by the reference HUD.
+	# Q remains the bottom-right primary action. E healing is separated below the auto-skill rail.
 	var scale := clampf(minf(view.x / 1303.0, view.y / 609.0), 0.38, 1.5)
 	var joystick_center := Vector2(145.0 * scale, view.y - 92.0 * scale)
-	var skill_center := Vector2(view.x - 96.0 * scale, view.y - 66.0 * scale)
-	var heal_center := Vector2(view.x - 208.0 * scale, view.y - 66.0 * scale)
+	var skill_center := Vector2(view.x - 88.0 * scale, view.y - 68.0 * scale)
+	var heal_center := Vector2(view.x - 48.0 * scale, view.y - 174.0 * scale)
 	var joystick_radius := 55.0 * scale
 	var skill_radius := 39.0 * scale
-	var heal_radius := 33.0 * scale
+	var heal_radius := 30.0 * scale
 	return {
 		"scale": scale,
 		"joystick_center": joystick_center,
