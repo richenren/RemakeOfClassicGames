@@ -542,13 +542,14 @@ func _test_reference_hud_layout() -> void:
 			var rect: Rect2 = layout[key]
 			_check(rect.position.x >= 0.0 and rect.position.y >= 0.0 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
 		_check(status.end.x < layout["boss"].position.x and objective.end.x < pause_center.x - 19.0 * float(layout["scale"]), "方案C左上角色卡、顶部Boss血条、右上倒计时与暂停键分区")
-		_check(objective.position.y < slots.position.y and slots.end.y < heal_center.y - float(touch["heal_radius"]), "方案C右上Boss追踪、右侧技能栏与治疗道具纵向分区")
+
 		_check(hud._center_text_origin(center_rect, "Lv2", 12).x > center_rect.position.x, "等级徽章文本使用独立的居中排版工具")
 		_check(slots.size.x <= 72.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧技能栏保持竖排窄幅，不覆盖战场")
 		var touch: Dictionary = hud._touch_layout(view)
 		var skill_center: Vector2 = touch["skill_center"]
 		var heal_center: Vector2 = touch["heal_center"]
 		var joystick_center: Vector2 = touch["joystick_center"]
+		_check(objective.position.y < slots.position.y and slots.end.y < heal_center.y - float(touch["heal_radius"]), "方案C右上Boss追踪、右侧技能栏与治疗道具纵向分区")
 		_check(skill_center.distance_to(heal_center) > float(touch["skill_hit_radius"]) + float(touch["heal_hit_radius"]), "Q与E按钮点击热区没有重叠")
 		_check(xp.position.x > joystick_center.x + float(touch["joystick_radius"]) and xp.end.x < skill_center.x - float(touch["skill_hit_radius"]), "底部经验细条避开虚拟摇杆及Q按钮")
 		_check(xp.size.y <= 14.0 * float(layout["scale"]) and xp.position.y > view.y - 30.0 * float(layout["scale"]), "底部经验条保持低存在感细线样式")
