@@ -276,3 +276,10 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 
 - 回归：HUD boss倒计时457秒、剩余59秒警戒、当前 Boss 肖像载入、青瓷丹瓶SVG尺寸、道术/治疗短按和长按互斥、金系技能分支说明数据。
 - Windows 验收：悬停自动技能图标/右下按钮查看浮层，移开消失；Android触摸短按触发、长按只显示不误消耗；核对Boss头像在竖条里是否清晰。
+
+## 2026-11-03：HUD 文本排版回归
+
+- [x] 左上角色卡不再绘制等级，底部等级徽章保留。
+- [x] Boss 名称/倒计时、Boss 血条标题、底部经验值改为居中容器。
+- [x] _center_text_origin 使用 Font ascent/descent/字符串宽度计算视觉中心，自动化断言水平与垂直中心一致。
+- [ ] Windows 实际窗口截图验收，重点查看中英混排、数字倒计时和不同分辨率的字形视觉中心。

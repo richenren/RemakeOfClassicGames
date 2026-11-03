@@ -531,10 +531,19 @@ func _test_reference_hud_layout() -> void:
 		var slots: Rect2 = layout["slots"]
 		var xp: Rect2 = layout["xp"]
 		var pause_center: Vector2 = layout["pause_center"]
+	var center_rect := Rect2(17.0, 23.0, 241.0, 37.0)
+	var center_origin: Vector2 = hud._center_text_origin(center_rect, "居中测试 07:43", 16)
+	var font: Font = ThemeDB.fallback_font
+	var center_width: float = font.get_string_size("居中测试 07:43", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16).x
+	var font_height: float = font.get_ascent(16) + font.get_descent(16)
+	var visual_center_x: float = center_origin.x + center_width * 0.5
+	var visual_center_y: float = center_origin.y + (font.get_descent(16) - font.get_ascent(16)) * 0.5
+	_check(is_equal_approx(visual_center_x, center_rect.get_center().x) and is_equal_approx(visual_center_y, center_rect.get_center().y), "HUD文字按字体实际宽高水平和垂直居中")
 		for key in ["status", "objective", "time", "slots", "xp", "boss"]:
 			var rect: Rect2 = layout[key]
 			_check(rect.position.x >= 0.0 and rect.position.y >= 0.0 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
 		_check(status.end.y < objective.position.y and status.end.x < timer.position.x and timer.end.x < slots.position.x, "定稿HUD角落状态、目标、计时、窄技能栏互不重叠")
+		_check(hud._center_text_origin(center_rect, "Lv2", 12).x > center_rect.position.x, "等级徽章文本使用独立的居中排版工具")
 		_check(slots.size.x <= 72.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧技能栏保持竖排窄幅，不覆盖战场")
 		var touch: Dictionary = hud._touch_layout(view)
 		var skill_center: Vector2 = touch["skill_center"]

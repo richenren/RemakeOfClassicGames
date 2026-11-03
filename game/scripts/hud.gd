@@ -109,7 +109,7 @@ func _draw_reference_hud(view: Vector2) -> void:
 	draw_line(Vector2(8.0 * unit, 2.0 * unit), Vector2(view.x - 8.0 * unit, 2.0 * unit), Color("#bb9451", 0.35), maxf(0.6, unit))
 	draw_line(Vector2(8.0 * unit, view.y - 2.0 * unit), Vector2(view.x - 8.0 * unit, view.y - 2.0 * unit), Color("#bb9451", 0.35), maxf(0.6, unit))
 
-	# Top-left portrait, name, health and level, aligned to the reference.
+	# Top-left portrait, name, health and kill count; level appears only in the XP badge.
 	var status: Rect2 = layout["status"]
 	_reference_panel(status, gold, unit)
 	var portrait_center := status.position + Vector2(45.0, 43.0) * unit
@@ -123,8 +123,8 @@ func _draw_reference_hud(view: Vector2) -> void:
 	draw_rect(hp_rect, Color("#170d0b", 0.95))
 	_bar(hp_rect, player.hp / maxf(1.0, player.max_hp), Color("#d45149"), true)
 	_center_text(hp_rect.grow(3.0 * unit), "%d / %d" % [roundi(player.hp), roundi(player.max_hp)], maxi(8, roundi(11.0 * unit)), Color("#fff1df"))
-	_text(Vector2(info_x, status.position.y + 49.0 * unit), "Lv%d" % player.level, maxi(9, roundi(12.0 * unit)), gold)
-	_text(Vector2(info_x, status.position.y + 69.0 * unit), "击杀 %d" % main_ref.kills, maxi(8, roundi(12.0 * unit)), MUTED_COLOR)
+	# Level is shown only once in the bottom XP medallion. Center the remaining kill label.
+	_center_text(Rect2(info_x, status.position.y + 56.0 * unit, status.end.x - info_x - 12.0 * unit, 21.0 * unit), "击杀 %d" % main_ref.kills, maxi(8, roundi(12.0 * unit)), MUTED_COLOR)
 
 	# Boss-specific seal portrait and compact countdown. The stage profile determines
 	# the visible boss name/portrait; the current prologue uses its existing boss art.
@@ -143,16 +143,16 @@ func _draw_reference_hud(view: Vector2) -> void:
 		var avatar_rect := Rect2(icon_center - Vector2(19.0, 20.0) * unit, Vector2(38.0, 40.0) * unit)
 		var avatar_modulate := Color(0.75, 0.68, 0.58, 0.86) if spawning and not danger else Color.WHITE
 		draw_texture_rect_region(_boss_profile_portrait(), avatar_rect, Rect2(54.0, 9.0, 84.0, 90.0), avatar_modulate, false)
-		var label_x := goal_rect.position.x + 58.0 * unit
+		var content_rect := Rect2(goal_rect.position.x + 57.0 * unit, goal_rect.position.y + 3.0 * unit, goal_rect.size.x - 68.0 * unit, 22.0 * unit)
 		var boss_title := str(objective.get("boss_name", "尸王"))
-		_text(Vector2(label_x, goal_rect.position.y + 18.0 * unit), "镇邪令 · " + boss_title, maxi(8, roundi(13.0 * unit)), goal_accent)
+		_center_text(content_rect, "镇邪令 · " + boss_title, maxi(8, roundi(13.0 * unit)), goal_accent)
+		var countdown_rect := Rect2(content_rect.position.x, goal_rect.position.y + 26.0 * unit, content_rect.size.x, 22.0 * unit)
 		if spawning:
 			var countdown := "%02d:%02d" % [remaining / 60, remaining % 60]
-			_text(Vector2(label_x, goal_rect.position.y + 42.0 * unit), "现身倒计时", maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
 			var pulse := 1.0 if not imminent else 0.74 + 0.26 * sin(main_ref.elapsed_seconds * 13.0)
-			_text(Vector2(label_x + 85.0 * unit, goal_rect.position.y + 43.0 * unit), countdown, maxi(10, roundi(18.0 * unit)), Color(goal_accent.r, goal_accent.g, goal_accent.b, pulse))
+			_center_text(countdown_rect, "现身倒计时  " + countdown, maxi(9, roundi(13.0 * unit)), Color(goal_accent.r, goal_accent.g, goal_accent.b, pulse))
 		else:
-			_text(Vector2(label_x, goal_rect.position.y + 42.0 * unit), str(objective.get("detail", "正在交战")), maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
+			_center_text(countdown_rect, str(objective.get("detail", "正在交战")), maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
 		var objective_progress := float(objective.get("progress", 0.0))
 		_bar(Rect2(goal_rect.position.x + 58.0 * unit, goal_rect.end.y - 9.0 * unit, goal_rect.size.x - 70.0 * unit, 3.0 * unit), objective_progress, goal_accent)
 
@@ -199,7 +199,7 @@ func _draw_reference_hud(view: Vector2) -> void:
 	if boss != null:
 		var boss_rect: Rect2 = layout["boss"]
 		_reference_panel(boss_rect, Color("#b85e4c"), unit)
-		_text(boss_rect.position + Vector2(15.0, 17.0) * unit, str(main_ref.get_boss_ui_profile().get("name", "尸王")) + (" · 暴走" if boss.hp / maxf(1.0, boss.max_hp) <= 0.5 else ""), maxi(9, roundi(12.0 * unit)), pale_gold)
+		_center_text(Rect2(boss_rect.position.x + 8.0 * unit, boss_rect.position.y, boss_rect.size.x - 16.0 * unit, 18.0 * unit), str(main_ref.get_boss_ui_profile().get("name", "尸王")) + (" · 暴走" if boss.hp / maxf(1.0, boss.max_hp) <= 0.5 else ""), maxi(8, roundi(11.0 * unit)), pale_gold)
 		_bar(Rect2(boss_rect.position + Vector2(15.0, 24.0) * unit, Vector2(boss_rect.size.x / unit - 30.0, 6.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b64d43"), true)
 
 	# Experience bar stays at the bottom center as on the approved screenshot.
@@ -213,7 +213,8 @@ func _draw_reference_hud(view: Vector2) -> void:
 	_center_text(Rect2(badge_center - Vector2(20.0, 13.0) * unit, Vector2(40.0, 26.0) * unit), "Lv%d" % player.level, maxi(8, roundi(12.0 * unit)), pale_gold)
 	var xp_bar := Rect2(xp.position + Vector2(52.0, 8.0) * unit, Vector2(242.0, 12.0) * unit)
 	_bar(xp_bar, float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#c8984e"), true)
-	_text(xp.position + Vector2(310.0, 18.0) * unit, "经验 %d/%d" % [player.xp, player.xp_to_next], maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
+	var xp_label_rect := Rect2(xp.position.x + 300.0 * unit, xp.position.y + 2.0 * unit, xp.size.x - 308.0 * unit, xp.size.y - 4.0 * unit)
+	_center_text(xp_label_rect, "经验 %d/%d" % [player.xp, player.xp_to_next], maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
 
 	# Keyboard movement guide, the current Q/SPACE active art and E healing.
 	_draw_reference_controls(view, unit)
@@ -1008,8 +1009,18 @@ func _draw_skill_card_illustration(art_rect: Rect2, icon_id: String, accent: Col
 func _uses_water_formation_card_art(icon_id: String) -> bool:
 	return icon_id in ["water_array", "ice_array", "cold_relic"]
 
+func _center_text_origin(rect: Rect2, value: String, size: int) -> Vector2:
+	var font: Font = ThemeDB.fallback_font
+	var text_width := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size).x
+	var text_height := font.get_ascent(size) + font.get_descent(size)
+	var x := rect.position.x + maxf(0.0, (rect.size.x - text_width) * 0.5)
+	var baseline := rect.position.y + (rect.size.y - text_height) * 0.5 + font.get_ascent(size)
+	return Vector2(x, baseline)
+
+
 func _center_text(rect: Rect2, value: String, size: int, color: Color) -> void:
-	draw_string(ThemeDB.fallback_font, Vector2(rect.position.x, rect.position.y + size), value, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, color)
+	# draw_string() receives a baseline, not a top-left point. Center by actual font metrics.
+	draw_string(ThemeDB.fallback_font, _center_text_origin(rect, value, size), value, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size, color)
 
 
 func _draw_wrapped_text(rect: Rect2, value: String, size: int, color: Color, max_lines: int = 2) -> void:
