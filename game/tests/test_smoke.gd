@@ -557,8 +557,8 @@ func _test_reference_hud_layout() -> void:
 		var secondary_center: Vector2 = touch["secondary_center"]
 		var joystick_center: Vector2 = touch["joystick_center"]
 		_check(objective.position.y < slots.position.y and slots.end.y < heal_center.y - float(touch["heal_radius"]), "尸王卡、自动技能栏与底部操作区纵向分层")
-		_check(heal_center.x < skill_center.x and skill_center.x < secondary_center.x and absf(heal_center.y - secondary_center.y) <= 0.1, "E、Q、R按参考图横向排列，为双主动技能预留空间")
-		_check(heal_center.y == skill_center.y and skill_center.y == secondary_center.y, "E/Q/R三个操作按钮底部水平对齐")
+		_check(heal_center.x < secondary_center.x and secondary_center.x < skill_center.x and secondary_center.y < heal_center.y, "E/Q/R按参考图三角形排列：E左下、R上方、Q右下")
+		_check(absf(heal_center.y - skill_center.y) <= 0.1 and secondary_center.y < heal_center.y, "E/Q底部对齐，R主动技能位于上方")
 		_check(heal_center.distance_to(secondary_center) > float(touch["heal_radius"]) + float(touch["secondary_radius"]), "E与R按钮视觉区域不重叠")
 		_check(skill_center.distance_to(secondary_center) > float(touch["skill_radius"]) + float(touch["secondary_radius"]), "Q与R按钮视觉区域不重叠")
 		_check(xp.position.x > joystick_center.x + float(touch["joystick_radius"]) and xp.end.x < heal_center.x - float(touch["heal_hit_radius"]), "底部经验条避开虚拟摇杆及右下E/Q/R技能区")
@@ -568,6 +568,9 @@ func _test_reference_hud_layout() -> void:
 	_check(load("res://assets/sprites/hud_portrait_player.webp").get_size() == Vector2(192.0, 192.0), "角色卡使用192px写实青年道士肖像素材")
 	_check(load("res://assets/sprites/hud_portrait_boss.webp").get_size() == Vector2(128.0, 128.0), "尸王卡使用独立写实Boss肖像素材")
 	_check(load("res://assets/sprites/hud_skill_buttons.webp").get_size() == Vector2(384.0, 128.0), "E/Q/R使用独立技能按钮插画图集")
+	_check(load("res://assets/sprites/hud_reference/screen_frame.svg").get_size() == Vector2(1672.0, 941.0), "全屏金红装饰边框使用独立透明SVG素材")
+	_check(load("res://assets/sprites/hud_reference/player_card.svg") != null and load("res://assets/sprites/hud_reference/boss_card.svg") != null and load("res://assets/sprites/hud_reference/kill_card.svg") != null, "玩家、尸王与击杀卡片使用独立高清装饰素材")
+	_check(load("res://assets/sprites/hud_reference/joystick.svg") != null and load("res://assets/sprites/hud_reference/skill_cluster.svg") != null and load("res://assets/sprites/hud_reference/auto_rail.svg") != null, "摇杆、三角技能组和自动技能栏装饰素材可加载")
 	hud.queue_free()
 
 
@@ -603,7 +606,7 @@ func _test_compact_hud_layout() -> void:
 		_check(skill_center.x >= float(touch["skill_radius"]) and skill_center.x + float(touch["skill_radius"]) <= view.x, "小视口道术按钮完整显示")
 		_check(reserved_center.x + float(touch["secondary_radius"]) <= view.x, "小视口R预留技能按钮完整显示")
 		_check(heal_center.y + float(touch["heal_radius"]) <= view.y, "小视口治疗按钮完整显示")
-		_check(heal_center.x < skill_center.x and skill_center.x < reserved_center.x and absf(heal_center.y - skill_center.y) <= 0.1 and absf(skill_center.y - reserved_center.y) <= 0.1, "小视口E/Q/R三个按钮保持横向排列")
+		_check(heal_center.x < reserved_center.x and reserved_center.x < skill_center.x and reserved_center.y < heal_center.y and absf(heal_center.y - skill_center.y) <= 0.1, "小视口E/Q/R保持原型三角形布局")
 		_check(skill_center.distance_to(heal_center) > float(touch["skill_radius"]) + float(touch["heal_radius"]), "小视口Q主动技能与E治疗道具视觉上不重叠")
 		_check(skill_center.distance_to(heal_center) > float(touch["skill_hit_radius"]) + float(touch["heal_hit_radius"]), "小视口Q主动技能与E治疗触控热区不重叠")
 		_check(skill_center.distance_to(reserved_center) > float(touch["skill_hit_radius"]) + float(touch["secondary_hit_radius"]), "小视口Q主动技能与R预留技能触控热区不重叠")
