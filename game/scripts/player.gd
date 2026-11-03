@@ -2,6 +2,7 @@ extends Node2D
 
 const WORLD_MIN := Vector2(48.0, 48.0)
 const WORLD_MAX := Vector2(2352.0, 1552.0)
+const DEFAULT_CHARACTER_PORTRAIT: Texture2D = preload("res://assets/sprites/player_portrait.svg")
 const PLAYER_FRONT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_front.tres")
 const PLAYER_SIDE_LEFT_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_side_left.tres")
 const PLAYER_BACK_TEXTURE: Texture2D = preload("res://assets/sprites/player_taoist_back.tres")
@@ -41,6 +42,10 @@ const MOVE_ACCELERATION := 1500.0
 const MOVE_DECELERATION := 1900.0
 
 var main_ref: Node
+# Character identity is data-driven so future selection screens can swap name and portrait together.
+var character_id: String = "longhushan_tianshi"
+var character_display_name: String = "龙虎山天师"
+var character_portrait: Texture2D = DEFAULT_CHARACTER_PORTRAIT
 var max_hp: float = 100.0
 var hp: float = 100.0
 var move_speed: float = 215.0

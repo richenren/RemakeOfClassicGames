@@ -49,19 +49,22 @@ func _draw() -> void:
 # The approved 1303x609 reference is a thin, edge-anchored gameplay HUD.
 # Only layout and presentation change: all combat, upgrade and fire effects remain intact.
 func _reference_hud_layout(view: Vector2) -> Dictionary:
-	# Scheme C: player card, right-side Boss tracker, reserved Boss HP lane, slim XP footer.
-	var unit := clampf(minf(view.x / 1303.0, view.y / 609.0), 0.38, 1.5)
-	var status_rect := Rect2(Vector2(22.0, 12.0) * unit, Vector2(356.0, 86.0) * unit)
-	var objective_size := Vector2(300.0, 64.0) * unit
-	var objective_rect := Rect2(Vector2(view.x - objective_size.x - 54.0 * unit, 12.0 * unit), objective_size)
-	var slots_rect := Rect2(Vector2(view.x - 82.0 * unit, 116.0 * unit), Vector2(66.0, 255.0) * unit)
-	var xp_rect := Rect2(Vector2((view.x - 390.0 * unit) * 0.5, view.y - 25.0 * unit), Vector2(390.0, 12.0) * unit)
-	var objective_marker := Rect2(Vector2(view.x - 330.0 * unit, 84.0 * unit), Vector2(276.0, 24.0) * unit)
-	var pause_center := Vector2(view.x - 27.0 * unit, 29.0 * unit)
-	var boss_size := Vector2(380.0, 39.0) * unit
-	var boss_rect := Rect2(Vector2((view.x - boss_size.x) * 0.5, 12.0 * unit), boss_size)
-	var time_rect := Rect2()
-	return {"scale": unit, "status": status_rect, "objective": objective_rect, "time": time_rect, "slots": slots_rect, "xp": xp_rect, "objective_marker": objective_marker, "pause_center": pause_center, "boss": boss_rect}
+	# Approved 1672x941 reference artboard; scale uniformly and center for other aspect ratios.
+	var unit := clampf(minf(view.x / 1672.0, view.y / 941.0), 0.36, 1.5)
+	var canvas_size := Vector2(1672.0, 941.0) * unit
+	var offset := (view - canvas_size) * 0.5
+	var status_rect := Rect2(offset + Vector2(28.0, 78.0) * unit, Vector2(480.0, 136.0) * unit)
+	var kills_rect := Rect2(offset + Vector2(145.0, 220.0) * unit, Vector2(350.0, 66.0) * unit)
+	var objective_rect := Rect2(Vector2(view.x - 572.0 * unit, offset.y + 78.0 * unit), Vector2(480.0, 142.0) * unit)
+	var slots_rect := Rect2(Vector2(view.x - 126.0 * unit, offset.y + 228.0 * unit), Vector2(82.0, 354.0) * unit)
+	var xp_rect := Rect2(offset + Vector2(550.0, 858.0) * unit, Vector2(570.0, 32.0) * unit)
+	var boss_rect := Rect2(offset + Vector2(590.0, 14.0) * unit, Vector2(492.0, 46.0) * unit)
+	var pause_center := Vector2(view.x - 66.0 * unit, offset.y + 101.0 * unit)
+	return {
+		"scale": unit, "offset": offset, "status": status_rect, "kills": kills_rect,
+		"objective": objective_rect, "time": Rect2(), "slots": slots_rect,
+		"xp": xp_rect, "objective_marker": Rect2(), "pause_center": pause_center, "boss": boss_rect
+	}
 
 
 func reference_action_at(screen_position: Vector2) -> String:
@@ -80,8 +83,8 @@ func reference_action_at(screen_position: Vector2) -> String:
 
 
 func _reference_panel(rect: Rect2, accent: Color, unit: float) -> void:
-	draw_rect(rect, Color(0.024, 0.030, 0.032, 0.81))
-	draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.64), false, maxf(0.65, unit))
+	draw_rect(rect, Color(0.024, 0.030, 0.032, 0.88))
+	draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.72), false, maxf(0.7, unit))
 	var corner := 12.0 * unit
 	for i in range(4):
 		var x := rect.position.x if i % 2 == 0 else rect.end.x
@@ -92,126 +95,209 @@ func _reference_panel(rect: Rect2, accent: Color, unit: float) -> void:
 		draw_line(Vector2(x, y + y_sign * 3.0 * unit), Vector2(x, y + y_sign * corner), accent, maxf(0.8, 1.5 * unit))
 
 
+func _draw_ornate_game_card(rect: Rect2, accent: Color, unit: float, red_trim: bool = true) -> void:
+	draw_rect(rect, Color(0.018, 0.022, 0.026, 0.91))
+	draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.92), false, maxf(0.9, 1.45 * unit))
+	draw_rect(rect.grow(-4.0 * unit), Color(accent.r, accent.g, accent.b, 0.22), false, maxf(0.6, 0.8 * unit))
+	var x := rect.position.x
+	var y := rect.position.y
+	var right := rect.end.x
+	var bottom := rect.end.y
+	var corner := 22.0 * unit
+	for side in [1.0, -1.0]:
+		var cx := x + 5.0 * unit if side > 0.0 else right - 5.0 * unit
+		var dx := 1.0 if side > 0.0 else -1.0
+		draw_line(Vector2(cx, y + corner), Vector2(cx + dx * corner, y + 5.0 * unit), accent, 1.5 * unit, true)
+		draw_line(Vector2(cx + dx * corner, y + 5.0 * unit), Vector2(cx + dx * 2.0 * corner, y + 5.0 * unit), accent, 1.1 * unit, true)
+		draw_line(Vector2(cx, bottom - corner), Vector2(cx + dx * corner, bottom - 5.0 * unit), accent, 1.5 * unit, true)
+		draw_line(Vector2(cx + dx * corner, bottom - 5.0 * unit), Vector2(cx + dx * 2.0 * corner, bottom - 5.0 * unit), accent, 1.1 * unit, true)
+	var top_diamond := rect.position + Vector2(rect.size.x * 0.5, 2.0 * unit)
+	var bottom_diamond := Vector2(rect.get_center().x, rect.end.y - 2.0 * unit)
+	for center in [top_diamond, bottom_diamond]:
+		var diamond := PackedVector2Array([
+			center + Vector2(0.0, -5.0 * unit), center + Vector2(6.0 * unit, 0.0),
+			center + Vector2(0.0, 5.0 * unit), center + Vector2(-6.0 * unit, 0.0),
+			center + Vector2(0.0, -5.0 * unit)
+		])
+		draw_colored_polygon(diamond, Color(accent.r, accent.g, accent.b, 0.86))
+	if red_trim:
+		var red := Color("#a83b32", 0.82)
+		draw_arc(rect.position + Vector2(39.0, rect.size.y - 4.0) * unit, 34.0 * unit, PI * 1.10, PI * 1.78, 28, red, 2.2 * unit, true)
+		draw_arc(Vector2(rect.end.x - 39.0 * unit, rect.position.y + 4.0 * unit), 34.0 * unit, PI * 0.10, PI * 0.82, 28, red, 2.2 * unit, true)
+
+
+func _center_text_outline(rect: Rect2, value: String, size: int, color: Color, outline_size: int = 1) -> void:
+	var font: Font = ThemeDB.fallback_font
+	var origin := _center_text_origin(rect, value, size)
+	draw_string_outline(font, origin, value, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size, outline_size, Color(0.015, 0.012, 0.01, 0.94))
+	draw_string(font, origin, value, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size, color)
+
+
+func _fit_font_size(value: String, max_width: float, desired: int, minimum: int) -> int:
+	var font: Font = ThemeDB.fallback_font
+	var size := maxi(minimum, desired)
+	while size > minimum and font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size).x > max_width:
+		size -= 1
+	return size
+
+
+func _format_kill_count(value: int) -> String:
+	var count := maxi(0, value)
+	if count < 10000:
+		return str(count)
+	if count < 100000:
+		return "%.1f万" % (float(count) / 10000.0)
+	if count < 10000000:
+		return "%.0f万" % (float(count) / 10000.0)
+	return "%.1f千万" % (float(count) / 10000000.0)
+
+
+func _draw_reference_frame(view: Vector2, layout: Dictionary) -> void:
+	var unit: float = layout["scale"]
+	var offset: Vector2 = layout["offset"]
+	var frame := Rect2(offset + Vector2(7.0, 70.0) * unit, Vector2(1658.0, 832.0) * unit)
+	draw_rect(frame, Color("#bd914d", 0.82), false, 1.35 * unit)
+	draw_rect(frame.grow(-4.0 * unit), Color("#bd914d", 0.22), false, 0.7 * unit)
+	for sx in [1.0, -1.0]:
+		for sy in [1.0, -1.0]:
+			var corner := Vector2(frame.position.x if sx > 0.0 else frame.end.x, frame.position.y if sy > 0.0 else frame.end.y)
+			draw_line(corner + Vector2(0.0, sy * 30.0 * unit), corner + Vector2(0.0, sy * 8.0 * unit), Color("#e0b765", 0.92), 1.6 * unit, true)
+			draw_line(corner + Vector2(sx * 30.0 * unit, 0.0), corner + Vector2(sx * 8.0 * unit, 0.0), Color("#e0b765", 0.92), 1.6 * unit, true)
+			draw_arc(corner + Vector2(sx * 9.0, sy * 9.0) * unit, 8.0 * unit, 0.0, TAU, 20, Color("#e0b765", 0.78), 1.0 * unit)
+	_draw_cloud_motif(offset + Vector2(76.0, 30.0) * unit, unit, Color("#a43b32", 0.72))
+	_draw_cloud_motif(offset + Vector2(1515.0, 30.0) * unit, unit, Color("#a43b32", 0.72))
+	_draw_cloud_motif(offset + Vector2(72.0, 900.0) * unit, unit, Color("#a43b32", 0.66))
+	_draw_cloud_motif(offset + Vector2(1510.0, 900.0) * unit, unit, Color("#a43b32", 0.66))
+
+
+func _draw_player_card(player, rect: Rect2, unit: float) -> void:
+	_draw_ornate_game_card(rect, Color("#d2aa63"), unit, true)
+	var portrait_center := rect.position + Vector2(86.0, 68.0) * unit
+	var portrait_size := 122.0 * unit
+	draw_circle(portrait_center, 65.0 * unit, Color("#090b0d", 0.98))
+	draw_arc(portrait_center, 64.0 * unit, 0.0, TAU, 64, Color("#f0ce82"), 2.4 * unit, true)
+	draw_arc(portrait_center, 58.0 * unit, 0.0, TAU, 64, Color("#946c39", 0.9), 1.2 * unit, true)
+	var portrait: Texture2D = player.character_portrait if player.character_portrait != null else PLAYER_PORTRAIT_TEXTURE
+	draw_texture_rect(portrait, Rect2(portrait_center - Vector2.ONE * portrait_size * 0.5, Vector2.ONE * portrait_size), false)
+	var name_text := str(player.character_display_name)
+	var name_rect := Rect2(rect.position + Vector2(158.0, 14.0) * unit, Vector2(300.0, 48.0) * unit)
+	var name_size := _fit_font_size(name_text, name_rect.size.x - 12.0 * unit, maxi(16, roundi(36.0 * unit)), maxi(12, roundi(23.0 * unit)))
+	_center_text_outline(name_rect, name_text, name_size, Color("#f4d99f"), 1)
+	var hp_rect := Rect2(rect.position + Vector2(171.0, 76.0) * unit, Vector2(284.0, 26.0) * unit)
+	_draw_health_pill(hp_rect, player.hp / maxf(1.0, player.max_hp), Color("#d34b43"), true)
+	_center_text_outline(hp_rect.grow(2.0 * unit), "%d / %d" % [roundi(player.hp), roundi(player.max_hp)], maxi(10, roundi(19.0 * unit)), Color("#fff1df"), 1)
+
+
+func _draw_kill_card(rect: Rect2, unit: float) -> void:
+	_draw_ornate_game_card(rect, Color("#d6a85d"), unit, true)
+	var label_rect := Rect2(rect.position + Vector2(35.0, 9.0) * unit, Vector2(105.0, 47.0) * unit)
+	var count_rect := Rect2(rect.position + Vector2(137.0, 5.0) * unit, Vector2(196.0, 54.0) * unit)
+	var count_text := _format_kill_count(main_ref.kills)
+	var count_size := _fit_font_size(count_text, count_rect.size.x - 8.0 * unit, maxi(22, roundi(47.0 * unit)), maxi(17, roundi(26.0 * unit)))
+	_center_text_outline(label_rect, "击杀", maxi(14, roundi(27.0 * unit)), Color("#e7c47c"), 1)
+	_center_text_outline(count_rect, count_text, count_size, Color("#ffd889"), 1)
+
+
+func _draw_boss_card(rect: Rect2, unit: float) -> void:
+	_draw_ornate_game_card(rect, Color("#c75b45"), unit, true)
+	var portrait_center := rect.position + Vector2(77.0, 71.0) * unit
+	draw_circle(portrait_center, 65.0 * unit, Color("#120d0d", 0.98))
+	draw_arc(portrait_center, 64.0 * unit, 0.0, TAU, 64, Color("#e4b86b"), 2.5 * unit, true)
+	draw_arc(portrait_center, 58.0 * unit, 0.0, TAU, 64, Color("#a84035", 0.88), 1.4 * unit, true)
+	var portrait_rect := Rect2(portrait_center - Vector2(59.0, 62.0) * unit, Vector2(118.0, 124.0) * unit)
+	draw_texture_rect_region(_boss_profile_portrait(), portrait_rect, Rect2(54.0, 9.0, 84.0, 90.0), Color.WHITE, false)
+	var objective := objective_data()
+	var boss_title := str(objective.get("boss_name", main_ref.get_boss_ui_profile().get("name", "尸王")))
+	var title_rect := Rect2(rect.position + Vector2(145.0, 16.0) * unit, Vector2(315.0, 43.0) * unit)
+	var title_text := "镇邪令 · " + boss_title
+	_center_text_outline(title_rect, title_text, _fit_font_size(title_text, title_rect.size.x - 8.0 * unit, maxi(15, roundi(31.0 * unit)), maxi(12, roundi(20.0 * unit))), Color("#f0d49a"), 1)
+	var spawning := str(objective.get("kind", "")) == "survival"
+	var countdown_label := "现身倒计时" if spawning else "尸王已降临"
+	var countdown_rect := Rect2(rect.position + Vector2(145.0, 76.0) * unit, Vector2(175.0, 42.0) * unit)
+	_center_text_outline(countdown_rect, countdown_label, maxi(12, roundi(22.0 * unit)), Color("#e9c889"), 1)
+	if spawning:
+		var remaining := int(objective.get("remaining_seconds", 0))
+		var countdown := "%02d:%02d" % [remaining / 60, remaining % 60]
+		var pulse := 1.0 if remaining > 10 else 0.74 + 0.26 * sin(main_ref.elapsed_seconds * 13.0)
+		var time_rect := Rect2(rect.position + Vector2(315.0, 66.0) * unit, Vector2(135.0, 53.0) * unit)
+		_center_text_outline(time_rect, countdown, maxi(18, roundi(43.0 * unit)), Color("#ffd17c", pulse), 1)
+	else:
+		var boss = main_ref.get_boss()
+		var status_text := "正在交战" if boss != null else "战场清理中"
+		var status_rect := Rect2(rect.position + Vector2(315.0, 70.0) * unit, Vector2(135.0, 43.0) * unit)
+		_center_text_outline(status_rect, status_text, maxi(13, roundi(22.0 * unit)), Color("#ffd17c"), 1)
+		var progress := float(objective.get("progress", 0.0))
+		_bar(Rect2(rect.position + Vector2(150.0, 127.0) * unit, Vector2(294.0, 4.0) * unit), progress, Color("#c85b46"))
+
+
+func _draw_boss_health_lane(rect: Rect2, unit: float) -> void:
+	var boss = main_ref.get_boss()
+	if boss == null:
+		return
+	_draw_ornate_game_card(rect, Color("#bd7657"), unit, false)
+	var title := str(main_ref.get_boss_ui_profile().get("name", "尸王"))
+	_center_text_outline(Rect2(rect.position + Vector2(8.0, 0.0) * unit, Vector2(rect.size.x - 16.0 * unit, 18.0 * unit)), title, maxi(9, roundi(12.0 * unit)), Color("#f0d49a"), 1)
+	_draw_health_pill(Rect2(rect.position + Vector2(16.0, 25.0) * unit, Vector2(rect.size.x / unit - 32.0, 7.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b84d42"), true)
+
+
+func _draw_xp_footer(rect: Rect2, player, unit: float) -> void:
+	var level_center := rect.position + Vector2(37.0, 16.0) * unit
+	draw_circle(level_center, 29.0 * unit, Color("#100f0d", 0.98))
+	draw_arc(level_center, 29.0 * unit, 0.0, TAU, 48, Color("#d9ad60"), 2.1 * unit, true)
+	draw_arc(level_center, 24.0 * unit, 0.0, TAU, 48, Color("#8c6938", 0.72), 0.9 * unit, true)
+	_center_text_outline(Rect2(level_center - Vector2(25.0, 15.0) * unit, Vector2(50.0, 30.0) * unit), "Lv%d" % player.level, maxi(11, roundi(19.0 * unit)), Color("#f3d18b"), 1)
+	var xp_bar := Rect2(rect.position + Vector2(82.0, 8.0) * unit, Vector2(410.0, 12.0) * unit)
+	draw_rect(xp_bar, Color("#080a0b", 0.9))
+	draw_rect(xp_bar, Color("#b38b4c", 0.9), false, 1.0 * unit)
+	_bar(xp_bar.grow(-1.0 * unit), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#e1a944"))
+	_center_text_outline(Rect2(rect.position + Vector2(503.0, 1.0) * unit, Vector2(64.0, 28.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(10, roundi(17.0 * unit)), Color("#f0dfbb"), 1)
+
+
+func _draw_auto_skill_rail(rect: Rect2, unit: float) -> void:
+	_draw_ornate_game_card(rect, Color("#bd9957"), unit, false)
+	var owned := _equipped_skill_ids()
+	var offsets := [55.0, 145.0, 215.0, 285.0]
+	for i in range(4):
+		var center := rect.position + Vector2(rect.size.x / (2.0 * unit), float(offsets[i])) * unit
+		var radius := 29.0 * unit
+		if i < owned.size():
+			var skill_id := owned[i]
+			var data: Dictionary = main_ref.skills[skill_id]
+			var evolved := str(data.get("evolved", ""))
+			var icon := skill_id if evolved.is_empty() else evolved
+			_draw_card_art(center, icon, _upgrade_color(icon), radius)
+			var label := "自动" if i == 0 else "Lv%d" % int(data.get("level", 1))
+			_center_text_outline(Rect2(center.x - 30.0 * unit, center.y + 27.0 * unit, 60.0 * unit, 18.0 * unit), label, maxi(8, roundi(12.0 * unit)), Color("#f0d49a"), 1)
+		elif i == 0:
+			_draw_card_art(center, "control_art", Color("#d4ad69"), radius)
+			_center_text_outline(Rect2(center.x - 30.0 * unit, center.y + 27.0 * unit, 60.0 * unit, 18.0 * unit), "自动", maxi(8, roundi(12.0 * unit)), Color("#f0d49a"), 1)
+		else:
+			draw_circle(center, radius * 0.82, Color("#0b0e0f", 0.82))
+			draw_arc(center, radius * 0.82, 0.0, TAU, 36, Color("#bd9957", 0.76), 1.4 * unit, true)
+			_center_text_outline(Rect2(center.x - 16.0 * unit, center.y - 15.0 * unit, 32.0 * unit, 30.0 * unit), "+", maxi(18, roundi(29.0 * unit)), Color("#d3b476"), 1)
+
+
 func _draw_reference_hud(view: Vector2) -> void:
 	var player = main_ref.player
 	if player == null:
 		return
 	var layout := _reference_hud_layout(view)
 	var unit: float = layout["scale"]
-	var gold := Color("#c8a365")
-	var pale_gold := Color("#f4d99f")
-	# A subtle four-corner filigree frame retains the approved Chinese dark-gold style.
-	for i in range(4):
-		var corner := Vector2(3.0 * unit if i % 2 == 0 else view.x - 3.0 * unit, 3.0 * unit if i < 2 else view.y - 3.0 * unit)
-		var dx := 1.0 if i % 2 == 0 else -1.0
-		var dy := 1.0 if i < 2 else -1.0
-		draw_line(corner, corner + Vector2(28.0 * dx, 0.0) * unit, Color("#b28a46", 0.74), 1.3 * unit)
-		draw_line(corner, corner + Vector2(0.0, 28.0 * dy) * unit, Color("#b28a46", 0.74), 1.3 * unit)
-	draw_line(Vector2(8.0 * unit, 2.0 * unit), Vector2(view.x - 8.0 * unit, 2.0 * unit), Color("#bb9451", 0.35), maxf(0.6, unit))
-	draw_line(Vector2(8.0 * unit, view.y - 2.0 * unit), Vector2(view.x - 8.0 * unit, view.y - 2.0 * unit), Color("#bb9451", 0.35), maxf(0.6, unit))
-
-	# Top-left portrait, name, health and kill count; level appears only in the XP badge.
-	var status: Rect2 = layout["status"]
-	_reference_panel(status, gold, unit)
-	var portrait_center := status.position + Vector2(45.0, 43.0) * unit
-	var portrait_radius := 35.0 * unit
-	draw_circle(portrait_center, portrait_radius + 2.0 * unit, Color("#12110e", 0.97))
-	draw_arc(portrait_center, portrait_radius, 0.0, TAU, 48, pale_gold, 2.0 * unit)
-	draw_texture_rect(PLAYER_PORTRAIT_TEXTURE, Rect2(portrait_center - Vector2.ONE * 30.0 * unit, Vector2.ONE * 60.0 * unit), false)
-	var info_x := status.position.x + 86.0 * unit
-	_text(Vector2(info_x, status.position.y + 26.0 * unit), "镇邪录 · 破败义庄", maxi(9, roundi(16.0 * unit)), pale_gold)
-	var hp_rect := Rect2(Vector2(info_x + 40.0 * unit, status.position.y + 39.0 * unit), Vector2(219.0, 10.0) * unit)
-	_draw_health_pill(hp_rect, player.hp / maxf(1.0, player.max_hp), Color("#d45149"), true)
-	_center_text(hp_rect.grow(3.0 * unit), "%d / %d" % [roundi(player.hp), roundi(player.max_hp)], maxi(8, roundi(11.0 * unit)), Color("#fff1df"))
-	# Level is shown only once in the bottom XP medallion. Center the remaining kill label.
-	_center_text(Rect2(info_x, status.position.y + 56.0 * unit, status.end.x - info_x - 12.0 * unit, 21.0 * unit), "击杀 %d" % main_ref.kills, maxi(8, roundi(12.0 * unit)), MUTED_COLOR)
-
-	# Boss-specific seal portrait and compact countdown. The stage profile determines
-	# the visible boss name/portrait; the current prologue uses its existing boss art.
+	_draw_reference_frame(view, layout)
+	_draw_player_card(player, layout["status"], unit)
+	_draw_kill_card(layout["kills"], unit)
 	if main_ref.state != "victory" and main_ref.state != "game_over":
-		var objective := objective_data()
-		var goal_rect: Rect2 = layout["objective"]
-		var spawning: bool = str(objective.get("kind", "")) == "survival"
-		var remaining: int = int(objective.get("remaining_seconds", 0))
-		var danger: bool = spawning and remaining <= 60
-		var imminent: bool = spawning and remaining <= 10
-		var goal_accent := Color("#c85a46") if danger or not spawning else Color("#a98a57")
-		_reference_panel(goal_rect, goal_accent, unit)
-		var icon_center := goal_rect.position + Vector2(27.0, 30.0) * unit
-		draw_circle(icon_center, 23.0 * unit, Color("#18100f"))
-		draw_arc(icon_center, 23.0 * unit, 0.0, TAU, 36, goal_accent, 1.4 * unit)
-		var avatar_rect := Rect2(icon_center - Vector2(19.0, 20.0) * unit, Vector2(38.0, 40.0) * unit)
-		var avatar_modulate := Color(0.75, 0.68, 0.58, 0.86) if spawning and not danger else Color.WHITE
-		draw_texture_rect_region(_boss_profile_portrait(), avatar_rect, Rect2(54.0, 9.0, 84.0, 90.0), avatar_modulate, false)
-		var content_rect := Rect2(goal_rect.position.x + 57.0 * unit, goal_rect.position.y + 3.0 * unit, goal_rect.size.x - 68.0 * unit, 22.0 * unit)
-		var boss_title := str(objective.get("boss_name", "尸王"))
-		_center_text(content_rect, "镇邪令 · " + boss_title, maxi(8, roundi(13.0 * unit)), goal_accent)
-		var countdown_rect := Rect2(content_rect.position.x, goal_rect.position.y + 26.0 * unit, content_rect.size.x, 22.0 * unit)
-		if spawning:
-			var countdown := "%02d:%02d" % [remaining / 60, remaining % 60]
-			var pulse := 1.0 if not imminent else 0.74 + 0.26 * sin(main_ref.elapsed_seconds * 13.0)
-			_center_text(countdown_rect, "现身倒计时  " + countdown, maxi(9, roundi(13.0 * unit)), Color(goal_accent.r, goal_accent.g, goal_accent.b, pulse))
-		else:
-			_center_text(countdown_rect, str(objective.get("detail", "正在交战")), maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
-		var objective_progress := float(objective.get("progress", 0.0))
-		_bar(Rect2(goal_rect.position.x + 58.0 * unit, goal_rect.end.y - 9.0 * unit, goal_rect.size.x - 70.0 * unit, 3.0 * unit), objective_progress, goal_accent)
+		_draw_boss_card(layout["objective"], unit)
+	_draw_boss_health_lane(layout["boss"], unit)
+	_draw_xp_footer(layout["xp"], player, unit)
 
-	# Survival time is intentionally not rendered. Keep the top-center lane for the Boss HP bar.
-	# Boss HP is shown only after the Boss spawns.
-	var boss = main_ref.get_boss()
-	if boss != null:
-		var boss_rect: Rect2 = layout["boss"]
-		_reference_panel(boss_rect, Color("#b85e4c"), unit)
-		_center_text(Rect2(boss_rect.position.x + 8.0 * unit, boss_rect.position.y, boss_rect.size.x - 16.0 * unit, 18.0 * unit), str(main_ref.get_boss_ui_profile().get("name", "尸王")) + (" · 暴走" if boss.hp / maxf(1.0, boss.max_hp) <= 0.5 else ""), maxi(8, roundi(11.0 * unit)), pale_gold)
-		_draw_health_pill(Rect2(boss_rect.position + Vector2(15.0, 24.0) * unit, Vector2(boss_rect.size.x / unit - 30.0, 6.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b64d43"), true)
-
-	# Minimal XP footer: small level seal, fine progress line, quiet numeric progress.
-	var xp: Rect2 = layout["xp"]
-	var badge_center := xp.position + Vector2(18.0, 6.0) * unit
-	draw_circle(badge_center, 15.0 * unit, Color("#17130f", 0.96))
-	draw_arc(badge_center, 15.0 * unit, 0.0, TAU, 32, gold, 1.35 * unit)
-	_center_text(Rect2(badge_center - Vector2(16.0, 9.0) * unit, Vector2(32.0, 18.0) * unit), "Lv%d" % player.level, maxi(8, roundi(10.0 * unit)), pale_gold)
-	var xp_bar := Rect2(xp.position + Vector2(42.0, 3.0) * unit, Vector2(261.0, 6.0) * unit)
-	draw_rect(xp_bar, Color("#090b0c", 0.78))
-	_bar(xp_bar, float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#bd914d"))
-	_center_text(Rect2(xp.position + Vector2(307.0, -2.0) * unit, Vector2(82.0, 16.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(7, roundi(9.0 * unit)), MUTED_COLOR)
-
-	# Top-right pause is an actual click/touch target.
 	var pause: Vector2 = layout["pause_center"]
-	draw_circle(pause, 18.0 * unit, Color("#0a0c0e", 0.92))
-	draw_arc(pause, 18.0 * unit, 0.0, TAU, 32, gold, 1.7 * unit)
-	draw_line(pause + Vector2(-4.0, -7.0) * unit, pause + Vector2(-4.0, 7.0) * unit, pale_gold, 2.7 * unit)
-	draw_line(pause + Vector2(4.0, -7.0) * unit, pause + Vector2(4.0, 7.0) * unit, pale_gold, 2.7 * unit)
+	draw_circle(pause, 23.0 * unit, Color("#090b0d", 0.96))
+	draw_arc(pause, 23.0 * unit, 0.0, TAU, 48, Color("#e1b45f"), 2.0 * unit, true)
+	draw_line(pause + Vector2(-5.0, -8.0) * unit, pause + Vector2(-5.0, 8.0) * unit, Color("#f4d99f"), 3.0 * unit, true)
+	draw_line(pause + Vector2(5.0, -8.0) * unit, pause + Vector2(5.0, 8.0) * unit, Color("#f4d99f"), 3.0 * unit, true)
 
-	# Narrow right-side auto-skill rail, visually lighter than the objective panel.
-	var slots: Rect2 = layout["slots"]
-	draw_rect(slots, Color("#080a0b", 0.28))
-	draw_line(slots.position, Vector2(slots.position.x, slots.end.y), Color(gold.r, gold.g, gold.b, 0.35), 1.0 * unit)
-	draw_line(Vector2(slots.end.x, slots.position.y), slots.end, Color(gold.r, gold.g, gold.b, 0.35), 1.0 * unit)
-	var owned: Array[String] = []
-	for skill_variant in main_ref.AUTO_SKILL_DEFS.keys():
-		var sid := str(skill_variant)
-		if main_ref.skills.has(sid):
-			owned.append(sid)
-	var icon_radius := 25.0 * unit
-	for i in range(4):
-		var center := slots.position + Vector2(slots.size.x * 0.5, (35.0 + 60.0 * float(i)) * unit)
-		if i < owned.size():
-			var sid := str(owned[i])
-			var data: Dictionary = main_ref.skills[sid]
-			var evolved := str(data.get("evolved", ""))
-			var icon := sid if evolved.is_empty() else evolved
-			_draw_card_art(center, icon, _upgrade_color(icon), icon_radius)
-			_center_text(Rect2(center.x - 20.0 * unit, center.y + 15.0 * unit, 40.0 * unit, 13.0 * unit), "Lv%d" % int(data.get("level", 1)), maxi(7, roundi(10.0 * unit)), TEXT_COLOR)
-		elif i == 0 and owned.is_empty():
-			_draw_card_art(center, "control_art", Color("#b9975b"), icon_radius)
-			_center_text(Rect2(center.x - 20.0 * unit, center.y + 15.0 * unit, 40.0 * unit, 13.0 * unit), "基础", maxi(7, roundi(9.0 * unit)), TEXT_COLOR)
-		else:
-			draw_circle(center, icon_radius * 0.78, Color("#10120e", 0.84))
-			draw_arc(center, icon_radius * 0.78, 0.0, TAU, 28, Color("#aa9062", 0.45), 1.0 * unit)
-			_center_text(Rect2(center.x - 10.0 * unit, center.y - 8.0 * unit, 20.0 * unit, 16.0 * unit), "+", maxi(9, roundi(18.0 * unit)), Color("#c9ad78", 0.60))
-
-	# Keyboard movement guide, the current Q/SPACE active art and E healing.
+	_draw_auto_skill_rail(layout["slots"], unit)
 	_draw_reference_controls(view, unit)
 
 
@@ -219,40 +305,75 @@ func _draw_reference_controls(view: Vector2, unit: float) -> void:
 	var touch := _touch_layout(view)
 	var joy: Vector2 = touch["joystick_center"]
 	var joy_r: float = touch["joystick_radius"]
-	draw_circle(joy, joy_r, Color("#0d1011", 0.26))
-	draw_arc(joy, joy_r, 0.0, TAU, 36, Color("#ab946a", 0.48), maxf(1.0, 1.25 * unit))
+	draw_circle(joy, joy_r, Color("#0d1011", 0.34))
+	draw_arc(joy, joy_r, 0.0, TAU, 56, Color("#d2aa63", 0.9), 2.0 * unit, true)
+	draw_arc(joy, joy_r - 7.0 * unit, PI * 0.1, PI * 0.9, 28, Color("#8c6938", 0.7), 1.0 * unit, true)
 	if _is_mobile():
 		var offset: Vector2 = main_ref.player.mobile_move * joy_r * 0.45
-		draw_circle(joy + offset, 19.0 * unit, Color("#c6a464", 0.34))
-		draw_arc(joy + offset, 19.0 * unit, 0.0, TAU, 28, Color("#e3c68d"), 1.2 * unit)
+		draw_circle(joy + offset, 25.0 * unit, Color("#c6a464", 0.48))
+		draw_arc(joy + offset, 25.0 * unit, 0.0, TAU, 32, Color("#f0d49a"), 1.5 * unit)
 	else:
-		for item in [{"letter":"W","offset":Vector2(0,-32)}, {"letter":"A","offset":Vector2(-33,0)}, {"letter":"S","offset":Vector2(0,32)}, {"letter":"D","offset":Vector2(33,0)}]:
-			var c: Vector2 = joy + item["offset"] * unit
-			draw_circle(c, 16.0 * unit, Color("#161817", 0.72))
-			draw_arc(c, 16.0 * unit, 0.0, TAU, 24, Color("#bca783", 0.65), 1.2 * unit)
-			_center_text(Rect2(c - Vector2(13.0, 12.0) * unit, Vector2(26.0, 24.0) * unit), str(item["letter"]), maxi(8, roundi(14.0 * unit)), TEXT_COLOR)
+		for item in [{"letter":"W","offset":Vector2(0,-52)}, {"letter":"A","offset":Vector2(-52,0)}, {"letter":"S","offset":Vector2(0,52)}, {"letter":"D","offset":Vector2(52,0)}]:
+			var center: Vector2 = joy + item["offset"] * unit
+			draw_circle(center, 23.0 * unit, Color("#171512", 0.88))
+			draw_arc(center, 23.0 * unit, 0.0, TAU, 36, Color("#d5ad70", 0.9), 1.5 * unit, true)
+			_center_text_outline(Rect2(center - Vector2(18.0, 17.0) * unit, Vector2(36.0, 34.0) * unit), str(item["letter"]), maxi(11, roundi(21.0 * unit)), Color("#f0dfbd"), 1)
 
 	var heal: Vector2 = touch["heal_center"]
 	var skill: Vector2 = touch["skill_center"]
+	var reserved: Vector2 = touch["secondary_center"]
 	var heal_r: float = touch["heal_radius"]
 	var skill_r: float = touch["skill_radius"]
+	var reserved_r: float = touch["secondary_radius"]
 	var skill_ready: bool = main_ref.active_skill_cooldown <= 0.0
-	draw_circle(heal, heal_r, Color("#15130e", 0.9))
-	draw_arc(heal, heal_r, 0.0, TAU, 40, Color("#bd865d") if main_ref.heal_charges > 0 else Color("#6a6357"), 2.0 * unit)
-	# An independent illustrated celadon pill flask replaces the debug-red flask.
-	var potion_alpha := 1.0 if main_ref.heal_charges > 0 else 0.40
-	draw_texture_rect(HEAL_CELADON_TEXTURE, Rect2(heal - Vector2.ONE * 24.0 * unit, Vector2.ONE * 48.0 * unit), false, Color(1.0, 1.0, 1.0, potion_alpha))
-	_center_text(Rect2(heal.x - 17.0 * unit, heal.y + (heal_r / unit - 2.0) * unit, 34.0 * unit, 15.0 * unit), "E · %d" % main_ref.heal_charges, maxi(8, roundi(11.0 * unit)), TEXT_COLOR)
 
-	draw_circle(skill, skill_r, Color("#191209", 0.94))
-	var sword_color := Color("#f8d47b") if skill_ready else Color("#857869")
-	draw_arc(skill, skill_r, 0.0, TAU, 48, sword_color, 3.2 * unit)
-	_draw_card_art(skill, "control_art", sword_color, 27.0 * unit)
+	# E: healing flask, with the remaining count as a small corner badge.
+	draw_circle(heal, heal_r + 8.0 * unit, Color("#080b0c", 0.9))
+	draw_arc(heal, heal_r + 5.0 * unit, 0.0, TAU, 56, Color("#d5ad70"), 2.0 * unit, true)
+	draw_circle(heal, heal_r - 5.0 * unit, Color("#151711", 0.96))
+	var potion_alpha := 1.0 if main_ref.heal_charges > 0 else 0.4
+	draw_texture_rect(HEAL_CELADON_TEXTURE, Rect2(heal - Vector2.ONE * 33.0 * unit, Vector2.ONE * 66.0 * unit), false, Color(1.0, 1.0, 1.0, potion_alpha))
+	draw_circle(heal + Vector2(28.0, 27.0) * unit, 12.0 * unit, Color("#17120d", 0.96))
+	draw_arc(heal + Vector2(28.0, 27.0) * unit, 12.0 * unit, 0.0, TAU, 24, Color("#d6b06a"), 1.1 * unit)
+	_center_text_outline(Rect2(heal.x - 10.0 * unit, heal.y + 18.0 * unit, 20.0 * unit, 18.0 * unit), str(main_ref.heal_charges), maxi(8, roundi(12.0 * unit)), Color("#fff0d1"), 1)
+	_draw_action_keycap(heal, heal_r, "E", unit)
+
+	# R: reserved second active-skill socket. It is visual-only until its gameplay is implemented.
+	draw_circle(reserved, reserved_r + 8.0 * unit, Color("#080b0c", 0.88))
+	draw_arc(reserved, reserved_r + 5.0 * unit, 0.0, TAU, 56, Color("#b18b50", 0.86), 2.0 * unit, true)
+	draw_circle(reserved, reserved_r - 5.0 * unit, Color("#17130e", 0.94))
+	var scroll := PackedVector2Array([
+		reserved + Vector2(-18.0, -27.0) * unit,
+		reserved + Vector2(18.0, -23.0) * unit,
+		reserved + Vector2(15.0, 26.0) * unit,
+		reserved + Vector2(0.0, 31.0) * unit,
+		reserved + Vector2(-17.0, 22.0) * unit
+	])
+	draw_colored_polygon(scroll, Color("#d6b36e", 0.86))
+	draw_polyline(PackedVector2Array([scroll[0], scroll[1], scroll[2], scroll[3], scroll[4], scroll[0]]), Color("#f2d18a", 0.9), 1.4 * unit, true)
+	draw_line(reserved + Vector2(-7.0, -12.0) * unit, reserved + Vector2(7.0, 12.0) * unit, Color("#a43b32", 0.95), 2.5 * unit, true)
+	draw_line(reserved + Vector2(7.0, -12.0) * unit, reserved + Vector2(-7.0, 12.0) * unit, Color("#a43b32", 0.95), 2.5 * unit, true)
+	_draw_action_keycap(reserved, reserved_r, "R", unit)
+
+	# Q: current active skill. The outer arc communicates cooldown without adding another panel.
+	draw_circle(skill, skill_r + 8.0 * unit, Color("#080b0c", 0.94))
+	draw_arc(skill, skill_r + 5.0 * unit, 0.0, TAU, 64, Color("#e5bd69") if skill_ready else Color("#8c795c"), 2.6 * unit, true)
+	draw_circle(skill, skill_r - 5.0 * unit, Color("#1a130a", 0.98))
+	draw_arc(skill, skill_r * 0.48, -PI * 0.82, PI * 1.32, 48, Color("#f2c66e"), 4.0 * unit, true)
+	draw_arc(skill + Vector2(4.0, -3.0) * unit, skill_r * 0.25, PI * 0.08, PI * 1.7, 36, Color("#fff0b5"), 2.4 * unit, true)
+	draw_line(skill + Vector2(17.0, -19.0) * unit, skill + Vector2(27.0, -27.0) * unit, Color("#ffe7a2"), 2.5 * unit, true)
 	if not skill_ready:
 		var ratio := clampf(main_ref.active_skill_cooldown / maxf(0.1, main_ref.active_skill_base_cooldown), 0.0, 1.0)
-		draw_arc(skill, skill_r + 3.0 * unit, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - ratio), 40, Color("#4bbfa8"), 2.1 * unit)
-		_center_text(Rect2(skill - Vector2(22.0, 10.0) * unit, Vector2(44.0, 20.0) * unit), str(ceili(main_ref.active_skill_cooldown)), maxi(9, roundi(15.0 * unit)), Color("#ffffff"))
-	_center_text(Rect2(skill.x - 15.0 * unit, skill.y + (skill_r / unit - 1.0) * unit, 30.0 * unit, 16.0 * unit), "Q", maxi(9, roundi(14.0 * unit)), TEXT_COLOR)
+		draw_arc(skill, skill_r + 8.0 * unit, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - ratio), 48, Color("#67c8b3"), 3.0 * unit, true)
+		_center_text_outline(Rect2(skill - Vector2(24.0, 12.0) * unit, Vector2(48.0, 24.0) * unit), str(ceili(main_ref.active_skill_cooldown)), maxi(10, roundi(17.0 * unit)), Color("#ffffff"), 1)
+	_draw_action_keycap(skill, skill_r, "Q", unit)
+
+
+func _draw_action_keycap(center: Vector2, radius: float, key: String, unit: float) -> void:
+	var rect := Rect2(Vector2(center.x - 22.0 * unit, center.y + radius + 3.0 * unit), Vector2(44.0, 25.0) * unit)
+	draw_rect(rect, Color("#100e0b", 0.96))
+	draw_rect(rect, Color("#d5ad70", 0.95), false, 1.1 * unit)
+	_center_text_outline(rect, key, maxi(10, roundi(17.0 * unit)), Color("#f5d99a"), 1)
 
 
 func _boss_profile_portrait() -> Texture2D:
@@ -284,13 +405,16 @@ func reference_tooltip_at(position: Vector2) -> String:
 		return "heal"
 	if position.distance_to(touch["skill_center"]) <= float(touch["skill_radius"]):
 		return "active"
+	if position.distance_to(touch["secondary_center"]) <= float(touch["secondary_radius"]):
+		return "reserved_active"
 	var layout := _reference_hud_layout(view)
 	var slots: Rect2 = layout["slots"]
 	var unit: float = layout["scale"]
 	var owned := _equipped_skill_ids()
+	var offsets := [55.0, 145.0, 215.0, 285.0]
 	for i in range(mini(4, owned.size())):
-		var center := slots.position + Vector2(slots.size.x * 0.5, (35.0 + float(i) * 60.0) * unit)
-		if position.distance_to(center) <= 28.0 * unit:
+		var center := slots.position + Vector2(slots.size.x * 0.5, offsets[i]) * unit
+		if position.distance_to(center) <= 32.0 * unit:
 			return "skill:" + owned[i]
 	if slots.has_point(position) and owned.is_empty():
 		return "basic"
@@ -349,6 +473,8 @@ func _advance_tooltips(delta: float) -> void:
 
 
 func tooltip_details(key: String) -> Dictionary:
+	if key == "reserved_active":
+		return {"name":"第二主动道术", "level":"R · 预留技能槽", "detail":"为第二个主动技能保留的位置，当前版本尚未开放，不会触发技能。", "stat":"后续章节开发时接入"}
 	if key == "heal":
 		return {"name":"回春丹", "level":"治疗道具", "detail":"恢复最大生命值的 30%，满血时无法使用。", "stat":"剩余 %d 次 · E 使用" % main_ref.heal_charges}
 	if key == "active":
@@ -400,7 +526,7 @@ func _draw_reference_tooltip(view: Vector2) -> void:
 		anchor = Vector2(slots.position.x - size.x - 10.0 * unit, slots.position.y + 22.0 * unit)
 	else:
 		var touch := _touch_layout(view)
-		var center: Vector2 = touch["skill_center"] if key == "active" else touch["heal_center"]
+		var center: Vector2 = touch["skill_center"] if key == "active" else (touch["secondary_center"] if key == "reserved_active" else touch["heal_center"])
 		anchor = Vector2(center.x - size.x * 0.5, center.y - size.y - 57.0 * unit)
 	anchor.x = clampf(anchor.x, 5.0 * unit, maxf(5.0 * unit, view.x - size.x - 5.0 * unit))
 	anchor.y = clampf(anchor.y, 5.0 * unit, maxf(5.0 * unit, view.y - size.y - 5.0 * unit))
@@ -433,7 +559,7 @@ func _draw_hud(view: Vector2) -> void:
 	draw_arc(portrait_center, portrait_size * 0.55, 0.0, TAU, 48, Color("#d5ad61"), 2.0 * scale)
 	draw_texture_rect(PLAYER_PORTRAIT_TEXTURE, Rect2(portrait_center - Vector2(portrait_size, portrait_size) * 0.5, Vector2(portrait_size, portrait_size)), false)
 	var info_x := status_rect.position.x + portrait_size + 22.0 * scale
-	_text(Vector2(info_x, status_rect.position.y + 22.0 * scale), "镇邪录 · 破败义庄", maxi(11, roundi(16.0 * scale)), Color("#e7cf98"))
+	_text(Vector2(info_x, status_rect.position.y + 22.0 * scale), str(player.character_display_name), maxi(11, roundi(16.0 * scale)), Color("#e7cf98"))
 	_draw_seal(Vector2(status_rect.end.x - 15.0 * scale, status_rect.position.y + 19.0 * scale), "令", Color("#b34a3d"))
 	_text(Vector2(info_x, status_rect.position.y + 43.0 * scale), "生命  %d / %d" % [roundi(player.hp), roundi(player.max_hp)], maxi(10, roundi(13.0 * scale)), TEXT_COLOR)
 	var hp_bar_width := maxf(50.0, status_rect.end.x - info_x - 12.0 * scale)
@@ -1268,28 +1394,26 @@ func end_panel_rect(view: Vector2) -> Rect2:
 
 
 func _touch_layout(view: Vector2) -> Dictionary:
-	# Q remains the bottom-right primary action. E healing is separated below the auto-skill rail.
-	var scale := clampf(minf(view.x / 1303.0, view.y / 609.0), 0.38, 1.5)
-	var joystick_center := Vector2(145.0 * scale, view.y - 92.0 * scale)
-	# Scheme C groups the healing flask and Q action side by side at the bottom-right.
-	# The flask sits to the left of Q; neither control floats beside the mid-screen skill rail.
-	var skill_center := Vector2(view.x - 160.0 * scale, view.y - 68.0 * scale)
-	var heal_center := Vector2(view.x - 264.0 * scale, view.y - 68.0 * scale)
-	var joystick_radius := 55.0 * scale
-	var skill_radius := 39.0 * scale
-	var heal_radius := 30.0 * scale
+	var scale := clampf(minf(view.x / 1672.0, view.y / 941.0), 0.36, 1.5)
+	var offset := (view - Vector2(1672.0, 941.0) * scale) * 0.5
+	var joystick_center := offset + Vector2(173.0, 782.0) * scale
+	# Triangular action cluster: E healing, Q primary active, R reserved second active.
+	var heal_center := offset + Vector2(1375.0, 802.0) * scale
+	var secondary_center := offset + Vector2(1447.0, 727.0) * scale
+	var skill_center := offset + Vector2(1532.0, 802.0) * scale
+	var joystick_radius := 85.0 * scale
+	var skill_radius := 53.0 * scale
+	var heal_radius := 45.0 * scale
+	var secondary_radius := 49.0 * scale
 	return {
-		"scale": scale,
-		"joystick_center": joystick_center,
-		"joystick_radius": joystick_radius,
+		"scale": scale, "offset": offset,
+		"joystick_center": joystick_center, "joystick_radius": joystick_radius,
 		"joystick_move_radius": 49.0 * scale,
-		"skill_center": skill_center,
-		"skill_radius": skill_radius,
-		"skill_hit_radius": 44.0 * scale,
-		"heal_center": heal_center,
-		"heal_radius": heal_radius,
-		"heal_hit_radius": 39.0 * scale
+		"skill_center": skill_center, "skill_radius": skill_radius, "skill_hit_radius": 59.0 * scale,
+		"heal_center": heal_center, "heal_radius": heal_radius, "heal_hit_radius": 52.0 * scale,
+		"secondary_center": secondary_center, "secondary_radius": secondary_radius
 	}
+
 
 func _draw_touch_controls(view: Vector2) -> void:
 	var touch := _touch_layout(view)

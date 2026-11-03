@@ -530,31 +530,40 @@ func _test_reference_hud_layout() -> void:
 	var visual_center_x: float = center_origin.x + center_width * 0.5
 	var visual_center_y: float = center_origin.y + (font.get_descent(16) - font.get_ascent(16)) * 0.5
 	_check(is_equal_approx(visual_center_x, center_rect.get_center().x) and is_equal_approx(visual_center_y, center_rect.get_center().y), "HUD文字按字体实际宽高水平和垂直居中")
-	for view in [Vector2(1303.0, 609.0), Vector2(1280.0, 720.0), Vector2(1067.0, 744.0), Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
+	_check(hud._format_kill_count(0) == "0" and hud._format_kill_count(9999) == "9999", "击杀统计在一万以内显示完整整数")
+	_check(hud._format_kill_count(12000) == "1.2万" and hud._format_kill_count(100000) == "10万", "击杀统计高数值自动缩写，避免挤压卡片")
+	_check(hud._format_kill_count(10000000) == "1.0千万", "超大击杀数仍保持紧凑可读")
+	for view in [Vector2(1672.0, 941.0), Vector2(1303.0, 609.0), Vector2(1067.0, 600.0), Vector2(1280.0, 720.0), Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
 		var layout: Dictionary = hud._reference_hud_layout(view)
 		var status: Rect2 = layout["status"]
+		var kills: Rect2 = layout["kills"]
 		var objective: Rect2 = layout["objective"]
-		var timer: Rect2 = layout["time"]
 		var slots: Rect2 = layout["slots"]
 		var xp: Rect2 = layout["xp"]
 		var pause_center: Vector2 = layout["pause_center"]
-		for key in ["status", "objective", "time", "slots", "xp", "boss"]:
+		var offset: Vector2 = layout["offset"]
+		for key in ["status", "objective", "time", "slots", "xp", "boss", "kills"]:
 			var rect: Rect2 = layout[key]
-			_check(rect.position.x >= 0.0 and rect.position.y >= 0.0 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
-		_check(status.end.x < layout["boss"].position.x and objective.end.x < pause_center.x - 19.0 * float(layout["scale"]), "方案C左上角色卡、顶部Boss血条、右上倒计时与暂停键分区")
-
-		_check(hud._center_text_origin(center_rect, "Lv2", 12).x > center_rect.position.x, "等级徽章文本使用独立的居中排版工具")
-		_check(slots.size.x <= 72.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧技能栏保持竖排窄幅，不覆盖战场")
+			_check(rect.position.x >= -0.1 and rect.position.y >= -0.1 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
+		_check(status.end.x < objective.position.x and status.end.x < layout["boss"].position.x, "方案C玩家卡与右上尸王卡、顶部Boss血条分区")
+		_check(kills.position.y >= status.end.y and kills.end.y < xp.position.y, "击杀统计独立放在角色卡下方，并与底部经验栏分离")
+		_check(objective.end.x < pause_center.x - 19.0 * float(layout["scale"]), "右上尸王信息卡与暂停按钮留有间距")
+		_check(slots.size.x <= 90.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧自动技能栏保持窄幅竖排")
 		var touch: Dictionary = hud._touch_layout(view)
 		var skill_center: Vector2 = touch["skill_center"]
 		var heal_center: Vector2 = touch["heal_center"]
+		var secondary_center: Vector2 = touch["secondary_center"]
 		var joystick_center: Vector2 = touch["joystick_center"]
-		_check(objective.position.y < slots.position.y and slots.end.y < heal_center.y - float(touch["heal_radius"]), "方案C右上Boss追踪、右侧技能栏与底部操作区纵向分层")
-		_check(heal_center.x < skill_center.x and absf(heal_center.y - skill_center.y) <= 0.1, "方案C治疗瓶位于Q左侧且两个操作按钮水平对齐")
-		_check(skill_center.distance_to(heal_center) > float(touch["skill_hit_radius"]) + float(touch["heal_hit_radius"]), "Q与E按钮点击热区没有重叠")
-		_check(xp.position.x > joystick_center.x + float(touch["joystick_radius"]) and xp.end.x < skill_center.x - float(touch["skill_hit_radius"]), "底部经验细条避开虚拟摇杆及Q按钮")
-		_check(xp.size.y <= 14.0 * float(layout["scale"]) and xp.position.y > view.y - 30.0 * float(layout["scale"]), "底部经验条保持低存在感细线样式")
-		_check(pause_center.x > slots.position.x and pause_center.y + 19.0 * float(layout["scale"]) < slots.position.y, "右上暂停与技能栏分离")
+		_check(objective.position.y < slots.position.y and slots.end.y < heal_center.y - float(touch["heal_radius"]), "尸王卡、自动技能栏与底部操作区纵向分层")
+		_check(heal_center.x < secondary_center.x and secondary_center.x < skill_center.x and secondary_center.y < heal_center.y, "E、R、Q按三角形布局，为双主动技能预留位置")
+		_check(heal_center.y == skill_center.y, "E治疗与Q主动技能底部水平对齐")
+		_check(heal_center.distance_to(secondary_center) > float(touch["heal_radius"]) + float(touch["secondary_radius"]), "E与R按钮视觉区域不重叠")
+		_check(skill_center.distance_to(secondary_center) > float(touch["skill_radius"]) + float(touch["secondary_radius"]), "Q与R按钮视觉区域不重叠")
+		_check(xp.position.x > joystick_center.x + float(touch["joystick_radius"]) and xp.end.x < skill_center.x - float(touch["skill_hit_radius"]), "底部经验条避开虚拟摇杆及右下技能区")
+		_check(xp.size.y <= 34.0 * float(layout["scale"]) and xp.position.y > view.y - 90.0 * float(layout["scale"]), "底部经验条保持低存在感")
+		_check(pause_center.x > slots.position.x and pause_center.y + 19.0 * float(layout["scale"]) < slots.position.y, "右上暂停与自动技能栏分离")
+		_check(heal_center.y > offset.y + 700.0 * float(layout["scale"]) and heal_center.y < offset.y + 900.0 * float(layout["scale"]), "E/Q/R操作区锚定底部且保留安全边距")
+	_check(load("res://assets/sprites/player_portrait.svg") is Texture2D, "角色卡使用独立高清道士肖像素材")
 	hud.queue_free()
 
 
@@ -591,7 +600,7 @@ func _test_compact_hud_layout() -> void:
 		_check(heal_center.x < skill_center.x and absf(heal_center.y - skill_center.y) <= 0.1, "小视口治疗瓶与Q主动技能保持水平排列")
 		_check(skill_center.distance_to(heal_center) > float(touch["skill_radius"]) + float(touch["heal_radius"]), "小视口Q主动技能与E治疗道具视觉上不重叠")
 		_check(skill_center.distance_to(heal_center) > float(touch["skill_hit_radius"]) + float(touch["heal_hit_radius"]), "小视口Q主动技能与E治疗触控热区不重叠")
-		_check(heal_center.y > view.y - 90.0 * float(touch["scale"]), "E治疗道具与Q按钮组成贴近底边的操作区")
+		_check(heal_center.y > float(reference_layout["offset"].y) + 700.0 * float(touch["scale"]), "E/Q/R操作区保持贴近底部")
 	hud.queue_free()
 
 func _test_skill_art_assets() -> void:
