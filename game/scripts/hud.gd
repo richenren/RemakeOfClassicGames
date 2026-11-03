@@ -283,17 +283,17 @@ func _draw_boss_health_lane(rect: Rect2, unit: float) -> void:
 
 func _draw_xp_footer(rect: Rect2, player, unit: float) -> void:
 	draw_texture_rect(HUD_XP_FOOTER_FRAME, rect, false)
-	var level_center := rect.position + Vector2(62.0, 61.0) * unit
-	_center_text_outline(Rect2(level_center - Vector2(34.0, 21.0) * unit, Vector2(68.0, 42.0) * unit), "Lv%d" % player.level, maxi(11, roundi(25.0 * unit)), Color("#f3d18b"), 1)
-	var xp_bar := Rect2(rect.position + Vector2(139.0, 54.0) * unit, Vector2(470.0, 20.0) * unit)
+	var level_center := rect.position + Vector2(64.0, 32.0) * unit
+	_center_text_outline(Rect2(level_center - Vector2(34.0, 18.0) * unit, Vector2(68.0, 36.0) * unit), "Lv%d" % player.level, maxi(11, roundi(25.0 * unit)), Color("#f3d18b"), 1)
+	var xp_bar := Rect2(rect.position + Vector2(130.0, 33.0) * unit, Vector2(470.0, 19.0) * unit)
 	_bar(xp_bar, float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#e1a944"))
-	_center_text_outline(Rect2(rect.position + Vector2(612.0, 48.0) * unit, Vector2(94.0, 32.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(8, roundi(16.0 * unit)), Color("#f0dfbb"), 1)
+	_center_text_outline(Rect2(rect.position + Vector2(610.0, 24.0) * unit, Vector2(96.0, 28.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(8, roundi(16.0 * unit)), Color("#f0dfbb"), 1)
 
 
 func _draw_auto_skill_rail(rect: Rect2, unit: float) -> void:
 	draw_texture_rect(HUD_AUTO_RAIL_FRAME, rect, false)
 	var owned := _equipped_skill_ids()
-	var offsets := [50.0, 132.0, 198.0, 264.0]
+	var offsets := [50.0, 130.0, 208.0, 286.0]
 	for slot_index in range(1, 4):
 		var owned_index := slot_index - 1
 		if owned_index >= owned.size():
@@ -412,7 +412,7 @@ func reference_tooltip_at(position: Vector2) -> String:
 	var slots: Rect2 = layout["slots"]
 	var unit: float = layout["scale"]
 	var owned := _equipped_skill_ids()
-	var offsets := [50.0, 132.0, 198.0, 264.0]
+	var offsets := [50.0, 130.0, 208.0, 286.0]
 	var basic_center := slots.position + Vector2(slots.size.x * 0.5, offsets[0] * unit)
 	if position.distance_to(basic_center) <= 32.0 * unit:
 		return "basic"
