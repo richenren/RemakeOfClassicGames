@@ -339,7 +339,7 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 ### 最终 HUD 方案C 验证（2026-11-03）
 
 - 最新提交：`298825c1fdfe0ee976b4bcddb22aa76b5c6f5461`
-- [GitHub Actions](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41611309970)：Godot 4.5.1，**541 项通过，0 项失败**。
+- [GitHub Actions](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41611309970)：Godot 4.5.1，**548 项通过，0 项失败**。
 - 资源导入、GDScript 解析、自动化测试、主场景 Headless 启动全部通过。
 
 
@@ -350,3 +350,11 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 - [x] 玩家/Boss头像采用圆形纹理裁切；动态数值保留Godot文本绘制。
 - [x] E/Q/R视觉组件位置与鼠标/触屏热区共用同一组坐标。
 - [ ] Windows实机检查SVG缩放、字体清晰度、符箓细节和按钮热区；CI通过不等于画面验收。
+
+
+### 最新HUD组件改造CI记录
+
+- 提交：`da1aed9d5db8670eb236785b5d897d39c6da0516`
+- Godot 4.5.1：**548 项自动化测试通过，0 失败**。
+- SVG资源导入、GDScript解析、主场景Headless启动通过。
+- Windows实际窗口的美术验收仍待用户截图确认。
