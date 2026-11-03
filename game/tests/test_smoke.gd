@@ -549,7 +549,8 @@ func _test_reference_hud_layout() -> void:
 		var skill_center: Vector2 = touch["skill_center"]
 		var heal_center: Vector2 = touch["heal_center"]
 		var joystick_center: Vector2 = touch["joystick_center"]
-		_check(objective.position.y < slots.position.y and slots.end.y < heal_center.y - float(touch["heal_radius"]), "方案C右上Boss追踪、右侧技能栏与治疗道具纵向分区")
+		_check(objective.position.y < slots.position.y and slots.end.y < heal_center.y - float(touch["heal_radius"]), "方案C右上Boss追踪、右侧技能栏与底部操作区纵向分层")
+		_check(heal_center.x < skill_center.x and absf(heal_center.y - skill_center.y) <= 0.1, "方案C治疗瓶位于Q左侧且两个操作按钮水平对齐")
 		_check(skill_center.distance_to(heal_center) > float(touch["skill_hit_radius"]) + float(touch["heal_hit_radius"]), "Q与E按钮点击热区没有重叠")
 		_check(xp.position.x > joystick_center.x + float(touch["joystick_radius"]) and xp.end.x < skill_center.x - float(touch["skill_hit_radius"]), "底部经验细条避开虚拟摇杆及Q按钮")
 		_check(xp.size.y <= 14.0 * float(layout["scale"]) and xp.position.y > view.y - 30.0 * float(layout["scale"]), "底部经验条保持低存在感细线样式")
@@ -587,6 +588,7 @@ func _test_compact_hud_layout() -> void:
 		var heal_center: Vector2 = touch["heal_center"]
 		_check(skill_center.x >= float(touch["skill_radius"]) and skill_center.x + float(touch["skill_radius"]) <= view.x, "小视口道术按钮完整显示")
 		_check(heal_center.y + float(touch["heal_radius"]) <= view.y, "小视口治疗按钮完整显示")
+		_check(heal_center.x < skill_center.x and absf(heal_center.y - skill_center.y) <= 0.1, "小视口治疗瓶与Q主动技能保持水平排列")
 		_check(skill_center.distance_to(heal_center) > float(touch["skill_radius"]) + float(touch["heal_radius"]), "小视口Q主动技能与E治疗道具视觉上不重叠")
 		_check(skill_center.distance_to(heal_center) > float(touch["skill_hit_radius"]) + float(touch["heal_hit_radius"]), "小视口Q主动技能与E治疗触控热区不重叠")
 		_check(heal_center.y < skill_center.y, "E治疗道具位于右侧技能栏下方、Q按钮上方")

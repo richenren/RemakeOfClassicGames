@@ -472,9 +472,33 @@ func _draw() -> void:
 	if not is_boss:
 		var bar_width := 48.0 if kind == "walker" else (46.0 if kind == "jumper" else 54.0)
 		var bar_y := sprite_rect.position.y - 5.0 + bob
-		var bar_rect := Rect2(-bar_width * 0.5, bar_y, bar_width, 3.5)
-		draw_rect(bar_rect, Color("#171612"))
+		var bar_rect := Rect2(-bar_width * 0.5, bar_y, bar_width, 4.5)
 		var ratio := clampf(hp / maxf(1.0, max_hp), 0.0, 1.0)
 		var hp_color := Color("#b45b4a") if ratio >= 0.3 else Color("#d17a4e")
-		draw_rect(Rect2(bar_rect.position, Vector2(bar_rect.size.x * ratio, bar_rect.size.y)), hp_color)
-		draw_rect(bar_rect, Color(0.72, 0.60, 0.42, 0.72), false, 0.8)
+		_draw_health_pill(bar_rect, ratio, hp_color)
+
+
+
+func _draw_health_pill(rect: Rect2, ratio: float, fill_color: Color) -> void:
+	var background := Color("#171612")
+	var border := Color(0.72, 0.60, 0.42, 0.72)
+	var radius := minf(rect.size.y * 0.5, rect.size.x * 0.5)
+	var center_y := rect.get_center().y
+	var left_center := Vector2(rect.position.x + radius, center_y)
+	var right_center := Vector2(rect.end.x - radius, center_y)
+	draw_circle(left_center, radius, background)
+	draw_circle(right_center, radius, background)
+	if right_center.x > left_center.x:
+		draw_rect(Rect2(left_center.x, rect.position.y, right_center.x - left_center.x, rect.size.y), background)
+	var fill_width := rect.size.x * clampf(ratio, 0.0, 1.0)
+	if fill_width > 0.0:
+		var pill_width := minf(rect.size.x, maxf(rect.size.y, fill_width))
+		var fill_right := Vector2(rect.position.x + pill_width - radius, center_y)
+		draw_circle(left_center, radius, fill_color)
+		draw_circle(fill_right, radius, fill_color)
+		if fill_right.x > left_center.x:
+			draw_rect(Rect2(left_center.x, rect.position.y, fill_right.x - left_center.x, rect.size.y), fill_color)
+	draw_line(Vector2(left_center.x, rect.position.y), Vector2(right_center.x, rect.position.y), border, 0.8, true)
+	draw_line(Vector2(left_center.x, rect.end.y), Vector2(right_center.x, rect.end.y), border, 0.8, true)
+	draw_arc(left_center, radius, PI * 0.5, PI * 1.5, 12, border, 0.8, true)
+	draw_arc(right_center, radius, -PI * 0.5, PI * 0.5, 12, border, 0.8, true)

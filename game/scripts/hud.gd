@@ -121,8 +121,7 @@ func _draw_reference_hud(view: Vector2) -> void:
 	var info_x := status.position.x + 86.0 * unit
 	_text(Vector2(info_x, status.position.y + 26.0 * unit), "镇邪录 · 破败义庄", maxi(9, roundi(16.0 * unit)), pale_gold)
 	var hp_rect := Rect2(Vector2(info_x + 40.0 * unit, status.position.y + 39.0 * unit), Vector2(219.0, 10.0) * unit)
-	draw_rect(hp_rect, Color("#170d0b", 0.95))
-	_bar(hp_rect, player.hp / maxf(1.0, player.max_hp), Color("#d45149"), true)
+	_draw_health_pill(hp_rect, player.hp / maxf(1.0, player.max_hp), Color("#d45149"), true)
 	_center_text(hp_rect.grow(3.0 * unit), "%d / %d" % [roundi(player.hp), roundi(player.max_hp)], maxi(8, roundi(11.0 * unit)), Color("#fff1df"))
 	# Level is shown only once in the bottom XP medallion. Center the remaining kill label.
 	_center_text(Rect2(info_x, status.position.y + 56.0 * unit, status.end.x - info_x - 12.0 * unit, 21.0 * unit), "击杀 %d" % main_ref.kills, maxi(8, roundi(12.0 * unit)), MUTED_COLOR)
@@ -164,15 +163,15 @@ func _draw_reference_hud(view: Vector2) -> void:
 		var boss_rect: Rect2 = layout["boss"]
 		_reference_panel(boss_rect, Color("#b85e4c"), unit)
 		_center_text(Rect2(boss_rect.position.x + 8.0 * unit, boss_rect.position.y, boss_rect.size.x - 16.0 * unit, 18.0 * unit), str(main_ref.get_boss_ui_profile().get("name", "尸王")) + (" · 暴走" if boss.hp / maxf(1.0, boss.max_hp) <= 0.5 else ""), maxi(8, roundi(11.0 * unit)), pale_gold)
-		_bar(Rect2(boss_rect.position + Vector2(15.0, 24.0) * unit, Vector2(boss_rect.size.x / unit - 30.0, 6.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b64d43"), true)
+		_draw_health_pill(Rect2(boss_rect.position + Vector2(15.0, 24.0) * unit, Vector2(boss_rect.size.x / unit - 30.0, 6.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b64d43"), true)
 
 	# Minimal XP footer: small level seal, fine progress line, quiet numeric progress.
 	var xp: Rect2 = layout["xp"]
-	var badge_center := xp.position + Vector2(12.0, 6.0) * unit
-	draw_circle(badge_center, 11.0 * unit, Color("#17130f", 0.94))
-	draw_arc(badge_center, 11.0 * unit, 0.0, TAU, 28, gold, 1.1 * unit)
-	_center_text(Rect2(badge_center - Vector2(12.0, 8.0) * unit, Vector2(24.0, 16.0) * unit), "Lv%d" % player.level, maxi(7, roundi(9.0 * unit)), pale_gold)
-	var xp_bar := Rect2(xp.position + Vector2(29.0, 3.0) * unit, Vector2(274.0, 6.0) * unit)
+	var badge_center := xp.position + Vector2(18.0, 6.0) * unit
+	draw_circle(badge_center, 15.0 * unit, Color("#17130f", 0.96))
+	draw_arc(badge_center, 15.0 * unit, 0.0, TAU, 32, gold, 1.35 * unit)
+	_center_text(Rect2(badge_center - Vector2(16.0, 9.0) * unit, Vector2(32.0, 18.0) * unit), "Lv%d" % player.level, maxi(8, roundi(10.0 * unit)), pale_gold)
+	var xp_bar := Rect2(xp.position + Vector2(42.0, 3.0) * unit, Vector2(261.0, 6.0) * unit)
 	draw_rect(xp_bar, Color("#090b0c", 0.78))
 	_bar(xp_bar, float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#bd914d"))
 	_center_text(Rect2(xp.position + Vector2(307.0, -2.0) * unit, Vector2(82.0, 16.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(7, roundi(9.0 * unit)), MUTED_COLOR)
@@ -1272,8 +1271,10 @@ func _touch_layout(view: Vector2) -> Dictionary:
 	# Q remains the bottom-right primary action. E healing is separated below the auto-skill rail.
 	var scale := clampf(minf(view.x / 1303.0, view.y / 609.0), 0.38, 1.5)
 	var joystick_center := Vector2(145.0 * scale, view.y - 92.0 * scale)
-	var skill_center := Vector2(view.x - 88.0 * scale, view.y - 68.0 * scale)
-	var heal_center := Vector2(view.x - 48.0 * scale, view.y - 174.0 * scale)
+	# Scheme C groups the healing flask and Q action side by side at the bottom-right.
+	# The flask sits to the left of Q; neither control floats beside the mid-screen skill rail.
+	var skill_center := Vector2(view.x - 160.0 * scale, view.y - 68.0 * scale)
+	var heal_center := Vector2(view.x - 264.0 * scale, view.y - 68.0 * scale)
 	var joystick_radius := 55.0 * scale
 	var skill_radius := 39.0 * scale
 	var heal_radius := 30.0 * scale
@@ -1334,6 +1335,35 @@ func _bar(rect: Rect2, ratio: float, color: Color, outline: bool = false) -> voi
 	draw_rect(Rect2(rect.position, Vector2(rect.size.x * clampf(ratio, 0.0, 1.0), rect.size.y)), color)
 	if outline:
 		draw_rect(rect, PANEL_EDGE, false, 1.0)
+
+
+
+func _draw_health_pill(rect: Rect2, ratio: float, fill_color: Color, outline: bool = true) -> void:
+	var background := Color("#170d0b", 0.96)
+	var border := Color(0.72, 0.60, 0.42, 0.76)
+	var radius := minf(rect.size.y * 0.5, rect.size.x * 0.5)
+	var center_y := rect.get_center().y
+	var left_center := Vector2(rect.position.x + radius, center_y)
+	var right_center := Vector2(rect.end.x - radius, center_y)
+	# Full pill-shaped dark track.
+	draw_circle(left_center, radius, background)
+	draw_circle(right_center, radius, background)
+	if right_center.x > left_center.x:
+		draw_rect(Rect2(left_center.x, rect.position.y, right_center.x - left_center.x, rect.size.y), background)
+	# Keep the filled portion rounded at both ends, including when health is low.
+	var fill_width := rect.size.x * clampf(ratio, 0.0, 1.0)
+	if fill_width > 0.0:
+		var pill_width := minf(rect.size.x, maxf(rect.size.y, fill_width))
+		var fill_right := Vector2(rect.position.x + pill_width - radius, center_y)
+		draw_circle(left_center, radius, fill_color)
+		draw_circle(fill_right, radius, fill_color)
+		if fill_right.x > left_center.x:
+			draw_rect(Rect2(left_center.x, rect.position.y, fill_right.x - left_center.x, rect.size.y), fill_color)
+	if outline:
+		draw_line(Vector2(left_center.x, rect.position.y), Vector2(right_center.x, rect.position.y), border, 0.8, true)
+		draw_line(Vector2(left_center.x, rect.end.y), Vector2(right_center.x, rect.end.y), border, 0.8, true)
+		draw_arc(left_center, radius, PI * 0.5, PI * 1.5, 16, border, 0.8, true)
+		draw_arc(right_center, radius, -PI * 0.5, PI * 0.5, 16, border, 0.8, true)
 
 
 func _text(position: Vector2, value: String, size: int, color: Color) -> void:
