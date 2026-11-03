@@ -334,3 +334,10 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 - [x] E/Q/R 三角布局与触控中心统一：E 左下、R 上方、Q 右下。
 - [x] 动态数值仍由代码渲染；静态素材不包含玩家/Boss动态文本与实时数值。
 - [ ] Windows 图形窗口视觉验收：检查不同分辨率边缘贴合、按钮热区与装饰层重合度。
+
+
+### 最终 HUD 方案C 验证（2026-11-03）
+
+- 最新提交：`298825c1fdfe0ee976b4bcddb22aa76b5c6f5461`
+- [GitHub Actions](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41611309970)：Godot 4.5.1，**541 项通过，0 项失败**。
+- 资源导入、GDScript 解析、自动化测试、主场景 Headless 启动全部通过。
