@@ -46,7 +46,7 @@ func _draw() -> void:
 	# The reference HUD owns action/joystick visuals for keyboard and touch alike.
 
 
-# The approved 1303x609 reference is a thin, edge-anchored gameplay HUD.
+# The approved 1672x941 reference defines the full ornamental gameplay HUD.
 # Only layout and presentation change: all combat, upgrade and fire effects remain intact.
 func _reference_hud_layout(view: Vector2) -> Dictionary:
 	# Approved 1672x941 reference artboard; scale uniformly and center for other aspect ratios.
@@ -147,9 +147,9 @@ func _format_kill_count(value: int) -> String:
 		return str(count)
 	if count < 100000:
 		return "%.1f万" % (float(count) / 10000.0)
-	if count < 10000000:
+	if count < 100000000:
 		return "%.0f万" % (float(count) / 10000.0)
-	return "%.1f千万" % (float(count) / 10000000.0)
+	return "%.1f亿" % (float(count) / 100000000.0)
 
 
 func _draw_reference_frame(view: Vector2, layout: Dictionary) -> void:
@@ -181,7 +181,7 @@ func _draw_player_card(player, rect: Rect2, unit: float) -> void:
 	draw_texture_rect(portrait, Rect2(portrait_center - Vector2.ONE * portrait_size * 0.5, Vector2.ONE * portrait_size), false)
 	var name_text := str(player.character_display_name)
 	var name_rect := Rect2(rect.position + Vector2(158.0, 14.0) * unit, Vector2(300.0, 48.0) * unit)
-	var name_size := _fit_font_size(name_text, name_rect.size.x - 12.0 * unit, maxi(16, roundi(36.0 * unit)), maxi(12, roundi(23.0 * unit)))
+	var name_size := _fit_font_size(name_text, name_rect.size.x - 12.0 * unit, maxi(14, roundi(36.0 * unit)), maxi(12, roundi(22.0 * unit)))
 	_center_text_outline(name_rect, name_text, name_size, Color("#f4d99f"), 1)
 	var hp_rect := Rect2(rect.position + Vector2(171.0, 76.0) * unit, Vector2(284.0, 26.0) * unit)
 	_draw_health_pill(hp_rect, player.hp / maxf(1.0, player.max_hp), Color("#d34b43"), true)
@@ -193,7 +193,7 @@ func _draw_kill_card(rect: Rect2, unit: float) -> void:
 	var label_rect := Rect2(rect.position + Vector2(35.0, 9.0) * unit, Vector2(105.0, 47.0) * unit)
 	var count_rect := Rect2(rect.position + Vector2(137.0, 5.0) * unit, Vector2(196.0, 54.0) * unit)
 	var count_text := _format_kill_count(main_ref.kills)
-	var count_size := _fit_font_size(count_text, count_rect.size.x - 8.0 * unit, maxi(22, roundi(47.0 * unit)), maxi(17, roundi(26.0 * unit)))
+	var count_size := _fit_font_size(count_text, count_rect.size.x - 8.0 * unit, maxi(14, roundi(44.0 * unit)), maxi(12, roundi(22.0 * unit)))
 	_center_text_outline(label_rect, "击杀", maxi(14, roundi(27.0 * unit)), Color("#e7c47c"), 1)
 	_center_text_outline(count_rect, count_text, count_size, Color("#ffd889"), 1)
 
@@ -220,7 +220,7 @@ func _draw_boss_card(rect: Rect2, unit: float) -> void:
 		var countdown := "%02d:%02d" % [remaining / 60, remaining % 60]
 		var pulse := 1.0 if remaining > 10 else 0.74 + 0.26 * sin(main_ref.elapsed_seconds * 13.0)
 		var time_rect := Rect2(rect.position + Vector2(315.0, 66.0) * unit, Vector2(135.0, 53.0) * unit)
-		_center_text_outline(time_rect, countdown, maxi(18, roundi(43.0 * unit)), Color("#ffd17c", pulse), 1)
+		_center_text_outline(time_rect, countdown, maxi(14, roundi(40.0 * unit)), Color("#ffd17c", pulse), 1)
 	else:
 		var boss = main_ref.get_boss()
 		var status_text := "正在交战" if boss != null else "战场清理中"
@@ -250,7 +250,7 @@ func _draw_xp_footer(rect: Rect2, player, unit: float) -> void:
 	draw_rect(xp_bar, Color("#080a0b", 0.9))
 	draw_rect(xp_bar, Color("#b38b4c", 0.9), false, 1.0 * unit)
 	_bar(xp_bar.grow(-1.0 * unit), float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#e1a944"))
-	_center_text_outline(Rect2(rect.position + Vector2(503.0, 1.0) * unit, Vector2(64.0, 28.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(10, roundi(17.0 * unit)), Color("#f0dfbb"), 1)
+	_center_text_outline(Rect2(rect.position + Vector2(503.0, 1.0) * unit, Vector2(64.0, 28.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(8, roundi(17.0 * unit)), Color("#f0dfbb"), 1)
 
 
 func _draw_auto_skill_rail(rect: Rect2, unit: float) -> void:
@@ -373,7 +373,7 @@ func _draw_action_keycap(center: Vector2, radius: float, key: String, unit: floa
 	var rect := Rect2(Vector2(center.x - 22.0 * unit, center.y + radius + 3.0 * unit), Vector2(44.0, 25.0) * unit)
 	draw_rect(rect, Color("#100e0b", 0.96))
 	draw_rect(rect, Color("#d5ad70", 0.95), false, 1.1 * unit)
-	_center_text_outline(rect, key, maxi(10, roundi(17.0 * unit)), Color("#f5d99a"), 1)
+	_center_text_outline(rect, key, maxi(8, roundi(17.0 * unit)), Color("#f5d99a"), 1)
 
 
 func _boss_profile_portrait() -> Texture2D:

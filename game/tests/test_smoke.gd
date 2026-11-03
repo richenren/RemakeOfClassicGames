@@ -532,7 +532,7 @@ func _test_reference_hud_layout() -> void:
 	_check(is_equal_approx(visual_center_x, center_rect.get_center().x) and is_equal_approx(visual_center_y, center_rect.get_center().y), "HUD文字按字体实际宽高水平和垂直居中")
 	_check(hud._format_kill_count(0) == "0" and hud._format_kill_count(9999) == "9999", "击杀统计在一万以内显示完整整数")
 	_check(hud._format_kill_count(12000) == "1.2万" and hud._format_kill_count(100000) == "10万", "击杀统计高数值自动缩写，避免挤压卡片")
-	_check(hud._format_kill_count(10000000) == "1.0千万", "超大击杀数仍保持紧凑可读")
+	_check(hud._format_kill_count(10000000) == "1000万" and hud._format_kill_count(100000000) == "1.0亿", "超大击杀数仍保持紧凑可读")
 	for view in [Vector2(1672.0, 941.0), Vector2(1303.0, 609.0), Vector2(1067.0, 600.0), Vector2(1280.0, 720.0), Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
 		var layout: Dictionary = hud._reference_hud_layout(view)
 		var status: Rect2 = layout["status"]
@@ -560,7 +560,7 @@ func _test_reference_hud_layout() -> void:
 		_check(heal_center.distance_to(secondary_center) > float(touch["heal_radius"]) + float(touch["secondary_radius"]), "E与R按钮视觉区域不重叠")
 		_check(skill_center.distance_to(secondary_center) > float(touch["skill_radius"]) + float(touch["secondary_radius"]), "Q与R按钮视觉区域不重叠")
 		_check(xp.position.x > joystick_center.x + float(touch["joystick_radius"]) and xp.end.x < skill_center.x - float(touch["skill_hit_radius"]), "底部经验条避开虚拟摇杆及右下技能区")
-		_check(xp.size.y <= 34.0 * float(layout["scale"]) and xp.position.y > view.y - 90.0 * float(layout["scale"]), "底部经验条保持低存在感")
+		_check(xp.size.y <= 34.0 * float(layout["scale"]) and xp.position.y > offset.y + 820.0 * float(layout["scale"]), "底部经验条保持低存在感")
 		_check(pause_center.x > slots.position.x and pause_center.y + 19.0 * float(layout["scale"]) < slots.position.y, "右上暂停与自动技能栏分离")
 		_check(heal_center.y > offset.y + 700.0 * float(layout["scale"]) and heal_center.y < offset.y + 900.0 * float(layout["scale"]), "E/Q/R操作区锚定底部且保留安全边距")
 	_check(load("res://assets/sprites/player_portrait.svg") is Texture2D, "角色卡使用独立高清道士肖像素材")
