@@ -550,6 +550,7 @@ func _test_reference_hud_layout() -> void:
 			_check(rect.position.x >= -0.1 and rect.position.y >= -0.1 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
 		_check(status.end.x < objective.position.x and status.end.x < layout["boss"].position.x, "方案C玩家卡与右上尸王卡、顶部Boss血条分区")
 		_check(kills.position.y >= status.end.y and kills.end.y < xp.position.y, "击杀统计独立放在角色卡下方，并与底部经验栏分离")
+		_check(is_equal_approx(status.size.x, 520.0 * float(layout["scale"])) and is_equal_approx(objective.size.x, 580.0 * float(layout["scale"])), "玩家与尸王卡采用原型横向展开比例，避免头像徽章挤压文字区")
 		_check(objective.end.x < pause_center.x - 19.0 * float(layout["scale"]), "右上尸王信息卡与暂停按钮留有间距")
 		_check(slots.size.x <= 90.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧自动技能栏保持窄幅竖排")
 		var touch: Dictionary = hud._touch_layout(view)

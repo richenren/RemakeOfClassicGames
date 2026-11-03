@@ -63,7 +63,7 @@ func _reference_hud_layout(view: Vector2) -> Dictionary:
 	var canvas_size := Vector2(1672.0, 941.0) * unit
 	var offset := (view - canvas_size) * 0.5
 	var status_rect := Rect2(offset + Vector2(12.0, 18.0) * unit, Vector2(520.0, 215.0) * unit)
-	var kills_rect := Rect2(offset + Vector2(150.0, 230.0) * unit, Vector2(310.0, 88.0) * unit)
+	var kills_rect := Rect2(offset + Vector2(150.0, 238.0) * unit, Vector2(310.0, 88.0) * unit)
 	var objective_rect := Rect2(Vector2(view.x - 640.0 * unit, offset.y + 18.0 * unit), Vector2(580.0, 215.0) * unit)
 	var slots_rect := Rect2(Vector2(view.x - 105.0 * unit, offset.y + 225.0 * unit), Vector2(82.0, 320.0) * unit)
 	var xp_rect := Rect2(offset + Vector2(476.0, 804.0) * unit, Vector2(720.0, 122.0) * unit)
@@ -219,7 +219,7 @@ func _draw_player_card(player, rect: Rect2, unit: float) -> void:
 	draw_circle(portrait_center, 69.0 * unit, Color("#08090a", 0.98))
 	_draw_circular_texture(portrait, portrait_center, 67.0 * unit)
 	var name_text := str(player.character_display_name)
-	var name_rect := Rect2(rect.position + Vector2(215.0, 62.0) * unit, Vector2(275.0, 48.0) * unit)
+	var name_rect := Rect2(rect.position + Vector2(215.0, 62.0) * unit, Vector2(255.0, 48.0) * unit)
 	var name_size := _fit_font_size(name_text, name_rect.size.x - 12.0 * unit, maxi(14, roundi(34.0 * unit)), maxi(12, roundi(20.0 * unit)))
 	_center_text_outline(name_rect, name_text, name_size, Color("#f4d99f"), 1)
 	var hp_rect := Rect2(rect.position + Vector2(218.0, 143.0) * unit, Vector2(250.0, 27.0) * unit)
@@ -249,7 +249,7 @@ func _draw_boss_card(rect: Rect2, unit: float) -> void:
 	var objective := objective_data()
 	var boss_title := str(objective.get("boss_name", main_ref.get_boss_ui_profile().get("name", "尸王")))
 	var title_text := "镇邪令·" + boss_title
-	var title_rect := Rect2(rect.position + Vector2(205.0, 58.0) * unit, Vector2(350.0, 48.0) * unit)
+	var title_rect := Rect2(rect.position + Vector2(205.0, 58.0) * unit, Vector2(300.0, 48.0) * unit)
 	_center_text_outline(title_rect, title_text, _fit_font_size(title_text, title_rect.size.x - 8.0 * unit, maxi(15, roundi(29.0 * unit)), maxi(12, roundi(18.0 * unit))), Color("#f0d49a"), 1)
 	var spawning := str(objective.get("kind", "")) == "survival"
 	var countdown_label := "现身倒计时" if spawning else "尸王已降临"
