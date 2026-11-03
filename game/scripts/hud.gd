@@ -55,7 +55,7 @@ func _reference_hud_layout(view: Vector2) -> Dictionary:
 	var canvas_size := Vector2(1672.0, 941.0) * unit
 	var offset := (view - canvas_size) * 0.5
 	var status_rect := Rect2(offset + Vector2(28.0, 78.0) * unit, Vector2(480.0, 136.0) * unit)
-	var kills_rect := Rect2(offset + Vector2(145.0, 218.0) * unit, Vector2(320.0, 58.0) * unit
+	var kills_rect := Rect2(offset + Vector2(145.0, 218.0) * unit, Vector2(320.0, 58.0) * unit)
 	var objective_rect := Rect2(Vector2(view.x - 572.0 * unit, offset.y + 78.0 * unit), Vector2(480.0, 142.0) * unit)
 	var slots_rect := Rect2(Vector2(view.x - 126.0 * unit, offset.y + 228.0 * unit), Vector2(82.0, 354.0) * unit)
 	var xp_rect := Rect2(offset + Vector2(550.0, 858.0) * unit, Vector2(570.0, 32.0) * unit)
