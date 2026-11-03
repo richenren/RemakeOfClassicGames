@@ -536,6 +536,7 @@ func _test_reference_hud_layout() -> void:
 	_check(hud._format_kill_count(12000) == "1.2万" and hud._format_kill_count(100000) == "10万", "击杀统计高数值自动缩写，避免挤压卡片")
 	_check(hud._format_kill_count(10000000) == "1000万" and hud._format_kill_count(100000000) == "1.0亿", "超大击杀数仍保持紧凑可读")
 	for view in [Vector2(1672.0, 941.0), Vector2(1303.0, 609.0), Vector2(1067.0, 600.0), Vector2(1280.0, 720.0), Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
+		_check(hud._reference_frame_rect(view) == Rect2(Vector2.ZERO, view), "游戏金红装饰边框从视口(0,0)延伸至完整屏幕边缘")
 		var layout: Dictionary = hud._reference_hud_layout(view)
 		var status: Rect2 = layout["status"]
 		var kills: Rect2 = layout["kills"]

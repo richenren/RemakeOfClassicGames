@@ -183,10 +183,14 @@ func _format_kill_count(value: int) -> String:
 	return "%.1f亿" % (float(count) / 100000000.0)
 
 
+func _reference_frame_rect(view: Vector2) -> Rect2:
+	return Rect2(Vector2.ZERO, view)
+
+
 func _draw_reference_frame(view: Vector2, layout: Dictionary) -> void:
 	# Full-bleed ornamental frame: deliberately independent from the centered design-artboard offset.
 	# This keeps the border flush with every viewport edge, including non-16:9 windows.
-	draw_texture_rect(HUD_SCREEN_FRAME, Rect2(Vector2.ZERO, view), false)
+	draw_texture_rect(HUD_SCREEN_FRAME, _reference_frame_rect(view), false)
 
 func _draw_player_card(player, rect: Rect2, unit: float) -> void:
 	draw_texture_rect(HUD_PLAYER_CARD_FRAME, rect, false)
@@ -331,7 +335,7 @@ func _draw_reference_controls(view: Vector2, unit: float) -> void:
 			_center_text_outline(Rect2(center - Vector2(18.0, 17.0) * unit, Vector2(36.0, 34.0) * unit), str(item["letter"]), maxi(11, roundi(21.0 * unit)), Color("#f0dfbd"), 1)
 
 	# Ornamental three-point cluster: E and Q below, R above. Hit targets use the same centers.
-	var cluster_position := Vector2(1280.0, 590.0) * unit + Vector2((view.x - 1672.0 * unit) * 0.5, (view.y - 941.0 * unit) * 0.5)
+	var cluster_position := Vector2(1280.0, 583.0) * unit + Vector2((view.x - 1672.0 * unit) * 0.5, (view.y - 941.0 * unit) * 0.5)
 	draw_texture_rect(HUD_SKILL_CLUSTER_FRAME, Rect2(cluster_position, Vector2(350.0, 300.0) * unit), false)
 	var heal: Vector2 = touch["heal_center"]
 	var skill: Vector2 = touch["skill_center"]
@@ -1399,14 +1403,14 @@ func _touch_layout(view: Vector2) -> Dictionary:
 	var skill_center := offset + Vector2(1560.0, 780.0) * scale
 	var secondary_center := offset + Vector2(1455.0, 660.0) * scale
 	var joystick_radius := 108.0 * scale
-	var button_radius := 55.0 * scale
+	var button_radius := 60.0 * scale
 	return {
 		"scale": scale, "offset": offset,
 		"joystick_center": joystick_center, "joystick_radius": joystick_radius,
 		"joystick_move_radius": 49.0 * scale,
-		"skill_center": skill_center, "skill_radius": button_radius, "skill_hit_radius": 61.0 * scale,
-		"heal_center": heal_center, "heal_radius": button_radius, "heal_hit_radius": 61.0 * scale,
-		"secondary_center": secondary_center, "secondary_radius": button_radius, "secondary_hit_radius": 61.0 * scale
+		"skill_center": skill_center, "skill_radius": button_radius, "skill_hit_radius": 68.0 * scale,
+		"heal_center": heal_center, "heal_radius": button_radius, "heal_hit_radius": 68.0 * scale,
+		"secondary_center": secondary_center, "secondary_radius": button_radius, "secondary_hit_radius": 68.0 * scale
 	}
 
 func _draw_touch_controls(view: Vector2) -> void:
