@@ -128,7 +128,7 @@ func _test_hud_tooltips_and_boss_profile(main: Variant) -> void:
 	var rect: Rect2 = hud._reference_hud_layout(view)["slots"]
 	var unit: float = hud._reference_hud_layout(view)["scale"]
 	main.skills["copper_coin_sword"] = {"level":3, "branch":"pierce", "evolved":""}
-	var icon_center := rect.position + Vector2(rect.size.x * 0.5, 35.0 * unit)
+	var icon_center := rect.position + Vector2(rect.size.x * 0.5, 132.0 * unit)
 	_check(hud.reference_tooltip_at(icon_center) == "skill:copper_coin_sword", "右侧窄技能栏图标支持鼠标悬停与触屏长按识别")
 	var details: Dictionary = hud.tooltip_details("skill:copper_coin_sword")
 	_check(str(details.get("name", "")) == "铜钱剑" and str(details.get("stat", "")).contains("贯穿"), "技能说明读取当前实际等级、分支与冷却，而不是固定占位数据")

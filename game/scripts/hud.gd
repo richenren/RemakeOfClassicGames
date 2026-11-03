@@ -413,11 +413,11 @@ func reference_tooltip_at(position: Vector2) -> String:
 	var unit: float = layout["scale"]
 	var owned := _equipped_skill_ids()
 	var offsets := [50.0, 132.0, 198.0, 264.0]
-	var basic_center := slots.position + Vector2(slots.size.x * 0.5, offsets[0]) * unit
+	var basic_center := slots.position + Vector2(slots.size.x * 0.5, offsets[0] * unit)
 	if position.distance_to(basic_center) <= 32.0 * unit:
 		return "basic"
 	for i in range(mini(3, owned.size())):
-		var center := slots.position + Vector2(slots.size.x * 0.5, offsets[i + 1]) * unit
+		var center := slots.position + Vector2(slots.size.x * 0.5, offsets[i + 1] * unit)
 		if position.distance_to(center) <= 32.0 * unit:
 			return "skill:" + owned[i]
 	return ""
