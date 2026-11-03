@@ -11,7 +11,7 @@
 
 ## 2026-11-03 HUD 方案C高还原调整
 - 按已确认的1672×941参考图更新写实角色/尸王头像、红金击杀牌、Boss倒计时卡、窄幅自动技能栏、底部等级经验徽章及E/Q/R横向按钮；E/Q/R图标使用独立插画图集，保留E/Q操作热区与R说明热区。
-- 自动化检查覆盖新素材导入、E/Q/R横向位置、按钮触控热区不重叠及多视口边界；本次CI结果待提交后确认。
+- 自动化检查覆盖新素材导入、E/Q/R横向位置、按钮触控热区不重叠及多视口边界；[Godot 4.5.1 CI：532 项通过，0 项失败](https://github.com/richenren/RemakeOfClassicGames/actions/runs/41607579501)。
 
 ## 本轮测试范围
 - 本轮视觉调整：背景 SVG 提升至 2400×1600 原生分辨率并增加灵堂建筑、符纹、苔痕与湿石反光；新增六种攻击技能 + 六系修炼共 12 幅横向卡片插画；800×600、640×360 改用紧凑 HUD，并统一触控按钮的绘制与命中布局、增加小视口镜头缩放。本轮 Godot 4.5.1 Headless CI 已通过 245 项自动化检查、0 项失败（[本轮运行](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40809265036)）。
@@ -46,7 +46,15 @@ GitHub Actions 工作流：`.github/workflows/godot-prototype-tests.yml`
 2. `tests/test_smoke.gd` 游戏逻辑烟雾测试。
 3. 主场景 headless 启动检查。
 
-## 最新执行结果（2026-10-28）
+## 最新执行结果（2026-11-03）
+
+[本轮 HUD 方案C GitHub Actions：532 项自动化测试通过]( https://github.com/richenren/RemakeOfClassicGames/actions/runs/41607579501 )
+
+- [x] Godot 4.5.1 Headless 导入与脚本解析：通过。
+- [x] 游戏逻辑及 HUD 自动化检查：**532 项通过，0 项失败**。
+- [x] 主场景 Headless 启动：通过。
+
+## 历史执行结果（2026-10-28）
 
 [本轮 GitHub Actions：245 项自动化测试通过](https://github.com/richenren/RemakeOfClassicGames/actions/runs/40809265036)
 
