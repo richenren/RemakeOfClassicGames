@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 215">
+<defs>
+<linearGradient id="g" x2="0" y2="1"><stop stop-color="#fff8cf"/><stop offset=".12" stop-color="#f5ce72"/><stop offset=".3" stop-color="#784019"/><stop offset=".48" stop-color="#ffe6a0"/><stop offset=".68" stop-color="#98501c"/><stop offset=".86" stop-color="#f4c56a"/><stop offset="1" stop-color="#4b240e"/></linearGradient>
+<linearGradient id="r" x2="0" y2="1"><stop stop-color="#ff7950"/><stop offset=".4" stop-color="#d82e28"/><stop offset="1" stop-color="#510c16"/></linearGradient>
+<linearGradient id="p" x2="0" y2="1"><stop stop-color="#2b1510"/><stop offset=".5" stop-color="#100a0b"/><stop offset="1" stop-color="#070809"/></linearGradient>
+<linearGradient id="hp" x2="0" y2="1"><stop stop-color="#ff8a70"/><stop offset=".4" stop-color="#dc332d"/><stop offset="1" stop-color="#711319"/></linearGradient>
+<radialGradient id="gem"><stop stop-color="#fff2c1"/><stop offset=".25" stop-color="#ff6b45"/><stop offset=".65" stop-color="#a90e19"/><stop offset="1" stop-color="#30070c"/></radialGradient>
+<pattern id="engrave" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M0 12Q6 2 12 12T24 12M12 0Q22 6 12 12T12 24" fill="none" stroke="#bd8a47" stroke-width=".7" opacity=".18"/></pattern>
+</defs>
+<!-- black lacquer plaque and double bevel -->
+<path d="M111 22Q137 9 166 11H474Q501 14 514 38L518 57V157Q507 185 481 195H154Q128 190 108 173L82 154L88 52Z" fill="#160907" stroke="#170805" stroke-width="9"/>
+<path d="M111 22Q137 9 166 11H474Q501 14 514 38L518 57V157Q507 185 481 195H154Q128 190 108 173L82 154L88 52Z" fill="url(#p)" stroke="url(#g)" stroke-width="4"/>
+<path d="M126 29Q148 19 171 19H468Q492 22 505 43L509 59V153Q499 177 477 185H157Q136 180 117 165L99 151L102 58Z" fill="url(#engrave)" stroke="#b37a39" stroke-width="1.2"/>
+<path d="M150 31H465M150 179H465" stroke="#f1c66e" stroke-width="1.2" opacity=".55"/>
+<!-- crimson silk flame trails -->
+<g fill="none" stroke-linecap="round"><path d="M20 148C54 183 79 178 108 192C142 208 166 188 193 179C224 169 247 188 279 188C318 190 344 176 376 184C414 194 454 182 494 158" stroke="#4a0b13" stroke-width="13"/><path d="M20 147C54 176 80 173 108 186C143 201 167 181 194 173C226 164 249 181 280 181C319 183 345 170 377 177C416 187 456 175 495 152" stroke="url(#r)" stroke-width="5.5"/><path d="M116 27C146 7 171 22 197 29C227 37 251 23 281 29C312 34 338 21 369 27C407 34 442 27 481 19" stroke="#74131a" stroke-width="8"/><path d="M117 27C148 13 172 28 198 33C228 39 252 28 282 34C313 39 339 27 370 33C409 40 444 31 481 24" stroke="#e44831" stroke-width="2.8"/><path d="M18 128C4 108 11 87 29 77C20 99 31 112 47 120M30 174C14 158 15 142 27 128M477 182C500 169 511 151 507 132" stroke="#e13d30" stroke-width="3"/></g>
+<!-- engraved scrollwork and corners -->
+<g fill="none" stroke="url(#g)" stroke-linecap="round" stroke-linejoin="round"><path d="M145 22C164 5 184 10 198 24C211 37 228 35 242 22C255 10 272 13 284 25M145 192C165 207 185 202 200 189C213 177 230 179 244 192C257 204 275 201 287 188" stroke-width="2.4"/><path d="M452 25C478 9 498 25 506 45C511 58 505 69 494 72C482 75 478 64 485 57C492 50 501 56 498 64M452 181C478 198 499 182 506 163C511 150 505 139 494 136C482 133 478 144 485 151C492 159 501 153 498 145" stroke-width="2.6"/><path d="M128 47Q145 31 158 44Q168 56 157 66Q147 74 141 64Q137 55 148 52M128 166Q145 182 158 169Q168 157 157 147Q147 139 141 149Q137 158 148 161" stroke-width="1.7"/><path d="M200 17l8 8-8 8-8-8zM492 29l7 7-7 7-7-7zM491 174l7 7-7 7-7-7z" stroke-width="1.2"/></g>
+<!-- portrait socket with embossed rings -->
+<circle cx="105" cy="107" r="92" fill="#080809" stroke="#2c130b" stroke-width="10"/><circle cx="105" cy="107" r="87" fill="none" stroke="url(#g)" stroke-width="7"/><circle cx="105" cy="107" r="79" fill="none" stroke="#f9d98c" stroke-width="2.4"/><circle cx="105" cy="107" r="74" fill="none" stroke="#4d2913" stroke-width="4"/><circle cx="105" cy="107" r="69" fill="none" stroke="url(#g)" stroke-width="2.8"/><circle cx="105" cy="107" r="64" fill="none" stroke="#d4a45b" stroke-width="1.2"/>
+<path d="M67 30L80 12L94 22L105 0L117 22L132 12L145 31L131 43H79Z" fill="#35190d" stroke="url(#g)" stroke-width="3"/><path d="M105 3L117 22L105 39L93 22Z" fill="url(#gem)" stroke="#ffe5a2" stroke-width="1.5"/>
+<path d="M67 182L82 194L93 187L105 212L118 187L131 194L145 182L132 171H78Z" fill="#32160d" stroke="url(#g)" stroke-width="2.7"/><circle cx="105" cy="195" r="12" fill="#1b100b" stroke="url(#g)" stroke-width="2"/><path d="M105 184A11 11 0 0 1 105 206A5.5 5.5 0 0 0 105 195A5.5 5.5 0 0 1 105 184" fill="#f2d18a"/><circle cx="105" cy="189.5" r="1.7" fill="#482710"/><circle cx="105" cy="200.5" r="1.7" fill="#f7d98d"/>
+<path d="M17 107l13-11 13 11-13 11zM180 107l13-11 13 11-13 11z" fill="url(#gem)" stroke="url(#g)" stroke-width="2"/><g stroke="#f1cc78" stroke-width="1.5"><path d="M105 17v9M105 188v9M15 107h9M186 107h9M42 43l7 7M161 164l7 7M42 171l7-7M161 50l7-7"/></g>
+<!-- live HP bar bezel -->
+<rect x="215" y="143" width="253" height="29" rx="14.5" fill="#050607" stroke="#40220f" stroke-width="5"/><rect x="217" y="145" width="249" height="25" rx="12.5" fill="#180c0b" stroke="url(#g)" stroke-width="2"/><rect x="222" y="150" width="239" height="15" rx="7.5" fill="url(#hp)" opacity=".5"/>
+</svg>
