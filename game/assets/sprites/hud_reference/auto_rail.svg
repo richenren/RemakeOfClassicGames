@@ -32,7 +32,6 @@
 <g fill="url(#gold)"><path d="M41 116V144M27 130H55"/><path d="M41 194V222M27 208H55"/><path d="M41 272V300M27 286H55"/></g>
 <g fill="none" stroke="#fff0b2" stroke-width=".7" opacity=".7"><circle cx="41" cy="130" r="15"/><circle cx="41" cy="208" r="15"/><circle cx="41" cy="286" r="15"/></g>
 <path d="M41 0L48 9L41 18L34 9Z" fill="url(#gold)" stroke="#5c3517" stroke-width=".8"/>
-<path d="M41 311L48 320L41 329L34 320Z" fill="url(#gold)" stroke="#5c3517" stroke-width=".8"/>
-<path d="M41 318C31 327 34 336 41 341C48 336 51 327 41 318Z" fill="url(#red)" stroke="url(#gold)" stroke-width="1"/>
-<path d="M41 326V342" stroke="#e6b55d" stroke-width="1.2"/>
+<path d="M41 307L46 313L41 319L36 313Z" fill="url(#gold)" stroke="#5c3517" stroke-width=".8"/>
+<path d="M41 312C35 315 37 318 41 320C45 318 47 315 41 312Z" fill="url(#red)" stroke="url(#gold)" stroke-width=".8"/>
 </svg>
