@@ -564,7 +564,7 @@ func _test_reference_hud_layout() -> void:
 		_check(pause_center.x + 25.0 * float(layout["scale"]) <= view.x - 10.0 * float(layout["scale"]) and pause_center.y - 25.0 * float(layout["scale"]) >= offset.y + 10.0 * float(layout["scale"]), "暂停徽章与屏幕上、右边缘保留安全距离")
 		_check(slots.size.x <= 90.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧自动技能栏保持窄幅竖排")
 		var touch: Dictionary = hud._touch_layout(view)
-		_check(touch["cluster_rect"].size.is_equal_approx(Vector2(276.0, 251.2) * float(touch["scale"])), "E/Q/R三角按钮美术组件采用最终定稿尺寸")
+		_check(touch["cluster_rect"].size.is_equal_approx(Vector2(288.0, 262.4) * float(touch["scale"])), "E/Q/R三角按钮美术组件采用最终定稿尺寸")
 		_check(touch["joystick_rect"].size.is_equal_approx(Vector2(230.0, 216.2) * float(touch["scale"])) and touch["joystick_center"].is_equal_approx(offset + Vector2(136.0, 780.0) * design_scale), "左下摇杆视觉尺寸与中心位置按最终定稿还原")
 		_check(is_equal_approx(float(touch["joystick_radius"]), 125.0 * design_scale) and is_equal_approx(float(touch["joystick_move_radius"]), 49.0 * design_scale), "摇杆视觉缩放不改变原有触控移动范围")
 		_check(is_equal_approx(float(touch["skill_radius"]), 54.0 * design_scale) and is_equal_approx(float(touch["heal_radius"]), 54.0 * design_scale) and is_equal_approx(float(touch["skill_hit_radius"]), 64.0 * design_scale) and is_equal_approx(float(touch["heal_hit_radius"]), 64.0 * design_scale), "E/Q视觉半径缩小但实际触控热区保持64设计单位")

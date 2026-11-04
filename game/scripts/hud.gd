@@ -1428,9 +1428,9 @@ func _touch_layout(view: Vector2) -> Dictionary:
 	var joystick_center := offset + Vector2(136.0, 780.0) * scale
 	var joystick_radius := 125.0 * scale
 	var joystick_rect := Rect2(joystick_center - Vector2(115.0, 108.1) * scale, Vector2(230.0, 216.2) * scale)
-	# The approved triangular E/R/Q artwork keeps its original 360:328 aspect
-	# ratio at the finalized 276x251.2 display size. All hit areas use these same anchors.
-	var cluster_rect := Rect2(offset + Vector2(1340.0, 640.0) * scale, Vector2(276.0, 251.2) * scale)
+	# Keep the original 360:328 artwork ratio. 288x262.4 is the smallest
+	# compact size that keeps all 64-unit E/Q/R touch regions separate.
+	var cluster_rect := Rect2(offset + Vector2(1340.0, 640.0) * scale, Vector2(288.0, 262.4) * scale)
 	var heal_center := cluster_rect.position + Vector2(91.0 / 360.0 * cluster_rect.size.x, 238.0 / 328.0 * cluster_rect.size.y)
 	var skill_center := cluster_rect.position + Vector2(269.0 / 360.0 * cluster_rect.size.x, 238.0 / 328.0 * cluster_rect.size.y)
 	var secondary_center := cluster_rect.position + Vector2(180.0 / 360.0 * cluster_rect.size.x, 104.0 / 328.0 * cluster_rect.size.y)
