@@ -111,6 +111,8 @@ func _test_hud_tooltips_and_boss_profile(main: Variant) -> void:
 	main.elapsed_seconds = 23.0
 	var view: Vector2 = main.get_viewport_rect().size
 	var touch: Dictionary = hud._touch_layout(view)
+	var pause_center: Vector2 = hud._reference_hud_layout(view)["pause_center"]
+	_check(hud.reference_action_at(pause_center) == "pause", "鎏金暂停徽章中心保持可点击热区")
 	var cast_pos: Vector2 = touch["skill_center"]
 	var heal_pos: Vector2 = touch["heal_center"]
 	_check(hud.reference_tooltip_at(cast_pos) == "active" and hud.reference_tooltip_at(heal_pos) == "heal", "主动道术与青瓷丹瓶均支持技能说明热区")
@@ -572,6 +574,7 @@ func _test_reference_hud_layout() -> void:
 	_check(load("res://assets/sprites/hud_portrait_boss.webp").get_size() == Vector2(128.0, 128.0), "尸王卡使用独立写实Boss肖像素材")
 	_check(load("res://assets/sprites/hud_skill_buttons.webp").get_size() == Vector2(384.0, 128.0), "E/Q/R使用独立技能按钮插画图集")
 	_check(load("res://assets/sprites/hud_reference/screen_frame.svg").get_size() == Vector2(1672.0, 941.0), "全屏金红装饰边框使用独立透明SVG素材")
+	_check(load("res://assets/sprites/hud_reference/pause_button.svg").get_size() == Vector2(64.0, 64.0), "暂停按钮使用独立鎏金圆形徽章素材")
 	_check(load("res://assets/sprites/hud_reference/player_card_ornate.svg").get_size() == Vector2(520.0, 215.0) and load("res://assets/sprites/hud_reference/boss_card_ornate.svg").get_size() == Vector2(580.0, 215.0) and load("res://assets/sprites/hud_reference/kill_card.svg").get_size() == Vector2(330.0, 93.0), "玩家、尸王头像框使用高细节浮雕装饰素材，击杀牌独立显示")
 	_check(load("res://assets/sprites/hud_reference/joystick.svg").get_size() == Vector2(250.0, 235.0) and load("res://assets/sprites/hud_reference/skill_cluster.svg").get_size() == Vector2(360.0, 328.0) and load("res://assets/sprites/hud_reference/auto_rail.svg").get_size() == Vector2(82.0, 320.0) and load("res://assets/sprites/hud_reference/xp_footer.svg").get_size() == Vector2(720.0, 122.0), "摇杆、三角技能组、自动技能栏与经验底栏比例匹配组件原型")
 	var player_card_svg := FileAccess.get_file_as_string("res://assets/sprites/hud_reference/player_card_ornate.svg")
