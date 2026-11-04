@@ -1,39 +1,38 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 170">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 240">
 <defs>
- <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff8cf"/><stop offset=".13" stop-color="#f4cb72"/><stop offset=".32" stop-color="#784019"/><stop offset=".5" stop-color="#ffe7a0"/><stop offset=".72" stop-color="#98501c"/><stop offset=".88" stop-color="#f4c66c"/><stop offset="1" stop-color="#4b240e"/></linearGradient>
- <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff7950"/><stop offset=".4" stop-color="#d82e28"/><stop offset="1" stop-color="#510c16"/></linearGradient>
- <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#2b1210"/><stop offset=".5" stop-color="#10090a"/><stop offset="1" stop-color="#070809"/></linearGradient>
- <radialGradient id="gem"><stop stop-color="#fff2c1"/><stop offset=".25" stop-color="#ff6b45"/><stop offset=".65" stop-color="#a90e19"/><stop offset="1" stop-color="#30070c"/></radialGradient>
- <pattern id="engrave" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M0 12Q6 1 12 12T24 12M12 0Q22 6 12 12T12 24" fill="none" stroke="#bd8a47" stroke-width=".65" opacity=".17"/></pattern>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff9d7"/><stop offset=".12" stop-color="#f5d27d"/><stop offset=".28" stop-color="#78431b"/><stop offset=".46" stop-color="#fff0b2"/><stop offset=".64" stop-color="#a25b25"/><stop offset=".84" stop-color="#f6cd75"/><stop offset="1" stop-color="#4b230e"/></linearGradient>
+ <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff8b59"/><stop offset=".42" stop-color="#d72c28"/><stop offset="1" stop-color="#4b0913"/></linearGradient>
+ <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#3a1a12"/><stop offset=".25" stop-color="#1c0c0b"/><stop offset=".72" stop-color="#080809"/><stop offset="1" stop-color="#24100d"/></linearGradient>
+ <radialGradient id="gem"><stop stop-color="#fff8d2"/><stop offset=".22" stop-color="#ff8155"/><stop offset=".62" stop-color="#b20d1c"/><stop offset="1" stop-color="#30070d"/></radialGradient>
+ <pattern id="engrave" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M0 10Q6 0 10 10T20 10M10 0Q20 5 10 10T10 20" fill="none" stroke="#c18a49" stroke-width=".75" opacity=".22"/></pattern>
 </defs>
-<path d="M88 13Q116 2 150 5H533Q558 8 572 31L578 48V122Q568 151 538 162H151Q119 157 94 140L70 122L76 45Z" fill="#160806" stroke="#170704" stroke-width="9"/>
-<path d="M88 13Q116 2 150 5H533Q558 8 572 31L578 48V122Q568 151 538 162H151Q119 157 94 140L70 122L76 45Z" fill="url(#panel)" stroke="url(#gold)" stroke-width="4"/>
-<path d="M101 20Q126 12 154 12H528Q550 15 563 35L568 50V119Q559 144 534 153H153Q126 149 102 134L83 121L88 48Z" fill="url(#engrave)" stroke="#b37a39" stroke-width="1.1"/>
-<path d="M178 19H528M178 151H528" stroke="#f1c66e" stroke-width="1.1" opacity=".5"/>
-<g fill="none" stroke-linecap="round">
- <path d="M12 125C40 151 64 153 89 145C116 136 135 151 162 157C193 164 217 149 245 151C278 154 305 165 338 154C375 142 409 158 443 151C486 142 526 130 571 109" stroke="#4a0b13" stroke-width="12"/>
- <path d="M12 124C40 145 65 147 90 140C117 131 136 145 163 151C194 158 218 143 246 145C279 148 306 158 339 148C376 136 410 151 444 145C487 136 527 124 571 103" stroke="url(#red)" stroke-width="4.8"/>
- <path d="M111 14C144 0 170 13 198 18C229 24 254 13 285 17C318 22 345 11 379 16C423 22 470 13 533 8" stroke="#74131a" stroke-width="6.5"/>
- <path d="M112 14C145 7 171 19 199 23C230 28 255 19 286 23C319 28 346 18 380 22C424 28 471 18 534 13" stroke="#e44831" stroke-width="2.4"/>
- <path d="M14 108C0 89 13 71 33 64C18 84 32 98 50 105M29 147C13 134 12 120 25 108M539 153C564 143 576 127 569 107" stroke="#df3c2f" stroke-width="3"/>
+<path d="M83 42Q113 19 151 23H539Q568 28 578 58V180Q568 214 539 225H151Q115 217 90 192L67 174L73 69Z" fill="#030405" stroke="#080605" stroke-width="13"/>
+<path d="M83 42Q113 19 151 23H539Q568 28 578 58V180Q568 214 539 225H151Q115 217 90 192L67 174L73 69Z" fill="url(#panel)" stroke="url(#gold)" stroke-width="5"/>
+<path d="M100 49Q125 31 154 31H533Q558 36 567 61V178Q558 205 533 213H154Q125 207 103 187L84 171L90 72Z" fill="url(#engrave)" stroke="#a87538" stroke-width="1.5"/>
+<path d="M195 39H532M195 211H532" stroke="#f6d58a" stroke-width="1.5" opacity=".7"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M96 38C138 9 172 27 200 35C232 44 259 29 289 34C324 40 356 27 390 33C438 40 481 24 553 30" stroke="#4d0a12" stroke-width="13"/>
+ <path d="M96 37C138 17 172 35 200 43C232 52 259 37 289 42C324 48 356 35 390 41C438 48 481 33 553 38" stroke="url(#red)" stroke-width="4.5"/>
+ <path d="M80 186C114 216 142 216 170 207C199 198 224 218 256 221C294 225 321 204 355 210C393 218 427 206 461 213C502 219 537 201 574 180" stroke="#4d0911" stroke-width="15"/>
+ <path d="M80 184C114 205 142 205 170 197C199 188 224 208 256 211C294 215 321 194 355 200C393 208 427 196 461 203C502 209 537 191 574 170" stroke="url(#red)" stroke-width="5"/>
+ <path d="M27 171C3 148 13 121 38 110C21 139 40 155 61 160M46 204C22 188 21 168 36 153M540 50C564 29 580 47 575 70C571 86 555 89 547 78M540 194C564 215 580 197 575 174" stroke="#ef4432" stroke-width="3.2"/>
 </g>
 <g fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
- <path d="M477 18Q501 0 528 12Q548 22 564 8Q579 23 564 40Q550 53 531 44Q519 37 526 26Q535 17 545 28" stroke-width="2.8"/>
- <path d="M479 151Q504 167 530 153Q550 143 565 157Q579 140 563 124Q549 112 530 124Q520 132 527 143Q535 151 545 140" stroke-width="2.8"/>
- <path d="M496 23Q519 33 537 26M502 35Q523 45 541 38M502 145Q522 134 540 142" stroke-width="1.3"/>
- <path d="M151 15C169 1 190 7 204 19C217 30 234 29 249 17C262 7 280 9 292 20M151 155C170 167 191 163 205 151C218 139 236 141 250 153C264 164 282 162 294 149" stroke-width="2"/>
+ <path d="M160 31C180 9 204 17 220 31C235 45 254 45 270 30C284 16 305 20 319 35M160 216C180 238 204 230 220 216C235 202 254 202 270 217C284 231 305 227 319 212" stroke-width="2.5"/>
+ <path d="M500 49Q526 25 552 41Q574 55 560 78Q547 95 532 82Q523 74 532 64Q541 55 550 66M500 193Q526 217 552 201Q574 187 560 164Q547 147 532 160Q523 168 532 178Q541 187 550 176" stroke-width="3"/>
+ <path d="M507 58Q528 68 547 57M507 184Q528 174 547 185" stroke-width="1.5"/>
 </g>
-<circle cx="104" cy="85" r="75" fill="#080809" stroke="#2d130b" stroke-width="9"/>
-<circle cx="104" cy="85" r="70" fill="none" stroke="url(#gold)" stroke-width="6"/>
-<circle cx="104" cy="85" r="65" fill="none" stroke="#f7d78c" stroke-width="2.1"/>
-<circle cx="104" cy="85" r="60" fill="none" stroke="#4a2412" stroke-width="3.8"/>
-<circle cx="104" cy="85" r="56" fill="none" stroke="url(#gold)" stroke-width="2.5"/>
-<circle cx="104" cy="85" r="51" fill="none" stroke="#ad4135" stroke-width="1.7"/>
-<path d="M57 30L64 12L81 20L94 2L104 14L117 1L131 20L148 12L155 34L139 45H73Z" fill="#35150d" stroke="url(#gold)" stroke-width="3"/>
-<path d="M104 4L116 22L104 39L92 22Z" fill="url(#gem)" stroke="#ffe5a2" stroke-width="1.4"/>
-<path d="M57 139L74 153L87 146L104 170L121 146L134 153L151 139L136 128H72Z" fill="#32140e" stroke="url(#gold)" stroke-width="2.6"/>
-<path d="M104 143l9 10-9 10-9-10z" fill="url(#gem)" stroke="#f8d58a" stroke-width="1"/>
-<path d="M10 85l13-11 13 11-13 11zM176 85l13-11 13 11-13 11z" fill="url(#gem)" stroke="url(#gold)" stroke-width="1.8"/>
-<g stroke="#f3ce79" stroke-width="1.2"><path d="M104 9v8M104 153v8M18 85h10M180 85h10M43 35l7 7M162 128l7 7M43 135l7-7M162 42l7-7"/></g>
-<g fill="url(#gold)" stroke="#5a2c12" stroke-width="1"><path d="M104 0l7 9-7 9-7-9zM104 151l8 9-8 9-8-9zM565 19l7 8-7 8-7-8zM562 143l7 8-7 8-7-8zM303 10l5 6-5 6-5-6zM302 150l5 6-5 6-5-6z"/></g>
+<circle cx="110" cy="120" r="96" fill="#050607" stroke="#1a0b08" stroke-width="12"/>
+<circle cx="110" cy="120" r="92" fill="none" stroke="url(#gold)" stroke-width="7"/>
+<circle cx="110" cy="120" r="85" fill="none" stroke="#f9df9d" stroke-width="2.5"/>
+<circle cx="110" cy="120" r="79" fill="none" stroke="#4d2914" stroke-width="4"/>
+<circle cx="110" cy="120" r="74" fill="none" stroke="url(#gold)" stroke-width="3"/>
+<circle cx="110" cy="120" r="69" fill="none" stroke="#b44a35" stroke-width="1.8"/>
+<path d="M54 55L64 28L82 39L96 12L110 30L124 12L139 39L157 28L168 58L149 73H71Z" fill="#32140d" stroke="url(#gold)" stroke-width="3.8"/>
+<path d="M110 15L125 38L110 57L95 38Z" fill="url(#gem)" stroke="#fff0b7" stroke-width="1.6"/>
+<path d="M54 190L74 207L90 197L110 235L130 197L146 207L166 190L148 174H72Z" fill="#2d140e" stroke="url(#gold)" stroke-width="3"/>
+<path d="M110 194l13 16-13 16-13-16z" fill="url(#gem)" stroke="#ffe7a0" stroke-width="1.2"/>
+<path d="M12 120l15-13 15 13-15 13zM176 120l15-13 15 13-15 13z" fill="url(#gem)" stroke="url(#gold)" stroke-width="2"/>
+<g fill="url(#gold)" stroke="#5b3217" stroke-width="1.1"><path d="M110 3l9 12-9 12-9-12zM110 216l9 12-9 12-9-12zM561 42l8 9-8 9-8-9zM558 188l8 9-8 9-8-9zM330 24l6 8-6 8-6-8zM330 212l6 8-6 8-6-8z"/></g>
+<g fill="none" stroke="#fff0b8" stroke-width="1.2" opacity=".78"><path d="M110 20v12M110 211v12M19 120h12M185 120h12M43 57l8 8M169 176l8 8M43 183l8-8M169 64l8-8"/></g>
 </svg>
