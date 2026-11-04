@@ -16,6 +16,7 @@ const HUD_AUTO_RAIL_FRAME: Texture2D = preload("res://assets/sprites/hud_referen
 const HUD_JOYSTICK_FRAME: Texture2D = preload("res://assets/sprites/hud_reference/joystick.svg")
 const HUD_SKILL_CLUSTER_FRAME: Texture2D = preload("res://assets/sprites/hud_reference/skill_cluster.svg")
 const HUD_XP_FOOTER_FRAME: Texture2D = preload("res://assets/sprites/hud_reference/xp_footer.svg")
+const HUD_PAUSE_FRAME: Texture2D = preload("res://assets/sprites/hud_reference/pause_button.svg")
 
 var main_ref
 const MOUSE_TOOLTIP_DELAY := 0.40
@@ -80,7 +81,7 @@ func reference_action_at(screen_position: Vector2) -> String:
 	var layout := _reference_hud_layout(view)
 	var unit: float = layout["scale"]
 	var pause_center: Vector2 = layout["pause_center"]
-	if screen_position.distance_to(pause_center) <= 18.0 * unit:
+	if screen_position.distance_to(pause_center) <= 23.0 * unit:
 		return "pause"
 	var touch := _touch_layout(view)
 	if screen_position.distance_to(touch["skill_center"]) <= float(touch["skill_hit_radius"]):
@@ -276,7 +277,7 @@ func _draw_boss_health_lane(rect: Rect2, unit: float) -> void:
 	_draw_ornate_game_card(rect, Color("#bd7657"), unit, false)
 	var title := str(main_ref.get_boss_ui_profile().get("name", "尸王"))
 	_center_text_outline(Rect2(rect.position + Vector2(8.0, 0.0) * unit, Vector2(rect.size.x - 16.0 * unit, 18.0 * unit)), title, maxi(9, roundi(12.0 * unit)), Color("#f0d49a"), 1)
-	_draw_health_pill(Rect2(rect.position + Vector2(16.0, 25.0) * unit, Vector2(rect.size.x / unit - 32.0, 7.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#b84d42"), true)
+	_draw_metal_progress_bar(Rect2(rect.position + Vector2(16.0, 25.0) * unit, Vector2(rect.size.x / unit - 32.0, 7.0) * unit), boss.hp / maxf(1.0, boss.max_hp), Color("#c34a3e"), unit)
 
 
 
@@ -286,8 +287,28 @@ func _draw_xp_footer(rect: Rect2, player, unit: float) -> void:
 	var level_center := rect.position + Vector2(64.0, 32.0) * unit
 	_center_text_outline(Rect2(level_center - Vector2(34.0, 18.0) * unit, Vector2(68.0, 36.0) * unit), "Lv%d" % player.level, maxi(11, roundi(25.0 * unit)), Color("#f3d18b"), 1)
 	var xp_bar := Rect2(rect.position + Vector2(130.0, 33.0) * unit, Vector2(470.0, 19.0) * unit)
-	_bar(xp_bar, float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#e1a944"))
+	_draw_metal_progress_bar(xp_bar, float(player.xp) / maxf(1.0, float(player.xp_to_next)), Color("#e1a944"), unit)
 	_center_text_outline(Rect2(rect.position + Vector2(610.0, 24.0) * unit, Vector2(96.0, 28.0) * unit), "%d/%d" % [player.xp, player.xp_to_next], maxi(8, roundi(16.0 * unit)), Color("#f0dfbb"), 1)
+
+
+func _draw_metal_progress_bar(rect: Rect2, ratio: float, fill_color: Color, unit: float) -> void:
+	var amount := clampf(ratio, 0.0, 1.0)
+	draw_rect(rect, Color("#100b09", 0.98))
+	if amount > 0.0:
+		var fill_width := rect.size.x * amount
+		var fill_rect := Rect2(rect.position, Vector2(fill_width, rect.size.y))
+		var shadow_color := Color(fill_color.r * 0.58, fill_color.g * 0.48, fill_color.b * 0.38, 1.0)
+		var mid_color := Color(fill_color.r, fill_color.g, fill_color.b, 1.0)
+		var shine_color := Color(minf(1.0, fill_color.r * 1.25 + 0.08), minf(1.0, fill_color.g * 1.18 + 0.08), minf(1.0, fill_color.b * 1.08 + 0.06), 0.76)
+		draw_rect(fill_rect, shadow_color)
+		draw_rect(Rect2(rect.position + Vector2(0.0, rect.size.y * 0.22), Vector2(fill_width, rect.size.y * 0.58)), mid_color)
+		draw_rect(Rect2(rect.position + Vector2(0.0, rect.size.y * 0.18), Vector2(fill_width, rect.size.y * 0.20)), shine_color)
+		draw_line(rect.position + Vector2(0.0, 1.0 * unit), Vector2(rect.position.x + fill_width, rect.position.y + 1.0 * unit), Color("#fff0bf", 0.58), maxf(0.65, 0.8 * unit), true)
+		draw_line(Vector2(rect.position.x, rect.end.y - 1.0 * unit), Vector2(rect.position.x + fill_width, rect.end.y - 1.0 * unit), Color("#5a2d11", 0.72), maxf(0.65, 0.8 * unit), true)
+		if fill_width > 4.0 * unit:
+			var tip := Vector2(rect.position.x + fill_width, rect.get_center().y)
+			draw_circle(tip, 2.2 * unit, Color("#ffe6a0", 0.88))
+			draw_circle(tip, 4.2 * unit, Color("#e7aa43", 0.20))
 
 
 func _draw_auto_skill_rail(rect: Rect2, unit: float) -> void:
@@ -303,8 +324,13 @@ func _draw_auto_skill_rail(rect: Rect2, unit: float) -> void:
 		var data: Dictionary = main_ref.skills[skill_id]
 		var evolved := str(data.get("evolved", ""))
 		var icon := skill_id if evolved.is_empty() else evolved
-		_draw_card_art(center, icon, _upgrade_color(icon), 25.0 * unit)
-		_center_text_outline(Rect2(center.x - 24.0 * unit, center.y + 22.0 * unit, 48.0 * unit, 15.0 * unit), "Lv%d" % int(data.get("level", 1)), maxi(7, roundi(10.0 * unit)), Color("#f0d49a"), 1)
+		draw_circle(center, 22.0 * unit, Color("#090807", 0.96))
+		draw_arc(center, 22.0 * unit, 0.0, TAU, 36, Color("#d9ad61", 0.88), 1.2 * unit, true)
+		_draw_card_art(center, icon, _upgrade_color(icon), 17.5 * unit)
+		var level_rect := Rect2(center.x - 20.0 * unit, center.y + 17.0 * unit, 40.0 * unit, 14.0 * unit)
+		draw_rect(level_rect, Color("#090807", 0.92))
+		draw_rect(level_rect, Color("#a87c42", 0.68), false, maxf(0.65, 0.7 * unit))
+		_center_text_outline(level_rect, "Lv%d" % int(data.get("level", 1)), maxi(7, roundi(9.0 * unit)), Color("#f0d49a"), 1)
 
 func _draw_reference_hud(view: Vector2) -> void:
 	var player = main_ref.player
@@ -321,10 +347,8 @@ func _draw_reference_hud(view: Vector2) -> void:
 	_draw_xp_footer(layout["xp"], player, unit)
 
 	var pause: Vector2 = layout["pause_center"]
-	draw_circle(pause, 18.0 * unit, Color("#090b0d", 0.96))
-	draw_arc(pause, 18.0 * unit, 0.0, TAU, 48, Color("#e1b45f"), 1.8 * unit, true)
-	draw_line(pause + Vector2(-4.0, -6.0) * unit, pause + Vector2(-4.0, 6.0) * unit, Color("#f4d99f"), 3.0 * unit, true)
-	draw_line(pause + Vector2(4.0, -6.0) * unit, pause + Vector2(4.0, 6.0) * unit, Color("#f4d99f"), 3.0 * unit, true)
+	var pause_rect := Rect2(pause - Vector2(25.0, 25.0) * unit, Vector2(50.0, 50.0) * unit)
+	draw_texture_rect(HUD_PAUSE_FRAME, pause_rect, false)
 
 	_draw_auto_skill_rail(layout["slots"], unit)
 	_draw_reference_controls(view, unit)
@@ -356,8 +380,9 @@ func _draw_reference_controls(view: Vector2, unit: float) -> void:
 		_center_text_outline(Rect2(heal + Vector2(24.0, 25.0) * unit, Vector2(24.0, 18.0) * unit), str(main_ref.heal_charges), maxi(8, roundi(11.0 * unit)), Color("#f4d99f"), 1)
 	if not skill_ready:
 		var ratio := clampf(main_ref.active_skill_cooldown / maxf(0.1, main_ref.active_skill_base_cooldown), 0.0, 1.0)
-		draw_circle(skill, skill_r * 0.60, Color("#07090b", 0.58))
-		draw_arc(skill, skill_r * 0.96, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - ratio), 48, Color("#e0ad53"), 3.0 * unit, true)
+		draw_circle(skill, skill_r * 0.60, Color("#07090b", 0.72))
+		draw_arc(skill, skill_r * 0.96, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - ratio), 48, Color("#f0c36a", 0.96), 3.0 * unit, true)
+		draw_arc(skill, skill_r * 0.86, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - ratio), 48, Color("#fff0bb", 0.48), 1.0 * unit, true)
 		_center_text_outline(Rect2(skill - Vector2(24.0, 12.0) * unit, Vector2(48.0, 24.0) * unit), str(ceili(main_ref.active_skill_cooldown)), maxi(10, roundi(17.0 * unit)), Color("#ffffff"), 1)
 
 func _draw_action_keycap(center: Vector2, radius: float, key: String, unit: float) -> void:
