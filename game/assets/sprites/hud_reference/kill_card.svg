@@ -1,13 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 93">
 <defs>
- <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff1b5"/><stop offset=".22" stop-color="#e2ad55"/><stop offset=".55" stop-color="#70401c"/><stop offset=".82" stop-color="#f6c96e"/><stop offset="1" stop-color="#713d19"/></linearGradient>
- <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff6747"/><stop offset="1" stop-color="#751319"/></linearGradient>
- <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#38100f"/><stop offset=".55" stop-color="#10090a"/><stop offset="1" stop-color="#3a1012"/></linearGradient>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff5c5"/><stop offset=".17" stop-color="#e6b35a"/><stop offset=".43" stop-color="#714019"/><stop offset=".58" stop-color="#ffe39a"/><stop offset=".83" stop-color="#a35c24"/><stop offset="1" stop-color="#f2c56b"/></linearGradient>
+ <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff7953"/><stop offset=".45" stop-color="#cf2b29"/><stop offset="1" stop-color="#5a0d15"/></linearGradient>
+ <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#3b1710"/><stop offset=".28" stop-color="#170b09"/><stop offset=".72" stop-color="#09090a"/><stop offset="1" stop-color="#35100f"/></linearGradient>
+ <radialGradient id="gem"><stop stop-color="#fff3c5"/><stop offset=".3" stop-color="#ff7451"/><stop offset=".72" stop-color="#a90d19"/><stop offset="1" stop-color="#34070d"/></radialGradient>
 </defs>
-<path d="M24 5 H306 L325 22 V70 L306 88 H24 L5 70 V22 Z" fill="url(#panel)" stroke="#1a0b08" stroke-width="6"/>
-<path d="M24 5 H306 L325 22 V70 L306 88 H24 L5 70 V22 Z" fill="none" stroke="url(#gold)" stroke-width="3"/>
-<path d="M27 12 H303 L317 25 V67 L303 81 H27 L13 67 V25 Z" fill="none" stroke="#a66f35" stroke-width="1"/>
-<path d="M5 64 Q22 88 56 84 M325 25 Q306 3 278 10" fill="none" stroke="url(#red)" stroke-width="4"/>
-<path d="M165 0 l10 11 -10 11 -10 -11z M165 71 l10 11 -10 11 -10 -11z" fill="url(#gold)"/>
-<path d="M44 14 l5 6 -5 6 -5 -6z M285 67 l5 6 -5 6 -5 -6z" fill="url(#gold)"/>
+<path d="M24 5H306L325 22V70L306 88H24L5 70V22Z" fill="#070707" stroke="#120805" stroke-width="6"/>
+<path d="M24 7H306L323 23V69L306 86H24L7 69V23Z" fill="url(#panel)" stroke="url(#gold)" stroke-width="3"/>
+<path d="M27 13H303L316 26V66L303 80H27L14 66V26Z" fill="none" stroke="#b17b3c" stroke-width="1.2"/>
+<path d="M30 18H300M30 75H300" stroke="#f3cc78" stroke-width=".8" opacity=".52"/>
+<g fill="none" stroke="url(#red)" stroke-linecap="round">
+ <path d="M8 62C22 79 39 82 54 77C66 73 77 80 89 82" stroke-width="4"/>
+ <path d="M322 30C309 13 292 11 278 16C266 20 254 13 242 11" stroke-width="4"/>
+ <path d="M10 67Q29 91 56 84M320 25Q301 2 274 10" stroke-width="1.5"/>
+</g>
+<g fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M17 26Q28 9 43 17Q52 22 45 31Q39 37 32 30M313 67Q302 84 287 76Q278 71 285 62Q291 56 298 63" stroke-width="1.8"/>
+ <path d="M18 69L30 78L43 77M312 24L300 15L287 16" stroke-width="1.4"/>
+</g>
+<g fill="url(#gem)" stroke="url(#gold)" stroke-width="1.2">
+ <path d="M165 0L176 11L165 22L154 11Z"/>
+ <path d="M165 71L176 82L165 93L154 82Z"/>
+ <path d="M44 13L50 20L44 27L38 20Z"/>
+ <path d="M286 66L292 73L286 80L280 73Z"/>
+</g>
+<path d="M165 4L171 11L165 18L159 11Z" fill="none" stroke="#fff1b4" stroke-width=".8"/>
 </svg>
