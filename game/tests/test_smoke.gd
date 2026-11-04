@@ -557,6 +557,8 @@ func _test_reference_hud_layout() -> void:
 			var rect: Rect2 = layout[key]
 			_check(rect.position.x >= -0.1 and rect.position.y >= -0.1 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
 		_check(status.end.x < objective.position.x and status.end.x < layout["boss"].position.x, "方案C玩家卡与右上尸王卡、顶部Boss血条分区")
+		_check(layout["boss"].end.x <= objective.position.x - 9.9 * design_scale, "顶部Boss血条与右上尸王卡保留至少10设计单位间距")
+		_check(absf(layout["boss"].get_center().x - (offset.x + 836.0 * design_scale)) <= 0.1, "顶部Boss血条缩窄后仍保持画板水平居中")
 		_check(kills.position.y >= status.end.y - 20.0 * design_scale and kills.end.y < xp.position.y, "击杀统计按原型图与人物卡下沿轻微交叠，并与经验栏分离")
 		_check(absf(kills.get_center().x - (status.get_center().x + 50.0 * design_scale)) <= 0.1, "击杀牌按原型图偏右50设计单位")
 		_check(is_equal_approx(status.size.x, 520.0 * float(layout["scale"])) and is_equal_approx(objective.size.x, 580.0 * float(layout["scale"])) and is_equal_approx(status.size.y, 250.0 * float(layout["scale"])) and is_equal_approx(objective.size.y, 240.0 * float(layout["scale"])), "人物卡与尸王卡使用原型图的加高比例")
