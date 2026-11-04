@@ -64,12 +64,12 @@ func _reference_hud_layout(view: Vector2) -> Dictionary:
 	var canvas_size := Vector2(1672.0, 941.0) * unit
 	var offset := (view - canvas_size) * 0.5
 	var status_rect := Rect2(offset + Vector2(12.0, 18.0) * unit, Vector2(520.0, 170.0) * unit)
-	var kills_rect := Rect2(offset + Vector2(150.0, 198.0) * unit, Vector2(310.0, 88.0) * unit)
-	var objective_rect := Rect2(Vector2(view.x - 640.0 * unit, offset.y + 18.0 * unit), Vector2(580.0, 170.0) * unit)
+	var kills_rect := Rect2(offset + Vector2(117.0, 198.0) * unit, Vector2(310.0, 88.0) * unit)
+	var objective_rect := Rect2(Vector2(view.x - 660.0 * unit, offset.y + 18.0 * unit), Vector2(580.0, 170.0) * unit)
 	var slots_rect := Rect2(Vector2(view.x - 105.0 * unit, offset.y + 202.0 * unit), Vector2(82.0, 320.0) * unit)
-	var xp_rect := Rect2(offset + Vector2(476.0, 804.0) * unit, Vector2(720.0, 122.0) * unit)
+	var xp_rect := Rect2(offset + Vector2(476.0, 780.0) * unit, Vector2(720.0, 122.0) * unit)
 	var boss_rect := Rect2(offset + Vector2(590.0, 14.0) * unit, Vector2(492.0, 46.0) * unit)
-	var pause_center := Vector2(view.x - 32.0 * unit, offset.y + 35.0 * unit)
+	var pause_center := Vector2(view.x - 42.0 * unit, offset.y + 42.0 * unit)
 	return {
 		"scale": unit, "offset": offset, "status": status_rect, "kills": kills_rect,
 		"objective": objective_rect, "time": Rect2(), "slots": slots_rect,
@@ -241,12 +241,12 @@ func _draw_kill_card(rect: Rect2, unit: float) -> void:
 func _draw_boss_card(rect: Rect2, unit: float) -> void:
 	draw_texture_rect(HUD_BOSS_CARD_FRAME, rect, false)
 	var portrait_center := rect.position + Vector2(104.0, 85.0) * unit
-	draw_circle(portrait_center, 75.0 * unit, Color("#120d0d", 0.98))
+	draw_circle(portrait_center, 69.0 * unit, Color("#120d0d", 0.98))
 	var portrait := _boss_profile_portrait()
 	if portrait == BOSS_UI_PORTRAIT_DEFAULT:
-		_draw_circular_texture(portrait, portrait_center, 70.0 * unit)
+		_draw_circular_texture(portrait, portrait_center, 66.0 * unit)
 	else:
-		_draw_circular_texture(portrait, portrait_center, 70.0 * unit, Rect2(54.0, 9.0, 84.0, 90.0))
+		_draw_circular_texture(portrait, portrait_center, 66.0 * unit, Rect2(54.0, 9.0, 84.0, 90.0))
 	var objective := objective_data()
 	var boss_title := str(objective.get("boss_name", main_ref.get_boss_ui_profile().get("name", "尸王")))
 	var title_text := "镇邪令·" + boss_title
@@ -1429,10 +1429,10 @@ func _touch_layout(view: Vector2) -> Dictionary:
 	var joystick_radius := 125.0 * scale
 	# The approved triangular E/R/Q artwork is rendered at 320x292, not its
 	# original 360x328 size. These centers map to the artwork's source anchors.
-	var cluster_rect := Rect2(offset + Vector2(1300.0, 610.0) * scale, Vector2(320.0, 292.0) * scale)
-	var heal_center := offset + Vector2(1380.9, 821.9) * scale
-	var skill_center := offset + Vector2(1539.1, 821.9) * scale
-	var secondary_center := offset + Vector2(1460.0, 702.6) * scale
+	var cluster_rect := Rect2(offset + Vector2(1320.0, 630.0) * scale, Vector2(300.0, 273.333333) * scale)
+	var heal_center := cluster_rect.position + Vector2(91.0 / 360.0 * cluster_rect.size.x, 238.0 / 328.0 * cluster_rect.size.y)
+	var skill_center := cluster_rect.position + Vector2(269.0 / 360.0 * cluster_rect.size.x, 238.0 / 328.0 * cluster_rect.size.y)
+	var secondary_center := cluster_rect.position + Vector2(180.0 / 360.0 * cluster_rect.size.x, 104.0 / 328.0 * cluster_rect.size.y)
 	var button_radius := 58.0 * scale
 	return {
 		"scale": scale, "offset": offset,

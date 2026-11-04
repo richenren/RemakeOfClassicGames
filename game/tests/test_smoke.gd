@@ -537,7 +537,7 @@ func _test_reference_hud_layout() -> void:
 	_check(hud._format_kill_count(0) == "0" and hud._format_kill_count(9999) == "9999", "击杀统计在一万以内显示完整整数")
 	_check(hud._format_kill_count(12000) == "1.2万" and hud._format_kill_count(100000) == "10万", "击杀统计高数值自动缩写，避免挤压卡片")
 	_check(hud._format_kill_count(10000000) == "1000万" and hud._format_kill_count(100000000) == "1.0亿", "超大击杀数仍保持紧凑可读")
-	for view in [Vector2(1672.0, 941.0), Vector2(1303.0, 609.0), Vector2(1067.0, 600.0), Vector2(1280.0, 720.0), Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
+	for view in [Vector2(1672.0, 941.0), Vector2(1303.0, 609.0), Vector2(1076.0, 606.0), Vector2(1067.0, 600.0), Vector2(1280.0, 720.0), Vector2(800.0, 600.0), Vector2(640.0, 360.0)]:
 		_check(hud._reference_frame_rect(view) == Rect2(Vector2.ZERO, view), "游戏金红装饰边框从视口(0,0)延伸至完整屏幕边缘")
 		var layout: Dictionary = hud._reference_hud_layout(view)
 		var status: Rect2 = layout["status"]
@@ -552,11 +552,13 @@ func _test_reference_hud_layout() -> void:
 			_check(rect.position.x >= -0.1 and rect.position.y >= -0.1 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
 		_check(status.end.x < objective.position.x and status.end.x < layout["boss"].position.x, "方案C玩家卡与右上尸王卡、顶部Boss血条分区")
 		_check(kills.position.y >= status.end.y and kills.end.y < xp.position.y, "击杀统计独立放在角色卡下方，并与底部经验栏分离")
+		_check(absf(kills.get_center().x - status.get_center().x) <= 0.1, "击杀统计卡严格与人物信息卡水平居中对齐")
 		_check(is_equal_approx(status.size.x, 520.0 * float(layout["scale"])) and is_equal_approx(objective.size.x, 580.0 * float(layout["scale"])) and is_equal_approx(status.size.y, 170.0 * float(layout["scale"])) and is_equal_approx(objective.size.y, 170.0 * float(layout["scale"])), "玩家与尸王卡采用原型横向展开比例，避免头像徽章挤压文字区")
-		_check(objective.end.x < pause_center.x - 19.0 * float(layout["scale"]), "右上尸王信息卡与暂停按钮留有间距")
+		_check(objective.end.x <= pause_center.x - 35.0 * float(layout["scale"]), "右上尸王信息卡与暂停徽章至少保留10个设计单位间距")
+		_check(pause_center.x + 25.0 * float(layout["scale"]) <= view.x - 10.0 * float(layout["scale"]) and pause_center.y - 25.0 * float(layout["scale"]) >= offset.y + 10.0 * float(layout["scale"]), "暂停徽章与屏幕上、右边缘保留安全距离")
 		_check(slots.size.x <= 90.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧自动技能栏保持窄幅竖排")
 		var touch: Dictionary = hud._touch_layout(view)
-		_check(touch["cluster_rect"].size == Vector2(320.0, 292.0) * float(touch["scale"]), "E/Q/R三角按钮热区与整组美术组件尺寸联动")
+		_check(touch["cluster_rect"].size.is_equal_approx(Vector2(300.0, 273.333333) * float(touch["scale"])), "E/Q/R三角按钮美术组件进一步紧凑，仍保持原始宽高比")
 		var skill_center: Vector2 = touch["skill_center"]
 		var heal_center: Vector2 = touch["heal_center"]
 		var secondary_center: Vector2 = touch["secondary_center"]
@@ -570,7 +572,7 @@ func _test_reference_hud_layout() -> void:
 		_check(heal_center.distance_to(secondary_center) > float(touch["heal_radius"]) + float(touch["secondary_radius"]), "E与R按钮视觉区域不重叠")
 		_check(skill_center.distance_to(secondary_center) > float(touch["skill_radius"]) + float(touch["secondary_radius"]), "Q与R按钮视觉区域不重叠")
 		_check(xp.position.x > joystick_center.x + float(touch["joystick_radius"]) and xp.end.x < heal_center.x - float(touch["heal_hit_radius"]), "底部经验条避开虚拟摇杆及右下E/Q/R技能区")
-		_check(xp.size.y <= 125.0 * float(layout["scale"]) and xp.position.y > offset.y + 790.0 * float(layout["scale"]), "底部经验条采用低高度装饰底栏")
+		_check(xp.size.y <= 125.0 * float(layout["scale"]) and xp.position.y > offset.y + 760.0 * float(layout["scale"]) and view.y - xp.end.y >= 30.0 * float(layout["scale"]), "底部经验条与底边装饰保持呼吸空间")
 		_check(pause_center.x > slots.position.x and pause_center.y + 19.0 * float(layout["scale"]) < slots.position.y, "右上暂停与自动技能栏分离")
 		_check(heal_center.y > offset.y + 700.0 * float(layout["scale"]) and heal_center.y < offset.y + 900.0 * float(layout["scale"]), "E/Q/R操作区锚定底部且保留安全边距")
 	_check(load("res://assets/sprites/hud_portrait_player.webp").get_size() == Vector2(192.0, 192.0), "角色卡使用192px写实青年道士肖像素材")
@@ -583,7 +585,7 @@ func _test_reference_hud_layout() -> void:
 	var player_card_svg := FileAccess.get_file_as_string("res://assets/sprites/hud_reference/player_card_ornate.svg")
 	var boss_card_svg := FileAccess.get_file_as_string("res://assets/sprites/hud_reference/boss_card_ornate.svg")
 	_check(player_card_svg.contains("url(#gem)") and player_card_svg.contains("viewBox=\"0 0 520 170\"") and player_card_svg.contains("r=\"75\""), "玩家头像框保留红宝石、火焰丝带和紧凑鎏金浮雕")
-	_check(boss_card_svg.contains("url(#gem)") and boss_card_svg.contains("viewBox=\"0 0 580 170\"") and boss_card_svg.contains("r=\"80\""), "尸王头像框保留王冠、龙纹、赤焰和紧凑浮雕")
+	_check(boss_card_svg.contains("url(#gem)") and boss_card_svg.contains("viewBox=\"0 0 580 170\"") and boss_card_svg.contains("r=\"75\""), "尸王头像框保留王冠、龙纹、赤焰和紧凑浮雕")
 	var cluster_svg := FileAccess.get_file_as_string("res://assets/sprites/hud_reference/skill_cluster.svg")
 	_check(cluster_svg.contains("M180 62") and not cluster_svg.contains(">X<"), "R主动技能槽使用中式符箓笔画，不再显示X占位符")
 	hud.queue_free()
