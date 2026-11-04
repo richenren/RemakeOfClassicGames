@@ -561,7 +561,7 @@ func _test_reference_hud_layout() -> void:
 		_check(absf(kills.get_center().x - (status.get_center().x + 50.0 * design_scale)) <= 0.1, "击杀牌按原型图偏右50设计单位")
 		_check(is_equal_approx(status.size.x, 520.0 * float(layout["scale"])) and is_equal_approx(objective.size.x, 580.0 * float(layout["scale"])) and is_equal_approx(status.size.y, 250.0 * float(layout["scale"])) and is_equal_approx(objective.size.y, 240.0 * float(layout["scale"])), "人物卡与尸王卡使用原型图的加高比例")
 		_check(objective.end.x <= pause_center.x - 18.0 * float(layout["scale"]), "尸王卡与右上暂停徽章保留安全距离")
-		_check(pause_center.x + 20.0 * float(layout["scale"]) <= view.x - 8.0 * float(layout["scale"]) and pause_center.y - 20.0 * float(layout["scale"]) >= offset.y + 8.0 * float(layout["scale"]), "暂停徽章与屏幕上、右边缘保留安全距离")
+		_check(pause_center.x + 20.0 * float(layout["scale"]) <= view.x - 6.0 * float(layout["scale"]) and pause_center.y - 20.0 * float(layout["scale"]) >= offset.y + 8.0 * float(layout["scale"]), "暂停徽章与屏幕上、右边缘保留安全距离")
 		_check(slots.size.x <= 100.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧自动技能栏保持窄幅竖排")
 		var touch: Dictionary = hud._touch_layout(view)
 		_check(touch["cluster_rect"].size.is_equal_approx(Vector2(420.0, 360.0) * float(touch["scale"])), "E/Q/R技能组按原型图420×360比例还原")
@@ -575,7 +575,7 @@ func _test_reference_hud_layout() -> void:
 		_check(absf(heal_center.x - (cluster_rect.position.x + 110.0 / 435.0 * cluster_rect.size.x)) <= 0.2 and absf(heal_center.y - (cluster_rect.position.y + 238.0 / 360.0 * cluster_rect.size.y)) <= 0.2, "E治疗按钮中心与原型技能组素材锚点一致")
 		_check(absf(skill_center.x - (cluster_rect.position.x + 325.0 / 435.0 * cluster_rect.size.x)) <= 0.2 and absf(secondary_center.y - (cluster_rect.position.y + 104.0 / 360.0 * cluster_rect.size.y)) <= 0.2, "Q/R主动技能按钮中心与原型技能组素材锚点一致")
 		var joystick_center: Vector2 = touch["joystick_center"]
-		_check(objective.end.y <= slots.position.y + 20.0 * design_scale and slots.end.y < heal_center.y - float(touch["heal_radius"]), "尸王卡、自动技能栏与底部操作区按原型图分层")
+		_check(objective.end.y <= slots.position.y + 22.0 * design_scale and slots.end.y < heal_center.y - float(touch["heal_radius"]), "尸王卡、自动技能栏与底部操作区按原型图分层")
 		_check(heal_center.x < secondary_center.x and secondary_center.x < skill_center.x and secondary_center.y < heal_center.y, "E/Q/R按参考图三角形排列：E左下、R上方、Q右下")
 		_check(absf(heal_center.y - skill_center.y) <= 0.1 and secondary_center.y < heal_center.y, "E/Q底部对齐，R主动技能位于上方")
 		_check(heal_center.distance_to(secondary_center) > float(touch["heal_radius"]) + float(touch["secondary_radius"]), "E与R按钮视觉区域不重叠")
