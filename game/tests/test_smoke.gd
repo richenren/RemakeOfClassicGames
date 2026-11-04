@@ -552,16 +552,19 @@ func _test_reference_hud_layout() -> void:
 			_check(rect.position.x >= -0.1 and rect.position.y >= -0.1 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
 		_check(status.end.x < objective.position.x and status.end.x < layout["boss"].position.x, "方案C玩家卡与右上尸王卡、顶部Boss血条分区")
 		_check(kills.position.y >= status.end.y and kills.end.y < xp.position.y, "击杀统计独立放在角色卡下方，并与底部经验栏分离")
-		_check(is_equal_approx(status.size.x, 520.0 * float(layout["scale"])) and is_equal_approx(objective.size.x, 580.0 * float(layout["scale"])), "玩家与尸王卡采用原型横向展开比例，避免头像徽章挤压文字区")
+		_check(is_equal_approx(status.size.x, 520.0 * float(layout["scale"])) and is_equal_approx(objective.size.x, 580.0 * float(layout["scale"])) and is_equal_approx(status.size.y, 170.0 * float(layout["scale"])) and is_equal_approx(objective.size.y, 170.0 * float(layout["scale"])), "玩家与尸王卡采用原型横向展开比例，避免头像徽章挤压文字区")
 		_check(objective.end.x < pause_center.x - 19.0 * float(layout["scale"]), "右上尸王信息卡与暂停按钮留有间距")
 		_check(slots.size.x <= 90.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧自动技能栏保持窄幅竖排")
 		var touch: Dictionary = hud._touch_layout(view)
-		_check(touch["cluster_rect"].size == Vector2(360.0, 328.0) * float(touch["scale"]), "E/Q/R三角按钮热区与整组美术组件尺寸联动")
+		_check(touch["cluster_rect"].size == Vector2(320.0, 292.0) * float(touch["scale"]), "E/Q/R三角按钮热区与整组美术组件尺寸联动")
 		var skill_center: Vector2 = touch["skill_center"]
 		var heal_center: Vector2 = touch["heal_center"]
 		var secondary_center: Vector2 = touch["secondary_center"]
+		var cluster_rect: Rect2 = touch["cluster_rect"]
+		_check(absf(heal_center.x - (cluster_rect.position.x + 91.0 / 360.0 * cluster_rect.size.x)) <= 0.2 and absf(heal_center.y - (cluster_rect.position.y + 238.0 / 328.0 * cluster_rect.size.y)) <= 0.2, "E治疗按钮中心与缩小后技能组素材锚点一致")
+		_check(absf(skill_center.x - (cluster_rect.position.x + 269.0 / 360.0 * cluster_rect.size.x)) <= 0.2 and absf(secondary_center.y - (cluster_rect.position.y + 104.0 / 328.0 * cluster_rect.size.y)) <= 0.2, "Q/R主动技能按钮中心与缩小后技能组素材锚点一致")
 		var joystick_center: Vector2 = touch["joystick_center"]
-		_check(objective.position.y < slots.position.y and slots.end.y < heal_center.y - float(touch["heal_radius"]), "尸王卡、自动技能栏与底部操作区纵向分层")
+		_check(objective.end.y <= slots.position.y and slots.end.y < heal_center.y - float(touch["heal_radius"]), "尸王卡、自动技能栏与底部操作区纵向分层")
 		_check(heal_center.x < secondary_center.x and secondary_center.x < skill_center.x and secondary_center.y < heal_center.y, "E/Q/R按参考图三角形排列：E左下、R上方、Q右下")
 		_check(absf(heal_center.y - skill_center.y) <= 0.1 and secondary_center.y < heal_center.y, "E/Q底部对齐，R主动技能位于上方")
 		_check(heal_center.distance_to(secondary_center) > float(touch["heal_radius"]) + float(touch["secondary_radius"]), "E与R按钮视觉区域不重叠")
@@ -575,12 +578,12 @@ func _test_reference_hud_layout() -> void:
 	_check(load("res://assets/sprites/hud_skill_buttons.webp").get_size() == Vector2(384.0, 128.0), "E/Q/R使用独立技能按钮插画图集")
 	_check(load("res://assets/sprites/hud_reference/screen_frame.svg").get_size() == Vector2(1672.0, 941.0), "全屏金红装饰边框使用独立透明SVG素材")
 	_check(load("res://assets/sprites/hud_reference/pause_button.svg").get_size() == Vector2(64.0, 64.0), "暂停按钮使用独立鎏金圆形徽章素材")
-	_check(load("res://assets/sprites/hud_reference/player_card_ornate.svg").get_size() == Vector2(520.0, 215.0) and load("res://assets/sprites/hud_reference/boss_card_ornate.svg").get_size() == Vector2(580.0, 215.0) and load("res://assets/sprites/hud_reference/kill_card.svg").get_size() == Vector2(330.0, 93.0), "玩家、尸王头像框使用高细节浮雕装饰素材，击杀牌独立显示")
+	_check(load("res://assets/sprites/hud_reference/player_card_ornate.svg").get_size() == Vector2(520.0, 170.0) and load("res://assets/sprites/hud_reference/boss_card_ornate.svg").get_size() == Vector2(580.0, 170.0) and load("res://assets/sprites/hud_reference/kill_card.svg").get_size() == Vector2(330.0, 93.0), "玩家、尸王头像框使用高细节浮雕装饰素材，击杀牌独立显示")
 	_check(load("res://assets/sprites/hud_reference/joystick.svg").get_size() == Vector2(250.0, 235.0) and load("res://assets/sprites/hud_reference/skill_cluster.svg").get_size() == Vector2(360.0, 328.0) and load("res://assets/sprites/hud_reference/auto_rail.svg").get_size() == Vector2(82.0, 320.0) and load("res://assets/sprites/hud_reference/xp_footer.svg").get_size() == Vector2(720.0, 122.0), "摇杆、三角技能组、自动技能栏与经验底栏比例匹配组件原型")
 	var player_card_svg := FileAccess.get_file_as_string("res://assets/sprites/hud_reference/player_card_ornate.svg")
 	var boss_card_svg := FileAccess.get_file_as_string("res://assets/sprites/hud_reference/boss_card_ornate.svg")
-	_check(player_card_svg.contains("url(#gem)") and player_card_svg.contains("C54 183") and player_card_svg.contains("r=\"92\""), "玩家头像框包含红宝石、火焰丝带和多层鎏金浮雕")
-	_check(boss_card_svg.contains("url(#gem)") and boss_card_svg.contains("Q577 24") and boss_card_svg.contains("r=\"97\""), "尸王头像框包含独立王冠、龙纹、赤焰和立体徽章")
+	_check(player_card_svg.contains("url(#gem)") and player_card_svg.contains("viewBox=\"0 0 520 170\"") and player_card_svg.contains("r=\"75\""), "玩家头像框保留红宝石、火焰丝带和紧凑鎏金浮雕")
+	_check(boss_card_svg.contains("url(#gem)") and boss_card_svg.contains("viewBox=\"0 0 580 170\"") and boss_card_svg.contains("r=\"80\""), "尸王头像框保留王冠、龙纹、赤焰和紧凑浮雕")
 	var cluster_svg := FileAccess.get_file_as_string("res://assets/sprites/hud_reference/skill_cluster.svg")
 	_check(cluster_svg.contains("M180 62") and not cluster_svg.contains(">X<"), "R主动技能槽使用中式符箓笔画，不再显示X占位符")
 	hud.queue_free()
