@@ -1,21 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 82 320">
 <defs>
- <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff2b5"/><stop offset=".22" stop-color="#e0aa50"/><stop offset=".6" stop-color="#6e411d"/><stop offset=".84" stop-color="#f3c56b"/><stop offset="1" stop-color="#73431d"/></linearGradient>
- <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#1d120d"/><stop offset=".5" stop-color="#08090a"/><stop offset="1" stop-color="#21100d"/></linearGradient>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff4bf"/><stop offset=".18" stop-color="#e7b65e"/><stop offset=".48" stop-color="#70401a"/><stop offset=".64" stop-color="#ffe29a"/><stop offset=".86" stop-color="#8e4d1c"/><stop offset="1" stop-color="#f4c66d"/></linearGradient>
+ <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff7651"/><stop offset="1" stop-color="#630d17"/></linearGradient>
+ <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#28160f"/><stop offset=".45" stop-color="#09090a"/><stop offset="1" stop-color="#26100d"/></linearGradient>
+ <radialGradient id="disc"><stop stop-color="#342116"/><stop offset=".72" stop-color="#100b09"/><stop offset="1" stop-color="#050607"/></radialGradient>
 </defs>
-<path d="M14 2 H68 L80 16 V304 L68 318 H14 L2 304 V16 Z" fill="url(#panel)" stroke="url(#gold)" stroke-width="2.6"/>
-<path d="M18 8 H64 L73 19 V301 L64 312 H18 L9 301 V19 Z" fill="none" stroke="#93652f" stroke-width="1"/>
-<path d="M9 88 H73 M9 166 H73 M9 244 H73" stroke="#a87939" stroke-width=".8" opacity=".4"/>
-<!-- top automatic talisman -->
-<path d="M31 18 H51 L55 25 V53 L51 61 H31 L27 53 V25 Z" fill="#e9c36c" stroke="url(#gold)" stroke-width="2"/>
-<path d="M35 26 l4 4 -3 5 6 4 -5 5 4 5 M46 25 l-3 7 5 5 -4 7" fill="none" stroke="#9a2920" stroke-width="1.7"/>
-<path d="M31 16 H51 M31 62 H51" stroke="url(#gold)" stroke-width="2"/>
-<text x="41" y="80" fill="#f2d69a" font-family="serif" font-size="12" text-anchor="middle">自动</text>
-<g fill="none" stroke="url(#gold)" stroke-width="2.3">
+<path d="M14 2H68L80 16V304L68 318H14L2 304V16Z" fill="#050607" stroke="#160b07" stroke-width="3"/>
+<path d="M14 3H68L79 17V303L68 317H14L3 303V17Z" fill="url(#panel)" stroke="url(#gold)" stroke-width="2.7"/>
+<path d="M18 9H64L73 20V300L64 311H18L9 300V20Z" fill="none" stroke="#9b6b35" stroke-width="1"/>
+<path d="M9 88H73M9 166H73M9 244H73" stroke="#c18a43" stroke-width=".9" opacity=".45"/>
+<g fill="none" stroke="url(#gold)" stroke-width="1.4" opacity=".8">
+ <path d="M14 25Q41 9 68 25M14 296Q41 312 68 296"/>
+ <path d="M10 92L17 85L24 92M58 92L65 85L72 92M10 248L17 241L24 248M58 248L65 241L72 248"/>
+</g>
+<!-- temple crest for the automatic basic attack -->
+<circle cx="41" cy="43" r="27" fill="url(#disc)" stroke="url(#gold)" stroke-width="2.5"/>
+<circle cx="41" cy="43" r="22" fill="none" stroke="#b98743" stroke-width=".9"/>
+<g fill="url(#gold)" stroke="#603916" stroke-width=".8" stroke-linejoin="round">
+ <path d="M21 48H61L58 52H24Z"/>
+ <path d="M25 42H57L54 46H28Z"/>
+ <path d="M29 36H53L50 40H32Z"/>
+ <path d="M34 30H48L45 34H37Z"/>
+ <path d="M39 25H43V30H39Z"/>
+ <path d="M28 48V57H32V48M38 48V57H42V48M48 48V57H52V48"/>
+</g>
+<path d="M41 22L45 28L41 32L37 28Z" fill="#f1d38b" stroke="#7b4a20" stroke-width=".8"/>
+<g fill="none" stroke="url(#gold)" stroke-width="2.2">
  <circle cx="41" cy="130" r="25"/><circle cx="41" cy="208" r="25"/><circle cx="41" cy="286" r="25"/>
  <circle cx="41" cy="130" r="20"/><circle cx="41" cy="208" r="20"/><circle cx="41" cy="286" r="20"/>
 </g>
-<g fill="url(#gold)"><path d="M41 116 V144 M27 130 H55"/><path d="M41 194 V222 M27 208 H55"/><path d="M41 272 V300 M27 286 H55"/></g>
-<path d="M41 0 l7 9 -7 9 -7 -9z M41 311 l7 9 -7 9 -7 -9z" fill="url(#gold)"/>
-<path d="M6 22 L17 10 M76 22 L65 10 M6 298 L17 310 M76 298 L65 310" stroke="url(#gold)" stroke-width="1.5"/>
+<g fill="url(#gold)"><path d="M41 116V144M27 130H55"/><path d="M41 194V222M27 208H55"/><path d="M41 272V300M27 286H55"/></g>
+<g fill="none" stroke="#fff0b2" stroke-width=".7" opacity=".7"><circle cx="41" cy="130" r="15"/><circle cx="41" cy="208" r="15"/><circle cx="41" cy="286" r="15"/></g>
+<path d="M41 0L48 9L41 18L34 9Z" fill="url(#gold)" stroke="#5c3517" stroke-width=".8"/>
+<path d="M41 311L48 320L41 329L34 320Z" fill="url(#gold)" stroke="#5c3517" stroke-width=".8"/>
+<path d="M41 318C31 327 34 336 41 341C48 336 51 327 41 318Z" fill="url(#red)" stroke="url(#gold)" stroke-width="1"/>
+<path d="M41 326V342" stroke="#e6b55d" stroke-width="1.2"/>
 </svg>
