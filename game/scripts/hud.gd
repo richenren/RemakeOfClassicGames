@@ -68,7 +68,7 @@ func _reference_hud_layout(view: Vector2) -> Dictionary:
 	var objective_rect := Rect2(offset + Vector2(1040.0, 0.0) * unit, Vector2(580.0, 240.0) * unit)
 	var slots_rect := Rect2(offset + Vector2(1520.0, 220.0) * unit, Vector2(92.0, 365.0) * unit)
 	var xp_rect := Rect2(offset + Vector2(440.0, 808.0) * unit, Vector2(720.0, 122.0) * unit)
-	var boss_rect := Rect2(offset + Vector2(590.0, 14.0) * unit, Vector2(492.0, 46.0) * unit)
+	var boss_rect := Rect2(offset + Vector2(642.0, 14.0) * unit, Vector2(388.0, 46.0) * unit)
 	var pause_center := Vector2(view.x - 28.0 * unit, offset.y + 32.0 * unit)
 	return {
 		"scale": unit, "offset": offset, "status": status_rect, "kills": kills_rect,
