@@ -4,18 +4,18 @@
  <radialGradient id="disc"><stop stop-color="#302014"/><stop offset=".76" stop-color="#0d0c0c"/><stop offset="1" stop-color="#050607"/></radialGradient>
  <linearGradient id="dragon" x2="0" y2="1"><stop stop-color="#f8d889"/><stop offset=".5" stop-color="#9b642d"/><stop offset="1" stop-color="#4a2915"/></linearGradient>
 </defs>
-<path d="M125 4 C96 12 85 34 75 45 M125 4 C154 12 165 34 175 45 M15 118 Q2 100 10 81 M235 118 Q248 100 240 81 M125 231 Q93 220 78 196 M125 231 Q157 220 172 196" fill="none" stroke="url(#gold)" stroke-width="2" opacity=".9"/>
+<path d="M125 4 C96 12 85 34 75 45 M125 4 C154 12 165 34 175 45 M15 118 Q2 100 10 81 M235 118 Q248 100 240 81 M125 231 Q93 220 78 196 M125 231 Q157 220 172 196" fill="none" stroke="url(#gold)" stroke-width="1.6" opacity=".68"/>
 <!-- stylized guardian dragons flanking the control wheel -->
-<path d="M21 56 Q4 38 19 26 Q32 18 43 31 L36 37 L48 40 L39 48 Q34 61 21 56 Z M229 56 Q246 38 231 26 Q218 18 207 31 L214 37 L202 40 L211 48 Q216 61 229 56 Z" fill="url(#dragon)" stroke="#5d391b" stroke-width="1.5"/>
-<path d="M20 30 l-8 -9 14 3 7 -8 3 15 M230 30 l8 -9 -14 3 -7 -8 -3 15" fill="none" stroke="#f0cb7d" stroke-width="2"/>
-<circle cx="125" cy="48" r="35" fill="url(#disc)" stroke="url(#gold)" stroke-width="3.2"/>
+<path d="M21 56 Q4 38 19 26 Q32 18 43 31 L36 37 L48 40 L39 48 Q34 61 21 56 Z M229 56 Q246 38 231 26 Q218 18 207 31 L214 37 L202 40 L211 48 Q216 61 229 56 Z" fill="url(#dragon)" stroke="#5d391b" stroke-width="1.5" opacity=".84"/>
+<path d="M20 30 l-8 -9 14 3 7 -8 3 15 M230 30 l8 -9 -14 3 -7 -8 -3 15" fill="none" stroke="#f0cb7d" stroke-width="1.6" opacity=".78"/>
+<circle cx="125" cy="48" r="35" fill="url(#disc)" stroke="url(#gold)" stroke-width="2.6"/>
 <circle cx="52" cy="118" r="35" fill="url(#disc)" stroke="url(#gold)" stroke-width="3.2"/>
 <circle cx="198" cy="118" r="35" fill="url(#disc)" stroke="url(#gold)" stroke-width="3.2"/>
 <circle cx="125" cy="188" r="35" fill="url(#disc)" stroke="url(#gold)" stroke-width="3.2"/>
-<g fill="none" stroke="#f3d38b" stroke-width="1" opacity=".8"><circle cx="125" cy="48" r="29"/><circle cx="52" cy="118" r="29"/><circle cx="198" cy="118" r="29"/><circle cx="125" cy="188" r="29"/></g>
+<g fill="none" stroke="#f3d38b" stroke-width="1" opacity=".65"><circle cx="125" cy="48" r="29"/><circle cx="52" cy="118" r="29"/><circle cx="198" cy="118" r="29"/><circle cx="125" cy="188" r="29"/></g>
 <circle cx="125" cy="118" r="22" fill="#130e0b" stroke="url(#gold)" stroke-width="3"/>
 <path d="M125 96 A22 22 0 0 1 125 140 A11 11 0 0 0 125 118 A11 11 0 0 1 125 96" fill="url(#gold)"/>
 <circle cx="125" cy="107" r="3.5" fill="#170f0a"/><circle cx="125" cy="129" r="3.5" fill="#f3d38b"/>
 <g fill="#f5dca2" font-family="serif" font-size="22" text-anchor="middle" dominant-baseline="central"><text x="125" y="48">W</text><text x="52" y="118">A</text><text x="198" y="118">D</text><text x="125" y="188">S</text></g>
-<g fill="none" stroke="url(#gold)" stroke-width="2"><path d="M125 0 l7 9 -7 9 -7 -9z M125 218 l7 9 -7 8 -7 -8z M0 118 l9 -7 9 7 -9 7z M232 118 l9 -7 9 7 -9 7z"/></g>
+<g fill="none" stroke="url(#gold)" stroke-width="1.6"><path d="M125 0 l7 9 -7 9 -7 -9z M125 218 l7 9 -7 8 -7 -8z M0 118 l9 -7 9 7 -9 7z M232 118 l9 -7 9 7 -9 7z"/></g>
 </svg>

@@ -84,6 +84,7 @@ func _test_render_hierarchy(main: Variant) -> void:
 func _test_hud_presentation(main: Variant) -> void:
 	var hud: Variant = main.hud
 	var objective: Dictionary = hud.objective_data()
+	_check(str(main.player.character_display_name) == "龙虎山天师", "默认玩家角色名固定为龙虎山天师")
 	_check(objective.get("title", "").contains("镇压尸潮"), "战斗 HUD 显示当前阶段目标")
 	_check(objective.get("detail", "").contains("倒计时"), "战斗 HUD 显示尸王登场倒计时")
 	_check(float(objective.get("progress", -1.0)) >= 0.0 and float(objective.get("progress", 2.0)) <= 1.0, "任务进度条比例限制在 0 到 1")
@@ -547,6 +548,11 @@ func _test_reference_hud_layout() -> void:
 		var xp: Rect2 = layout["xp"]
 		var pause_center: Vector2 = layout["pause_center"]
 		var offset: Vector2 = layout["offset"]
+		var design_scale: float = layout["scale"]
+		_check(kills.position.is_equal_approx(offset + Vector2(132.0, 210.0) * design_scale) and kills.size.is_equal_approx(Vector2(280.0, 78.0) * design_scale), "击杀牌使用最终定稿的280×78尺寸并与人物卡中心对齐")
+		_check(objective.position.is_equal_approx(Vector2(view.x - 676.0 * design_scale, offset.y + 18.0 * design_scale)), "尸王卡保留最终定稿的右移安全间距")
+		_check(slots.position.is_equal_approx(Vector2(view.x - 112.0 * design_scale, offset.y + 220.0 * design_scale)), "自动技能栏位于尸王卡下方并保持安全间距")
+		_check(xp.position.is_equal_approx(offset + Vector2(476.0, 770.0) * design_scale), "经验底栏使用最终定稿的上移位置")
 		for key in ["status", "objective", "time", "slots", "xp", "boss", "kills"]:
 			var rect: Rect2 = layout[key]
 			_check(rect.position.x >= -0.1 and rect.position.y >= -0.1 and rect.end.x <= view.x + 0.1 and rect.end.y <= view.y + 0.1, "定稿HUD的%s适配%d×%d" % [key, roundi(view.x), roundi(view.y)])
@@ -558,7 +564,10 @@ func _test_reference_hud_layout() -> void:
 		_check(pause_center.x + 25.0 * float(layout["scale"]) <= view.x - 10.0 * float(layout["scale"]) and pause_center.y - 25.0 * float(layout["scale"]) >= offset.y + 10.0 * float(layout["scale"]), "暂停徽章与屏幕上、右边缘保留安全距离")
 		_check(slots.size.x <= 90.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧自动技能栏保持窄幅竖排")
 		var touch: Dictionary = hud._touch_layout(view)
-		_check(touch["cluster_rect"].size.is_equal_approx(Vector2(300.0, 273.333333) * float(touch["scale"])), "E/Q/R三角按钮美术组件进一步紧凑，仍保持原始宽高比")
+		_check(touch["cluster_rect"].size.is_equal_approx(Vector2(276.0, 251.2) * float(touch["scale"])), "E/Q/R三角按钮美术组件采用最终定稿尺寸")
+		_check(touch["joystick_rect"].size.is_equal_approx(Vector2(230.0, 216.2) * float(touch["scale"])) and touch["joystick_center"].is_equal_approx(offset + Vector2(136.0, 780.0) * design_scale), "左下摇杆视觉尺寸与中心位置按最终定稿还原")
+		_check(is_equal_approx(float(touch["joystick_radius"]), 125.0 * design_scale) and is_equal_approx(float(touch["joystick_move_radius"]), 49.0 * design_scale), "摇杆视觉缩放不改变原有触控移动范围")
+		_check(is_equal_approx(float(touch["skill_radius"]), 54.0 * design_scale) and is_equal_approx(float(touch["heal_radius"]), 54.0 * design_scale) and is_equal_approx(float(touch["skill_hit_radius"]), 64.0 * design_scale) and is_equal_approx(float(touch["heal_hit_radius"]), 64.0 * design_scale), "E/Q视觉半径缩小但实际触控热区保持64设计单位")
 		var skill_center: Vector2 = touch["skill_center"]
 		var heal_center: Vector2 = touch["heal_center"]
 		var secondary_center: Vector2 = touch["secondary_center"]
