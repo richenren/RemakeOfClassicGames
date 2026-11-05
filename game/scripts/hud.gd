@@ -63,9 +63,9 @@ func _reference_hud_layout(view: Vector2) -> Dictionary:
 	var unit := clampf(minf(view.x / 1672.0, view.y / 941.0), 0.36, 1.5)
 	var canvas_size := Vector2(1672.0, 941.0) * unit
 	var offset := (view - canvas_size) * 0.5
-	var status_rect := Rect2(offset + Vector2(0.0, 0.0) * unit, Vector2(500.0, 200.0) * unit)
+	var status_rect := Rect2(offset + Vector2(0.0, 0.0) * unit, Vector2(490.0, 235.0) * unit)
 	var kills_rect := Rect2(offset + Vector2(126.0, 204.0) * unit, Vector2(270.0, 72.0) * unit)
-	var objective_rect := Rect2(offset + Vector2(1110.0, 0.0) * unit, Vector2(520.0, 200.0) * unit)
+	var objective_rect := Rect2(offset + Vector2(1110.0, 0.0) * unit, Vector2(520.0, 215.0) * unit)
 	var slots_rect := Rect2(offset + Vector2(1508.0, 210.0) * unit, Vector2(112.0, 410.0) * unit)
 	var xp_rect := Rect2(offset + Vector2(456.0, 820.0) * unit, Vector2(720.0, 108.0) * unit)
 	var boss_rect := Rect2(offset + Vector2(642.0, 14.0) * unit, Vector2(388.0, 46.0) * unit)
@@ -215,15 +215,15 @@ func _draw_circular_texture(texture: Texture2D, center: Vector2, radius: float, 
 
 func _draw_player_card(player, rect: Rect2, unit: float) -> void:
 	draw_texture_rect(HUD_PLAYER_CARD_FRAME, rect, false)
-	var portrait_center := rect.position + Vector2(100.0, 101.0) * unit
+	var portrait_center := rect.position + Vector2(101.5, 118.5) * unit
 	var portrait: Texture2D = player.character_portrait if player.character_portrait != null else PLAYER_PORTRAIT_TEXTURE
-	draw_circle(portrait_center, 78.0 * unit, Color("#08090a", 0.98))
-	_draw_circular_texture(portrait, portrait_center, 68.0 * unit)
+	draw_circle(portrait_center, 75.0 * unit, Color("#08090a", 0.98))
+	_draw_circular_texture(portrait, portrait_center, 75.0 * unit)
 	var name_text := str(player.character_display_name)
-	var name_rect := Rect2(rect.position + Vector2(184.0, 58.0) * unit, Vector2(282.0, 54.0) * unit)
+	var name_rect := Rect2(rect.position + Vector2(197.0, 78.0) * unit, Vector2(270.0, 56.0) * unit)
 	var name_size := _fit_font_size(name_text, name_rect.size.x - 12.0 * unit, maxi(18, roundi(43.0 * unit)), maxi(14, roundi(24.0 * unit)))
 	_center_text_outline(name_rect, name_text, name_size, Color("#ffe4a0"), 1)
-	var hp_rect := Rect2(rect.position + Vector2(188.0, 125.0) * unit, Vector2(266.0, 30.0) * unit)
+	var hp_rect := Rect2(rect.position + Vector2(197.0, 145.0) * unit, Vector2(264.0, 32.0) * unit)
 	_draw_health_pill(hp_rect, player.hp / maxf(1.0, player.max_hp), Color("#d34b43"), true)
 	_center_text_outline(hp_rect.grow(1.5 * unit), "%d / %d" % [roundi(player.hp), roundi(player.max_hp)], maxi(12, roundi(20.0 * unit)), Color("#fff4df"), 1)
 
@@ -240,27 +240,27 @@ func _draw_kill_card(rect: Rect2, unit: float) -> void:
 
 func _draw_boss_card(rect: Rect2, unit: float) -> void:
 	draw_texture_rect(HUD_BOSS_CARD_FRAME, rect, false)
-	var portrait_center := rect.position + Vector2(104.0, 101.0) * unit
-	draw_circle(portrait_center, 82.0 * unit, Color("#120d0d", 0.98))
+	var portrait_center := rect.position + Vector2(99.0, 108.0) * unit
+	draw_circle(portrait_center, 78.0 * unit, Color("#120d0d", 0.98))
 	var portrait := _boss_profile_portrait()
 	if portrait == BOSS_UI_PORTRAIT_DEFAULT:
-		_draw_circular_texture(portrait, portrait_center, 68.0 * unit)
+		_draw_circular_texture(portrait, portrait_center, 69.0 * unit)
 	else:
-		_draw_circular_texture(portrait, portrait_center, 68.0 * unit, Rect2(54.0, 9.0, 84.0, 90.0))
+		_draw_circular_texture(portrait, portrait_center, 69.0 * unit, Rect2(54.0, 9.0, 84.0, 90.0))
 	var objective := objective_data()
 	var boss_title := str(objective.get("boss_name", main_ref.get_boss_ui_profile().get("name", "尸王")))
 	var title_text := "镇邪令·" + boss_title
-	var title_rect := Rect2(rect.position + Vector2(184.0, 54.0) * unit, Vector2(320.0, 52.0) * unit)
+	var title_rect := Rect2(rect.position + Vector2(185.0, 70.0) * unit, Vector2(320.0, 52.0) * unit)
 	_center_text_outline(title_rect, title_text, _fit_font_size(title_text, title_rect.size.x - 8.0 * unit, maxi(18, roundi(38.0 * unit)), maxi(14, roundi(23.0 * unit))), Color("#ffe0a0"), 1)
 	var spawning := str(objective.get("kind", "")) == "survival"
 	var countdown_label := "现身倒计时" if spawning else "尸王已降临"
-	var countdown_rect := Rect2(rect.position + Vector2(190.0, 112.0) * unit, Vector2(145.0, 30.0) * unit)
+	var countdown_rect := Rect2(rect.position + Vector2(192.0, 132.0) * unit, Vector2(145.0, 30.0) * unit)
 	_center_text_outline(countdown_rect, countdown_label, maxi(12, roundi(21.0 * unit)), Color("#f4d18a"), 1)
 	if spawning:
 		var remaining := int(objective.get("remaining_seconds", 0))
 		var countdown := "%02d:%02d" % [remaining / 60, remaining % 60]
 		var pulse := 1.0 if remaining > 10 else 0.74 + 0.26 * sin(main_ref.elapsed_seconds * 13.0)
-		var time_rect := Rect2(rect.position + Vector2(345.0, 105.0) * unit, Vector2(150.0, 52.0) * unit)
+		var time_rect := Rect2(rect.position + Vector2(348.0, 125.0) * unit, Vector2(150.0, 52.0) * unit)
 		_center_text_outline(time_rect, countdown, maxi(18, roundi(43.0 * unit)), Color("#ffd17c", pulse), 1)
 	else:
 		var boss = main_ref.get_boss()
