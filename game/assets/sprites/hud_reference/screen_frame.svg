@@ -20,7 +20,7 @@
 <g fill="none" stroke="url(#red)" stroke-linecap="round">
  <path d="M45 24C71 4 101 18 98 39C96 55 77 57 69 43C64 34 76 24 87 30" stroke-width="4"/>
  <path d="M1627 24C1601 4 1571 18 1574 39C1576 55 1595 57 1603 43C1608 34 1596 24 1585 30" stroke-width="4"/>
- <path d="M22 774C3 817 20 858 65 876C91 887 105 911 133 929M1650 774C1669 817 1652 858 1607 876C1581 887 1567 911 1539 929" stroke-width="7"/>
+ <path d="M22 774C3 817 20 858 65 876C91 887 105 911 133 929M1650 774C1669 817 1652 858 1607 876C1581 887 1567 911 1539 929" stroke-width="5.2"/>
  <path d="M25 791C13 825 31 852 67 867C97 880 111 902 136 915M1647 791C1659 825 1641 852 1605 867C1575 880 1561 902 1536 915" stroke-width="2.2"/>
 </g>
 <g fill="url(#gem)" stroke="url(#gold)" stroke-width="2">
@@ -35,27 +35,27 @@
  <path d="M818 20H800M854 20H872M818 920H800M854 920H872"/>
 </g>
 
-<g id="corner-filigree" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
+<g id="corner-filigree" transform="translate(0 0) scale(.72 .72)" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
  <path d="M13 160V48Q13 13 48 13H160M25 143V57Q25 25 57 25H143" stroke-width="2.2"/>
  <path d="M31 118C52 107 49 79 69 66C89 52 117 61 119 82C121 101 101 112 86 101C76 94 80 80 91 78" stroke-width="2.8"/>
  <path d="M28 43H78V93H28ZM40 43V93M65 43V93M28 68H78" stroke-width="1.7"/>
  <path d="M18 178Q43 162 58 177Q73 193 57 207Q43 218 32 207Q25 198 35 191Q44 185 50 194" stroke-width="2"/>
  <path d="M36 29Q58 13 77 28Q92 40 81 54Q70 67 57 57Q48 50 56 42" stroke="#f5d58a" stroke-width="1.2"/>
 </g>
-<g transform="translate(1672 0) scale(-1 1)" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
+<g transform="translate(1672 0) scale(-.72 .72)" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
  <path d="M13 160V48Q13 13 48 13H160M25 143V57Q25 25 57 25H143" stroke-width="2.2"/>
  <path d="M31 118C52 107 49 79 69 66C89 52 117 61 119 82C121 101 101 112 86 101C76 94 80 80 91 78" stroke-width="2.8"/>
  <path d="M28 43H78V93H28ZM40 43V93M65 43V93M28 68H78" stroke-width="1.7"/>
  <path d="M18 178Q43 162 58 177Q73 193 57 207Q43 218 32 207Q25 198 35 191Q44 185 50 194" stroke-width="2"/>
  <path d="M36 29Q58 13 77 28Q92 40 81 54Q70 67 57 57Q48 50 56 42" stroke="#f5d58a" stroke-width="1.2"/>
 </g>
-<g transform="translate(0 941) scale(1 -1)" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
+<g transform="translate(0 941) scale(.72 -.72)" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
  <path d="M13 160V48Q13 13 48 13H160M25 143V57Q25 25 57 25H143" stroke-width="2.2"/>
  <path d="M31 118C52 107 49 79 69 66C89 52 117 61 119 82C121 101 101 112 86 101C76 94 80 80 91 78" stroke-width="2.8"/>
  <path d="M28 43H78V93H28ZM40 43V93M65 43V93M28 68H78" stroke-width="1.7"/>
  <path d="M18 178Q43 162 58 177Q73 193 57 207Q43 218 32 207Q25 198 35 191Q44 185 50 194" stroke-width="2"/>
 </g>
-<g transform="translate(1672 941) scale(-1 -1)" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
+<g transform="translate(1672 941) scale(-.72 -.72)" fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
  <path d="M13 160V48Q13 13 48 13H160M25 143V57Q25 25 57 25H143" stroke-width="2.2"/>
  <path d="M31 118C52 107 49 79 69 66C89 52 117 61 119 82C121 101 101 112 86 101C76 94 80 80 91 78" stroke-width="2.8"/>
  <path d="M28 43H78V93H28ZM40 43V93M65 43V93M28 68H78" stroke-width="1.7"/>
