@@ -1439,7 +1439,7 @@ func _touch_layout(view: Vector2) -> Dictionary:
 	var heal_center := cluster_rect.position + Vector2(110.0 / 435.0 * cluster_rect.size.x, 238.0 / 360.0 * cluster_rect.size.y)
 	var skill_center := cluster_rect.position + Vector2(325.0 / 435.0 * cluster_rect.size.x, 238.0 / 360.0 * cluster_rect.size.y)
 	var secondary_center := cluster_rect.position + Vector2(217.5 / 435.0 * cluster_rect.size.x, 104.0 / 360.0 * cluster_rect.size.y)
-	var button_radius := 75.0 * scale
+	var button_radius := 60.0 * scale
 	return {
 		"scale": scale, "offset": offset,
 		"joystick_center": joystick_center, "joystick_radius": joystick_radius, "joystick_rect": joystick_rect,
