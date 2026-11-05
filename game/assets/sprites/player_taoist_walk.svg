@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="160" viewBox="0 0 128 160">
+<defs>
+ <linearGradient id="robe" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f3d99c"/><stop offset=".45" stop-color="#c29a57"/><stop offset="1" stop-color="#79502f"/></linearGradient>
+ <linearGradient id="silk" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0d0"/><stop offset="1" stop-color="#c8b38c"/></linearGradient>
+ <linearGradient id="inner" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#313a3b"/><stop offset="1" stop-color="#11191c"/></linearGradient>
+ <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8d6b2"/><stop offset=".65" stop-color="#d69e78"/><stop offset="1" stop-color="#8c5946"/></linearGradient>
+ <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#39302a"/><stop offset=".55" stop-color="#171819"/><stop offset="1" stop-color="#080d10"/></linearGradient>
+</defs>
+<!-- A slim peachwood sword and flowing waist ribbons give the Taoist a more dynamic silhouette. -->
+<g id="peachwood-sword">
+ <path d="M100 91L111 49L120 17L124 18L117 52L105 95Z" fill="#a6b0b2" stroke="#493b2b" stroke-width="1.6"/>
+ <path d="M112 48L120 17L122 18L116 49Z" fill="#fff0c7" opacity=".94"/>
+ <path d="M97 89L111 94L108 100L94 95Z" fill="#d2a65a" stroke="#64462b" stroke-width="1.4"/>
+ <path d="M100 94L93 107L89 105L96 92Z" fill="#5d2b25" stroke="#2b1b18" stroke-width="1.2"/>
+ <path d="M93 106L89 116M96 105L95 118" stroke="#a8342b" stroke-width="2.2" stroke-linecap="round"/>
+</g>
+<g id="flowing-sashes">
+ <path d="M45 103C31 108 25 120 13 128C29 129 42 121 51 111Z" fill="#8d2e29" stroke="#4c2420" stroke-width="1.4"/>
+ <path d="M43 108C32 115 28 120 22 124" fill="none" stroke="#d8b76e" stroke-width="1.2"/>
+ <path d="M81 103C97 108 104 117 117 123C109 110 98 103 85 99Z" fill="#c7a15a" stroke="#6b4c2d" stroke-width="1.2"/>
+ <path d="M84 105C97 111 105 116 111 120" fill="none" stroke="#f2d99a" stroke-width="1.1"/>
+</g>
+<!-- alternating long stride -->
+<path d="M48 109 L60 112 L48 133 L33 143 L25 139 L38 124Z" fill="#202327" stroke="#9a7847" stroke-width="1.4"/>
+<path d="M66 110 L78 108 L90 129 L88 141 L77 149 L70 136Z" fill="#202327" stroke="#9a7847" stroke-width="1.4"/>
+<path d="M25 136 Q36 131 47 138 L44 146 Q32 152 22 145Z" fill="#181b1e" stroke="#d0a35c" stroke-width="1.5"/>
+<path d="M76 143 Q86 137 94 141 L98 148 Q87 154 75 151Z" fill="#181b1e" stroke="#d0a35c" stroke-width="1.5"/>
+<path d="M47 51 Q39 54 35 65 L26 81 L35 90 L44 77 L40 111 Q50 124 64 126 Q79 124 89 111 L83 78 L95 89 L104 81 L92 64 Q86 54 78 51Z" fill="url(#robe)" stroke="#4b3424" stroke-width="2"/>
+<path d="M49 52 L64 63 L78 52 L81 111 L64 128 L47 111Z" fill="url(#inner)" stroke="#101719" stroke-width="1.6"/>
+<path d="M48 51 L64 63 L57 74 L43 59Z" fill="url(#silk)" stroke="#9a7546" stroke-width="1.1"/><path d="M79 51 L64 63 L71 74 L85 59Z" fill="url(#silk)" stroke="#9a7546" stroke-width="1.1"/>
+<path d="M62 65 L68 83 L64 110 L59 83Z" fill="#d3ad66" stroke="#6e492c" stroke-width="1"/>
+<!-- arms swing opposite the stride -->
+<path d="M42 58 Q34 61 31 70 L20 79 Q16 84 22 90 L33 87 L48 73Z" fill="url(#robe)" stroke="#6e4d2e" stroke-width="1.6"/>
+<path d="M22 79 L33 75 L43 70 L46 75 L33 88 L23 90Z" fill="url(#silk)" stroke="#9b7c51" stroke-width="1.1"/>
+<path d="M83 58 Q91 61 94 69 L107 83 Q110 88 104 92 L94 87 L80 73Z" fill="url(#robe)" stroke="#6e4d2e" stroke-width="1.6"/>
+<path d="M105 83 L95 75 L87 70 L83 75 L94 88 L104 92Z" fill="url(#silk)" stroke="#9b7c51" stroke-width="1.1"/>
+<path d="M21 80 L28 77 L34 84 L29 95 L22 96 L18 89Z M96 82 L103 79 L109 86 L105 95 L98 97 L94 90Z" fill="url(#skin)" stroke="#76503a" stroke-width="1.1"/>
+<path d="M19 86 L30 82 L34 89 L29 95 L22 96Z M94 88 L105 84 L109 91 L105 96 L98 97Z" fill="#efe0c1" stroke="#92734b" stroke-width="1.2"/>
+<path d="M42 96 Q64 102 86 96 L88 104 Q64 111 40 104Z" fill="#262322" stroke="#c39a52" stroke-width="1.5"/>
+<path d="M59 99 L68 99 L71 106 L64 110 L57 106Z" fill="#e9c575" stroke="#6d492c" stroke-width="1.2"/>
+<path d="M45 105 L40 119 L44 129 L50 113Z M84 105 L90 119 L84 129 L79 113Z" fill="#a73d32" stroke="#5d2923" stroke-width="1"/>
+<!-- raised talisman -->
+<path d="M16 47 L28 44 L35 68 L23 72Z" fill="#f5df9f" stroke="#7c522d" stroke-width="1.5"/><path d="M20 51 L28 48 L32 66 L24 69Z" fill="#fff0bd" stroke="#c49b55" stroke-width=".8"/><path d="M22 53 L29 56 L23 60 L30 63 L25 67" fill="none" stroke="#a62e28" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- face and hair consistent with idle -->
+<path d="M49 26 Q51 17 64 17 Q76 18 79 28 L76 41 Q72 49 64 51 Q55 49 51 41Z" fill="url(#skin)" stroke="#5b3929" stroke-width="1.4"/>
+<path d="M48 29 Q43 18 53 12 Q64 7 73 13 Q83 17 80 31 L75 27 L71 21 L65 24 L57 21 L52 28Z" fill="url(#hair)" stroke="#090d10" stroke-width="1.4"/>
+<path d="M53 17 Q50 7 60 4 Q70 3 74 12 L70 20 L59 21Z" fill="url(#hair)" stroke="#111417" stroke-width="1.4"/><path d="M53 13 Q64 18 75 11 L76 15 Q64 23 52 17Z" fill="#a6322c"/>
+<path d="M52 30 L60 28 M68 28 L76 30" stroke="#34231d" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="56" cy="33.5" rx="2" ry="1.5" fill="#11191a"/><ellipse cx="72" cy="33.5" rx="2" ry="1.5" fill="#11191a"/><path d="M64 34 L61 40 L65 41 M59 44 Q64 46 69 43" fill="none" stroke="#9b6549" stroke-width="1.2" stroke-linecap="round"/>
+<path d="M38 69 L48 88 L45 109 M90 69 L80 88 L84 109 M54 77 L51 98 M73 77 L77 98" fill="none" stroke="#f4d38c" stroke-width="1.25" opacity=".9"/>
+<path d="M53 116 L46 134 M74 116 L82 135" stroke="#e7c47a" stroke-width="1" opacity=".7"/>
+</svg>

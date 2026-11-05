@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<defs>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff7c9"/><stop offset=".18" stop-color="#f4ca70"/><stop offset=".42" stop-color="#9b5c23"/><stop offset=".62" stop-color="#ffe39a"/><stop offset=".84" stop-color="#8b4c1c"/><stop offset="1" stop-color="#f5c76a"/></linearGradient>
+ <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff7450"/><stop offset=".5" stop-color="#c52a28"/><stop offset="1" stop-color="#5d1016"/></linearGradient>
+ <radialGradient id="disc"><stop stop-color="#3a2115"/><stop offset=".68" stop-color="#140d0b"/><stop offset="1" stop-color="#050607"/></radialGradient>
+ <radialGradient id="gem"><stop stop-color="#fff4ce"/><stop offset=".28" stop-color="#ff7252"/><stop offset=".7" stop-color="#a70e1b"/><stop offset="1" stop-color="#39080e"/></radialGradient>
+</defs>
+<circle cx="32" cy="33" r="29" fill="#050607" opacity=".72"/>
+<circle cx="32" cy="31" r="28" fill="url(#disc)" stroke="#2b130b" stroke-width="4"/>
+<circle cx="32" cy="31" r="25.5" fill="none" stroke="url(#gold)" stroke-width="2.6"/>
+<circle cx="32" cy="31" r="21.5" fill="none" stroke="#9c672d" stroke-width="1"/>
+<circle cx="32" cy="31" r="18.5" fill="none" stroke="#f5d58a" stroke-width=".8" opacity=".8"/>
+<g fill="none" stroke="url(#red)" stroke-linecap="round">
+ <path d="M8 24C3 17 8 10 15 9C12 15 16 18 20 19" stroke-width="2.4"/>
+ <path d="M56 24C61 17 56 10 49 9C52 15 48 18 44 19" stroke-width="2.4"/>
+ <path d="M10 43C7 49 12 55 18 55M54 43C57 49 52 55 46 55" stroke-width="2"/>
+</g>
+<g fill="url(#gold)" stroke="#5a3216" stroke-width=".8">
+ <path d="M32 0L36 6L32 12L28 6Z"/><path d="M32 50L37 57L32 64L27 57Z"/>
+ <path d="M0 31L6 27L12 31L6 35Z"/><path d="M64 31L58 27L52 31L58 35Z"/>
+</g>
+<path d="M32 2L35 6L32 10L29 6Z" fill="url(#gem)" stroke="#ffe7a0" stroke-width=".8"/>
+<path d="M32 53L35 57L32 61L29 57Z" fill="url(#gem)" stroke="#ffe7a0" stroke-width=".8"/>
+<g>
+ <rect x="22" y="19" width="7" height="24" rx="2" fill="#3b1d0d" stroke="#5a3519" stroke-width="1.2"/>
+ <rect x="23.2" y="18.5" width="5.2" height="24.5" rx="1.5" fill="url(#gold)" stroke="#fff0b2" stroke-width=".65"/>
+ <path d="M24.5 21V40" stroke="#fff7d6" stroke-width=".7" opacity=".8"/>
+ <rect x="35" y="19" width="7" height="24" rx="2" fill="#3b1d0d" stroke="#5a3519" stroke-width="1.2"/>
+ <rect x="35.6" y="18.5" width="5.2" height="24.5" rx="1.5" fill="url(#gold)" stroke="#fff0b2" stroke-width=".65"/>
+ <path d="M37 21V40" stroke="#fff7d6" stroke-width=".7" opacity=".8"/>
+</g>
+<g fill="none" stroke="#f5d58a" stroke-width=".8" opacity=".8">
+ <path d="M13 31H17M47 31H51M32 13V16M32 46V49"/>
+ <path d="M16 15L19 18M45 44L48 47M48 15L45 18M19 44L16 47"/>
+</g>
+</svg>

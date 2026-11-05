@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+<defs>
+<linearGradient id="pot" x1="0" x2="1" y1=".25" y2=".75"><stop offset="0" stop-color="#193d38"/><stop offset=".17" stop-color="#5c9885"/><stop offset=".42" stop-color="#bde5c7"/><stop offset=".66" stop-color="#72b19d"/><stop offset="1" stop-color="#193f3c"/></linearGradient>
+<linearGradient id="neck" x1="0" y1="0" x2="1" y2=".8"><stop offset="0" stop-color="#eed5a1"/><stop offset=".45" stop-color="#bd9e62"/><stop offset="1" stop-color="#77583e"/></linearGradient>
+<radialGradient id="glow"><stop offset="0" stop-color="#bbf9d9" stop-opacity=".46"/><stop offset="1" stop-color="#71b7ac" stop-opacity="0"/></radialGradient>
+</defs>
+<circle cx="48" cy="51" r="40" fill="url(#glow)"/>
+<path d="M43 23 L44 14 Q48 9 52 14 L53 23Z" fill="#8e7248" stroke="#f0cf8b" stroke-width="2"/>
+<path d="M39 22 Q48 26 57 22 L57 30 Q48 35 39 30Z" fill="url(#neck)" stroke="#ffe8b3" stroke-width="1.5"/>
+<path d="M36 29 L60 29 Q61 38 70 43 Q77 51 75 63 Q73 79 60 82 Q48 88 36 82 Q23 79 21 63 Q19 51 26 43 Q35 38 36 29Z" fill="url(#pot)" stroke="#e5f4ce" stroke-width="2.5"/>
+<path d="M30 46 Q40 38 48 42 Q39 50 36 63 Q35 74 41 79 Q29 74 28 62Q27 52 30 46Z" fill="#d3f9e2" opacity=".27"/>
+<path d="M57 39 Q69 48 66 66 Q64 77 56 80" fill="none" stroke="#1f574e" stroke-width="3" opacity=".6"/>
+<path d="M48 45 Q53 54 60 59 Q58 70 48 75 Q38 70 36 60 Q43 57 48 45Z" fill="#d6e9c2" opacity=".55" stroke="#eaf8d8" stroke-width="1.2"/>
+<path d="M48 51 Q51 56 54 60 Q52 66 48 69 Q44 66 42 60 Q45 56 48 51Z" fill="#668e76" opacity=".7"/>
+<path d="M35 33 Q47 38 61 33" fill="none" stroke="#e4c27c" stroke-width="2"/>
+<path d="M31 74 Q48 85 65 73" fill="none" stroke="#f4e8a3" stroke-width="1.2" opacity=".7"/>
+<path d="M60 25 Q66 17 61 13 M32 29 Q27 22 32 18" fill="none" stroke="#bbeddc" opacity=".52" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

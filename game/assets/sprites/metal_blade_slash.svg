@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="112" viewBox="0 0 192 112">
+<defs>
+ <linearGradient id="outer" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#c18a35" stop-opacity="0"/><stop offset=".22" stop-color="#d69c42" stop-opacity=".62"/><stop offset=".52" stop-color="#ffe6a3" stop-opacity=".95"/><stop offset="1" stop-color="#ffeaaf" stop-opacity="0"/></linearGradient>
+ <linearGradient id="core" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset=".25" stop-color="#fff4c8" stop-opacity=".92"/><stop offset=".57" stop-color="#ffffff"/><stop offset=".86" stop-color="#fff6d7" stop-opacity=".85"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
+</defs>
+<!-- Artist-shaped curved metallic cut: tapering material, not a generic debug line. -->
+<path d="M8 101 C49 100 107 65 184 8 C139 67 78 102 8 101Z" fill="#ba8037" opacity=".2"/>
+<path d="M8 96 C52 96 116 54 181 13 C142 65 88 95 8 96Z" fill="url(#outer)"/>
+<path d="M14 92 C69 90 116 53 178 17 C130 61 78 93 14 92Z" fill="url(#core)"/>
+<path d="M30 90 C75 83 128 49 167 25" fill="none" stroke="#fffef1" stroke-opacity=".92" stroke-width="2.0" stroke-linecap="round"/>
+<path d="M69 102 C114 84 140 57 177 31" fill="none" stroke="#a36b2f" stroke-opacity=".45" stroke-width="1.5"/>
+<path d="M36 73 L48 67 M151 75 L163 68 M121 20 L125 13" stroke="#fbe6a3" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>
+</svg>

@@ -1,0 +1,57 @@
+name: Godot prototype tests
+
+on:
+  push:
+    branches:
+      - feat/godot-playable-prototype-v0.1
+  pull_request:
+    paths:
+      - "game/**"
+      - ".github/workflows/godot-prototype-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  godot-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.5.1
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.5.1
+          use-dotnet: false
+          include-templates: false
+
+      - name: Import project and check script parsing
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --editor --path game --quit 2>&1 | tee /tmp/godot-import.log
+          if grep -E "SCRIPT ERROR|Parse Error|ERROR:|Failed loading resource" /tmp/godot-import.log; then
+            echo "Godot import reported an error."
+            exit 1
+          fi
+
+      - name: Run gameplay smoke tests
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path game --script res://tests/test_smoke.gd 2>&1 | tee /tmp/godot-tests.log
+          if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" /tmp/godot-tests.log; then
+            echo "Godot gameplay tests reported a failure."
+            exit 1
+          fi
+          grep "测试汇总：" /tmp/godot-tests.log
+
+      - name: Boot the main scene
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path game --quit-after 5 2>&1 | tee /tmp/godot-boot.log
+          if grep -E "SCRIPT ERROR|Parse Error|ERROR:|Failed loading resource" /tmp/godot-boot.log; then
+            echo "Main scene startup reported an error."
+            exit 1
+          fi

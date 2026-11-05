@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 195">
+<defs>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff0b2"/><stop offset=".2" stop-color="#e5ad53"/><stop offset=".5" stop-color="#70401c"/><stop offset=".78" stop-color="#f6cb70"/><stop offset="1" stop-color="#713d19"/></linearGradient>
+ <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff6946"/><stop offset=".55" stop-color="#b32b26"/><stop offset="1" stop-color="#5d1117"/></linearGradient>
+ <radialGradient id="panel"><stop stop-color="#25100e"/><stop offset=".7" stop-color="#0b090a"/><stop offset="1" stop-color="#09090a"/></radialGradient>
+</defs>
+<path d="M103 7 H449 L485 27 V166 L452 188 H103 L67 171 L14 151 V43 L62 21 Z" fill="url(#panel)" stroke="#190b08" stroke-width="8"/>
+<path d="M103 7 H449 L485 27 V166 L452 188 H103 L67 171 L14 151 V43 L62 21 Z" fill="none" stroke="url(#gold)" stroke-width="3.5"/>
+<path d="M108 14 H445 L476 31 V161 L449 180 H106 L73 165 L22 148 V47 L66 28 Z" fill="none" stroke="#a66c34" stroke-width="1.2"/>
+<circle cx="100" cy="98" r="78" fill="#08090a" stroke="url(#gold)" stroke-width="5"/>
+<circle cx="100" cy="98" r="69" fill="none" stroke="#a83b31" stroke-width="2.4"/>
+<circle cx="100" cy="98" r="84" fill="none" stroke="#87542a" stroke-width="1.5"/>
+<path d="M24 45 Q37 11 73 5 M24 147 Q43 180 75 190" fill="none" stroke="url(#red)" stroke-width="5"/>
+<path d="M427 15 Q464 2 489 30 M430 181 Q468 191 490 160" fill="none" stroke="url(#red)" stroke-width="5"/>
+<path d="M179 26 H439 M179 173 H438" stroke="#d7a85d" stroke-width="1" opacity=".35"/>
+<!-- coiling dragon silhouette at the upper-right corner -->
+<path d="M425 8 Q445 -1 461 12 Q474 22 493 16 Q486 32 469 34 Q453 37 447 51 Q442 35 426 33 Q439 25 425 8 Z" fill="#4b2118" stroke="url(#gold)" stroke-width="2"/>
+<path d="M449 12 Q465 17 477 12 M458 27 Q471 30 484 24 M442 35 Q451 42 451 53" fill="none" stroke="#d6a452" stroke-width="1.5"/>
+<path d="M482 38 l12 8 -11 8 M476 54 l13 6 -14 8" fill="none" stroke="url(#red)" stroke-width="3"/>
+<path d="M100 0 l12 14 -12 14 -12 -14z M100 181 l10 12 -10 12 -10 -12z M480 23 l8 9 -8 9 -8 -9z" fill="url(#gold)"/>
+</svg>
