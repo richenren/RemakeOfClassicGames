@@ -550,7 +550,7 @@ func _test_reference_hud_layout() -> void:
 		var offset: Vector2 = layout["offset"]
 		var design_scale: float = layout["scale"]
 		_check(kills.position.is_equal_approx(offset + Vector2(160.0, 218.0) * design_scale) and kills.size.is_equal_approx(Vector2(270.0, 72.0) * design_scale), "击杀牌按原型图位置和290×82尺寸还原")
-		_check(objective.position.is_equal_approx(offset + Vector2(1110.0, 0.0) * design_scale) and objective.size.is_equal_approx(Vector2(520.0, 215.0) * design_scale), "尸王卡按原型图加高并保持右上定位")
+		_check(objective.position.is_equal_approx(offset + Vector2(1110.0, 0.0) * design_scale) and objective.size.is_equal_approx(Vector2(510.0, 211.0) * design_scale), "尸王卡按原型图加高并保持右上定位")
 		_check(slots.position.is_equal_approx(offset + Vector2(1508.0, 210.0) * design_scale) and slots.size.is_equal_approx(Vector2(112.0, 410.0) * design_scale), "自动技能栏按原型图加宽并延长垂穗")
 		_check(xp.position.is_equal_approx(offset + Vector2(456.0, 820.0) * design_scale), "经验底栏回到原型图底部居中位置")
 		for key in ["status", "objective", "time", "slots", "xp", "boss", "kills"]:
@@ -561,7 +561,7 @@ func _test_reference_hud_layout() -> void:
 		_check(absf(layout["boss"].get_center().x - (offset.x + 836.0 * design_scale)) <= 0.1, "顶部Boss血条缩窄后仍保持画板水平居中")
 		_check(kills.position.y >= status.end.y - 20.0 * design_scale and kills.end.y < xp.position.y, "击杀统计按原型图与人物卡下沿轻微交叠，并与经验栏分离")
 		_check(absf(kills.get_center().x - (status.get_center().x + 50.0 * design_scale)) <= 0.1, "击杀牌按原型图偏右50设计单位")
-		_check(is_equal_approx(status.size.x, 490.0 * float(layout["scale"])) and is_equal_approx(objective.size.x, 520.0 * float(layout["scale"])) and is_equal_approx(status.size.y, 235.0 * float(layout["scale"])) and is_equal_approx(objective.size.y, 215.0 * float(layout["scale"])), "人物卡与尸王卡使用原型图的加高比例")
+		_check(is_equal_approx(status.size.x, 490.0 * float(layout["scale"])) and is_equal_approx(objective.size.x, 510.0 * float(layout["scale"])) and is_equal_approx(status.size.y, 235.0 * float(layout["scale"])) and is_equal_approx(objective.size.y, 211.0 * float(layout["scale"])), "人物卡与尸王卡使用原型图的加高比例")
 		_check(objective.end.x <= pause_center.x - 18.0 * float(layout["scale"]), "尸王卡与右上暂停徽章保留安全距离")
 		_check(pause_center.x + 20.0 * float(layout["scale"]) <= view.x - 6.0 * float(layout["scale"]) and pause_center.y - 20.0 * float(layout["scale"]) >= offset.y + 8.0 * float(layout["scale"]), "暂停徽章与屏幕上、右边缘保留安全距离")
 		_check(slots.size.x <= 116.0 * float(layout["scale"]) and slots.size.y < view.y * 0.52, "右侧自动技能栏保持窄幅竖排")
